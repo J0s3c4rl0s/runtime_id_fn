@@ -14,6 +14,9 @@ open import Typeclass
 
 -- Simple example for "ornamented" lists
 
+-- I think this is "sound" but not "complete", 
+-- in that if you erase some element it cant be used in the function you wish to annotate as runtime id
+-- However you could still have erased values in the return of the 
 data @0 Even : ℕ → Set where
   even-zero  : Even zero
   even-plus2 : {n : ℕ} → Even n → Even (suc (suc n))
@@ -22,6 +25,9 @@ data EvenList : Set where
     []ₑ : EvenList
     _,_∷ₑ_ :  (n : ℕ) → @0 Dec (Even n) → EvenList → EvenList  
 
+
+data EvenListT : Set where
+  
 @0 tmp : ∀ {n} → ¬ Even n  →  ¬ Even (suc (suc n))
 tmp p (even-plus2 pss) = p pss
 
@@ -59,6 +65,8 @@ instance
     fRId ⦃ fHasRun ⦄ [] = refl
     fRId ⦃ fHasRun ⦄ (x ∷ x₁) = cong (_∷_  x) (fRId x₁)
 
--- What if already a function? 
-A : @0 ℕ → ℕ → Set
-A = {!   !}
+-- What if type is already a function? 
+Vecfun : {@0 n : ℕ} → List ℕ → Set
+-- Cant construct since vecfun behaviour depends on erased var, useless case?
+Vecfun {n} [] = {! n ≡ 0 !}
+Vecfun {n} (x ∷ xs) = {!   !}

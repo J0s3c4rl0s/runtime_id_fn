@@ -1,4 +1,6 @@
 name: run-time-id-functions
-depend: standard-library
+depend: 
+    standard-library
+    graded-type-theory
 include:
   ./src/

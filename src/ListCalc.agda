@@ -24,8 +24,9 @@ data _∋_ : (Γ : Context) → Term → Set where
 
 private variable 
     Γ : Context
-    A B C D : Term
+    A B C D P : Term
     a b c d e f g h l m n  : Term
+    nb cb : Term
 
 data Term where
     var :  ℕ → Term 
@@ -47,13 +48,13 @@ data Term where
 
     ---- elims 
     -- Nat
-    elimnat : (nat : Term) → Term → Term → Term
+    elimnat_P∶_zb∶_sb∶_ : Term → Term → Term → Term → Term
     -- List
     -- For now annotate parametrized type
-    eliml : (list : Term) → (innerTy : Term) → (nilB : Term) → (∷B : Term) → Term
+    eliml_P∶_ty∶_nb∶_cb∶_ : (list : Term) → Term → (innerTy : Term) → (nilB : Term) → (∷B : Term) → Term
     -- vec
     -- For now annotate length
-    elimv : (vec : Term) → (length : Term) → (innerTy : Term) → (nilB : Term) → (∷B : Term) → Term
+    elimv_P∶_l∶_ty∶_nb∶_cb∶_ : (vec : Term) → Term → (length : Term) → (innerTy : Term) → (nilB : Term) → (∷B : Term) → Term
     
     -- Types
     Nat : Term
@@ -79,9 +80,13 @@ data Type where
 _[_/_]  : ∀ {Γ A} →  Term → Term → Γ ∋ A → Term
 var 0 [ a / Z ] = a
 var b [ a / i ] = var b
-_[_/_] (ƛ∶ bₜ ♭ b) a i = ƛ∶ bₜ [ a / i ] ♭ (b [ a / S {B = bₜ} i ])
+_[_/_] (ƛ∶ bₜ ♭ b) a i = ƛ∶ bs ♭ (b [ a / S {B = bs} i ])
+    where 
+        bs = bₜ [ a / i ]
 (b · c) [ a / i ] = (b [ a / i ]) · (c [ a / i ])
-(∶ b ⟶ c) [ a / i ] = ∶ b [ a / i ] ⟶ (c [ a / i ])
+(∶ b ⟶ c) [ a / i ] = ∶ bs ⟶ (c [ a / S {B = bs} i ]) -- Propagate substitution here (telescoping?)
+    where 
+        bs = b [ a / i ]
 Sett [ a / i ] = Sett
 El b [ a / i ] = El (b [ a / i ])
 z [ a / i ] = z
@@ -90,14 +95,18 @@ nill [ a / i ] = nill
 (h ∷l t) [ a / i ] = (h [ a / i ]) ∷l (t [ a / i ])
 nilv [ a / i ] = nilv
 (h ∷v t) [ a / i ] = (h [ a / i ]) ∷v (t [ a / i ])
--- Eliminations should introduce relevant variables into context
-elimnat b bz bs [ a / i ] = elimnat (b [ a / i ]) (bz [ a / i ]) (bs [ a / S {B = Nat} i ])
-eliml b biₜ b[] b∷ [ a / i ] = eliml (b [ a / i ]) (biₜ [ a / i ]) (b[] [ a / i ]) (b∷ [ a / S {B = biₜ} (S {B = List biₜ} i) ]) 
--- potential bug from mapping 0 to 0 for subtraction
-elimv b biₜ bl b[] b∷ [ a / i ] = elimv (b [ a / i ]) bis bls (b[] [ a / i ]) (b∷ [ a / S {B = biₜ} (S {B = Vec (elimnat bls z (var 0)) biₜ} i) ]) 
-    where
-    bls = bl [ a / i ]
-    bis = biₜ [ a / i ]
+(elimnat b P∶ P zb∶ zb sb∶ sb) [ a / i ] = 
+    elimnat b [ a / i ] P∶ P [ a / i ] 
+        zb∶ zb [ a / i ] 
+        sb∶ (sb [ a / S {B = Nat} i ])
+(eliml b P∶ P ty∶ bty nb∶ nb cb∶ cb) [ a / i ] = 
+    eliml b [ a / i ] P∶ P [ a / i ] ty∶ bty [ a / i ] 
+        nb∶ nb [ a / i ] 
+        cb∶ (cb [ a / i ])
+(elimv b P∶ P l∶ n ty∶ ty nb∶ nb cb∶ cb) [ a / i ] = 
+    elimv b [ a / i ] P∶ P [ a / i ] l∶ n [ a / i ] ty∶ ty [ a / i ] 
+        nb∶ nb [ a / i ] 
+        cb∶ (cb [ a / i ])
 Nat [ a / i ] = Nat
 List b [ a / i ] = List (b [ a / i ])
 Vec n b [ a / i ] = Vec (n [ a / i ]) (b [ a / i ])
@@ -134,13 +143,16 @@ data _⊢_∶_ : Context → Term → Term → Set where
     ⊢s : 
         Γ ⊢ a ∶ Nat →
         Γ ⊢ s a ∶ Nat
-    -- might be nice to have flow sensitivity but that could be good for when pat match/ gen elim
-    ⊢natel :   
-        Γ ⊢ a ∶ Nat →
-        Γ ⊢ b ∶ A →
-        (Γ , Nat) ⊢ c ∶ A →
-        Γ ⊢ elimnat a b c ∶ A
-    
+    ⊢natel : ∀ {zb sb} →
+        Γ ⊢ n ∶ Nat →
+        Γ ⊢ P ∶ (∶ Nat ⟶ Sett) →
+        Γ ⊢ zb ∶ (P · z) →
+        Γ ⊢ sb ∶ (∶ Nat ⟶ (∶ P · var 0 ⟶ (P · s (var 1)))) →
+        Γ ⊢ elimnat n P∶ P 
+                zb∶ zb 
+                sb∶ sb 
+            ∶ (∶ Nat ⟶ (P · var 0)) -- Not convinced about this type signature, maybe shoulda made eliminators just special functions instead
+
     -- Lists
     ⊢List : 
         Γ ⊢ List A ∶ Sett
@@ -151,10 +163,14 @@ data _⊢_∶_ : Context → Term → Term → Set where
         Γ ⊢ b ∶ List A →
         Γ ⊢ a ∷l b ∶ List A
     ⊢listel : 
-        Γ ⊢ a ∶ List A → 
-        Γ ⊢ c ∶ B →
-        ((Γ , A) , List A  ) ⊢ d ∶ B → 
-        Γ ⊢ eliml a A c d ∶ B
+        Γ ⊢ l ∶ List A →
+        Γ ⊢ P ∶ (∶ List A ⟶ Sett) → 
+        Γ ⊢ nb ∶ (P · nill) →
+        Γ ⊢ cb ∶ (∶ A ⟶ (∶ List A ⟶ (∶ P · var 0 ⟶ (P · (var 2 ∷l var 1))))) → 
+        Γ ⊢ eliml l P∶ P ty∶ A 
+                nb∶ nb 
+                cb∶ cb 
+            ∶ (∶ List A ⟶ (P · var 0))
 
     -- Vecs
     ⊢Vec : 
@@ -167,9 +183,9 @@ data _⊢_∶_ : Context → Term → Term → Set where
         Γ ⊢ a ∷v b ∶ Vec (s c) A
     ⊢vecel : 
         Γ ⊢ a ∶ Vec n A →
-        Γ ⊢ d ∶ B →
-        ((Γ , A) , Vec {!   !} A) ⊢ e ∶ B → -- What if length is 0 lol
-        Γ ⊢ elimv a n A d e ∶ B
+        Γ ⊢ d ∶ {!   !} →
+        Γ ⊢ e ∶ {!   !} → -- What if length is 0 lol
+        Γ ⊢ {!   !} ∶ {!   !}
 
     ⊢Sett : 
         Γ ⊢ Sett ∶ Sett
@@ -177,12 +193,13 @@ data _⊢_∶_ : Context → Term → Term → Set where
         Γ ⊢ a ∶ A →
         Γ ⊢ A ＝ B →
         Γ ⊢ a ∶ B
-
+{-
 data _⊢ : Context → Set where
     ⊢nil : Γ ⊢
     ⊢cons : 
         Γ ⊢ A ∶ Sett →
         (Γ , A) ⊢
+-}
 
 data _⊢_＝_ where
     ＝var :

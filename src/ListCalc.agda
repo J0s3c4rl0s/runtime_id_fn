@@ -1,6 +1,6 @@
 module ListCalc where
 
-open import Data.Nat using (ℕ; zero; suc; _<_; _≤?_; z≤n; s≤s)
+open import Data.Nat using (ℕ; zero; suc; _+_)
 open import Relation.Nullary.Decidable using (True; toWitness)
 
 data Context : Set
@@ -26,7 +26,8 @@ private variable
     Γ : Context
     A B C D P : Term
     a b c d e f g h l m n  : Term
-    nb cb : Term
+    as cs : Term
+    nb cb zb sb : Term
 
 data Term where
     var :  ℕ → Term 
@@ -63,18 +64,8 @@ data Term where
     ∶_⟶_ : Term → Term → Term -- Pi type
     Sett : Term -- Universe 
     El : Term → Term
-    
-{- 
-data Type where 
-    ∶_⟶_ : Type → Type → Type -- Pi type
-    U : Type -- Universe 
-    El : Term → Type
-    
-    -- Base type
-    Nat : Type 
-    List : Type → Type
-    Vec : Type → Term → Type -- Cant stick the Nat in here directly
--}
+
+
 
 -- Could reflection make this more efficient?
 _[_/_]  : ∀ {Γ A} →  Term → Term → Γ ∋ A → Term
@@ -115,12 +106,35 @@ Vec n b [ a / i ] = Vec (n [ a / i ]) (b [ a / i ])
 ∋→ℕ Z = 0
 ∋→ℕ (S i) = suc (∋→ℕ i)
 
+liftindices : Term → Γ ∋ A → Term
+liftindices (var x) i = var (x + (1 + ∋→ℕ i)) 
+liftindices (ƛ∶ t ♭ t₁) i = ƛ∶ liftindices t i ♭ liftindices t₁ i
+liftindices (t · t₁) i = liftindices t i · liftindices t₁ i
+liftindices z i = z
+liftindices (s t) i = s (liftindices t i) 
+liftindices nill i = nill
+liftindices (t ∷l t₁) i = liftindices t i ∷l liftindices t₁ i
+liftindices nilv i = nilv
+liftindices (t ∷v t₁) i = liftindices t i ∷v liftindices t₁ i
+liftindices (elimnat t P∶ t₁ zb∶ t₂ sb∶ t₃) i = 
+    elimnat_P∶_zb∶_sb∶_ (liftindices t i) (liftindices t₁ i) (liftindices t₂ i) (liftindices t₃ i)
+liftindices (eliml t P∶ t₁ ty∶ t₂ nb∶ t₃ cb∶ t₄) i = 
+    eliml_P∶_ty∶_nb∶_cb∶_ (liftindices t i) (liftindices t i) (liftindices t₂ i) (liftindices t₃ i) (liftindices t₃ i)
+liftindices (elimv t P∶ t₁ l∶ t₂ ty∶ t₃ nb∶ t₄ cb∶ t₅) i = 
+    elimv_P∶_l∶_ty∶_nb∶_cb∶_ (liftindices t i) (liftindices t i) (liftindices t₂ i) (liftindices t₃ i) (liftindices t₃ i) (liftindices t₄ i)
+liftindices Nat i = Nat
+liftindices (List t) i = List (liftindices t i)
+liftindices (Vec t t₁) i = Vec (liftindices t i) (liftindices t₁ i)
+liftindices (∶ t ⟶ t₁) i = ∶ liftindices t i ⟶ liftindices t₁ i
+liftindices Sett i = Sett
+liftindices (El t) i = El (liftindices t i)
+
 data _⊢_＝_ : Context → Term → Term → Set
 
 data _⊢_∶_ : Context → Term → Term → Set where
     ⊢var : ∀ {Γ A}
         (i : Γ ∋ A) →
-        Γ ⊢ var (∋→ℕ i) ∶ A
+        Γ ⊢ var (∋→ℕ i) ∶ liftindices A i
     
     -- functions
     ⊢pi :
@@ -139,7 +153,7 @@ data _⊢_∶_ : Context → Term → Term → Set where
     ⊢Nat : 
         Γ ⊢ Nat ∶ Sett
     ⊢z : 
-        Γ ⊢ z ∶ Sett
+        Γ ⊢ z ∶ Nat
     ⊢s : 
         Γ ⊢ a ∶ Nat →
         Γ ⊢ s a ∶ Nat
@@ -151,7 +165,7 @@ data _⊢_∶_ : Context → Term → Term → Set where
         Γ ⊢ elimnat n P∶ P 
                 zb∶ zb 
                 sb∶ sb 
-            ∶ (∶ Nat ⟶ (P · var 0)) -- Not convinced about this type signature, maybe shoulda made eliminators just special functions instead
+            ∶ (P · n) -- Not convinced about this type signature, maybe shoulda made eliminators just special functions instead
 
     -- Lists
     ⊢List : 
@@ -170,11 +184,11 @@ data _⊢_∶_ : Context → Term → Term → Set where
         Γ ⊢ eliml l P∶ P ty∶ A 
                 nb∶ nb 
                 cb∶ cb 
-            ∶ (∶ List A ⟶ (P · var 0))
+            ∶ (P · l)
 
     -- Vecs
     ⊢Vec : 
-        Γ ⊢ Vec b A ∶ Sett
+        Γ ⊢ Vec n A ∶ Sett
     ⊢nilv : 
         Γ ⊢ nilv ∶ Vec z A
     ⊢∷v :
@@ -182,10 +196,14 @@ data _⊢_∶_ : Context → Term → Term → Set where
         Γ ⊢ b ∶ Vec c A →
         Γ ⊢ a ∷v b ∶ Vec (s c) A
     ⊢vecel : 
-        Γ ⊢ a ∶ Vec n A →
-        Γ ⊢ d ∶ {!   !} →
-        Γ ⊢ e ∶ {!   !} → -- What if length is 0 lol
-        Γ ⊢ {!   !} ∶ {!   !}
+        Γ ⊢ b ∶ Vec n A →
+        Γ ⊢ P ∶ (∶ Nat ⟶ Vec (var 0) A) →
+        Γ ⊢ nb ∶ ((P · z) · nilv) →
+        Γ ⊢ cb ∶ (∶ Nat ⟶ (∶ A ⟶ (∶ Vec (var 1) A ⟶ (∶ P · var 0 ⟶ (P · (var 2 ∷v var 1)))))) → 
+        Γ ⊢ elimv b P∶ P l∶ n ty∶ A 
+                nb∶ nb 
+                cb∶ cb 
+            ∶ (P · b)
 
     ⊢Sett : 
         Γ ⊢ Sett ∶ Sett
@@ -204,7 +222,7 @@ data _⊢ : Context → Set where
 data _⊢_＝_ where
     ＝var :
         (i : Γ ∋ a)  →
-        Γ ⊢ var (∋→ℕ i) ＝ a
+        Γ ⊢ var (∋→ℕ i) ＝ liftindices a i
 
     ＝pi : 
         Γ ⊢ A ＝ C → 
@@ -220,7 +238,7 @@ data _⊢_＝_ where
 
     ＝beta : Γ ⊢ (ƛ∶ A ♭ b) · a ＝ (b [ a / Z {A} {Γ} ])
 
-    =lift : 
+    ＝lift : 
         (Γ , A) ⊢ b ∶ B →
         Γ ⊢ a ＝ c →
         Γ ⊢ b [ a / Z {A} {Γ} ] ＝ ( b [ c / Z {A} {Γ} ]) 
@@ -234,6 +252,77 @@ data _⊢_＝_ where
         Γ ⊢ A ＝ B →
         Γ ⊢ B ＝ C →
         Γ ⊢ A ＝ C
+    
+    ---- eliminators 
+    -- nats
+    ＝natelz :
+        Γ ⊢ m ＝ z →
+        Γ ⊢ elimnat m P∶ P 
+            zb∶ zb 
+            sb∶ sb 
+            ＝ 
+            zb
+    ＝natels :
+        Γ ⊢ n ＝ s n →
+        Γ ⊢ elimnat n P∶ P 
+                zb∶ zb 
+                sb∶ sb 
+            ＝ 
+            a →
+        Γ ⊢ elimnat m P∶ P 
+                zb∶ zb 
+                sb∶ sb 
+            ＝ 
+            ((sb · n) · a)
+    -- list
+    ＝listeln :
+        Γ ⊢ cs ＝ nill →
+        Γ ⊢ eliml cs P∶ P ty∶ A  
+                nb∶ nb 
+                cb∶ cb 
+            ＝ 
+            nb
+    ＝listelc : 
+        Γ ⊢ cs ＝ (a ∷l as) →
+        Γ ⊢ eliml as P∶ P ty∶ A 
+                nb∶ nb 
+                cb∶ cb 
+            ＝ 
+            b →
+        Γ ⊢ eliml cs P∶ P ty∶ A 
+                nb∶ nb 
+                cb∶ cb 
+            ＝ 
+            (((cb · a) · as) ·  b)
+    -- vec
+    ＝veceln :
+        Γ ⊢ cs ＝ nilv →
+        Γ ⊢ elimv cs P∶ P l∶ z ty∶ A 
+                nb∶ nb 
+                cb∶ cb 
+            ＝ 
+            nb
+    ＝vecelc :
+        Γ ⊢ cs ＝ (a ∷v as) → 
+        Γ ⊢ elimv nilv P∶ P l∶ n ty∶ A 
+                nb∶ nb 
+                cb∶ cb 
+            ＝ 
+            b →
+        Γ ⊢ elimv cs P∶ P l∶ s n ty∶ A 
+                nb∶ nb 
+                cb∶ cb 
+            ＝ 
+            ((((cb · n) · a) · as) · b)
+    
+    -- For easier comparison of Data types 
+    ＝list : 
+        Γ ⊢ A ＝ B →
+        Γ ⊢ List A ＝ List B
+    ＝vec : 
+        Γ ⊢ n ＝ m →
+        Γ ⊢ A ＝ B →
+        Γ ⊢ Vec n A ＝ Vec m B
        
 -- Id example
 
@@ -244,4 +333,93 @@ idDef : Term
 idDef = ƛ∶ Sett ♭ (ƛ∶ var 0 ♭ (var 0))
 
 idTyped : Γ ⊢ idDef ∶ idTy
-idTyped {Γ} = ⊢lam (⊢lam (⊢var Z) (⊢var Z)) ⊢Sett
+idTyped {Γ} = ⊢lam (⊢lam (⊢conv (⊢var Z) (＝sym (＝var Z))) (⊢var Z)) ⊢Sett
+
+listLengthTy : Term 
+listLengthTy = ∶ Sett ⟶ (∶ List (var 0) ⟶ Nat)
+
+listLengthDef : Term
+listLengthDef = 
+    ƛ∶ Sett ♭ 
+        (ƛ∶ List (var 0) ♭ 
+            (eliml var 0 P∶ ƛ∶ List (var 1) ♭ Nat ty∶ var 1 
+                nb∶ z 
+                cb∶ (ƛ∶ var 1 ♭ (ƛ∶ List (var 1) ♭ (ƛ∶ Nat ♭ s (var 0))))))
+ 
+listLengthTyped : [] ⊢ listLengthDef ∶ listLengthTy
+listLengthTyped = 
+    ⊢lam 
+        (⊢lam 
+            (⊢conv 
+            (⊢listel 
+                (⊢conv (⊢var Z) ＝refl) 
+                (⊢lam ⊢Nat ⊢List) 
+                (⊢conv ⊢z (＝sym ＝beta)) 
+                (⊢lam 
+                    (⊢lam 
+                        (⊢conv (⊢lam (⊢s (⊢var Z)) ⊢Nat) (＝sym (＝pi ＝beta ＝beta))) 
+                        ⊢List) 
+                    (⊢var (S Z))) 
+                ) 
+                ＝beta) 
+            ⊢List) 
+        ⊢Sett
+
+-- Assume A in context
+listToVecTy : Term 
+listToVecTy = ∶ List Nat ⟶ Vec ((listLengthDef · Nat) · var 0) Nat
+
+listToVecDef : Term
+listToVecDef = 
+    ƛ∶ List Nat ♭ 
+        (eliml var 0 P∶ ƛ∶ List Nat ♭ Vec ((listLengthDef · Nat) · var 0) Nat ty∶ Nat 
+            nb∶ nilv 
+            cb∶ (ƛ∶ Nat ♭ 
+                    (ƛ∶ List Nat ♭ 
+                        (ƛ∶ Vec ((listLengthDef · Nat) · var 0) Nat ♭ (var 2 ∷v var 0)))))
+
+listToVecTyped : [] ⊢ listToVecDef ∶ listToVecTy
+listToVecTyped = 
+    ⊢lam 
+        (⊢conv 
+            (⊢listel 
+                (⊢var Z) 
+                (⊢lam ⊢Vec ⊢List) 
+                (⊢conv 
+                    (⊢nilv {A = Nat}) 
+                    (＝sym (＝trans 
+                        ＝beta 
+                        (＝vec 
+                            (＝trans 
+                                (＝app 
+                                    ＝beta 
+                                    ＝refl) 
+                                (＝trans 
+                                    ＝beta 
+                                    (＝listeln ＝refl))) 
+                            ＝refl)))) 
+                (⊢lam 
+                    (⊢lam 
+                        (⊢conv 
+                            (⊢lam 
+                                (⊢∷v (⊢var (S (S Z))) (⊢var Z)) 
+                                ⊢Vec) 
+                            (＝sym (＝pi 
+                                ＝beta 
+                                (＝trans 
+                                    ＝beta 
+                                    (＝vec 
+                                        (＝trans 
+                                            (＝app 
+                                                ＝beta 
+                                                ＝refl) 
+                                            (＝trans 
+                                                ＝beta 
+                                                (＝trans 
+                                                    {!   !}
+                                                    {!   !}))) 
+                                        ＝refl)))))
+                        ⊢List) 
+                    ⊢Nat)) 
+            ＝beta) 
+        ⊢List  

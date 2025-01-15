@@ -4,3 +4,4 @@ depend:
     graded-type-theory
 include:
   ./src/
+  ./src/ListCalc

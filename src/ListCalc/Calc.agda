@@ -1,4 +1,4 @@
-module ListCalc where
+module Calc where
 
 open import Data.Nat using (ℕ; zero; suc; _+_)
 open import Relation.Nullary.Decidable using (True; toWitness)
@@ -20,7 +20,6 @@ data _∋_ : (Γ : Context) → Term → Set where
     -- Ensure there is a lookup judgement in submodule
     → Γ ∋ A
     →  (Γ , B) ∋ A
-
 
 private variable 
     Γ : Context
@@ -65,17 +64,44 @@ data Term where
     Sett : Term -- Universe 
     El : Term → Term
 
+∋→ℕ : Γ ∋ A → ℕ 
+∋→ℕ Z = 0
+∋→ℕ (S i) = suc (∋→ℕ i)
 
+liftindices : Term → Γ ∋ A → Term -- Only do this for free variables, lower and upper bound
+liftindices (var x) i = var (x + (1 + ∋→ℕ i)) 
+liftindices (ƛ∶ t ♭ t₁) i = ƛ∶ liftindices t i ♭ liftindices t₁ i
+liftindices (t · t₁) i = liftindices t i · liftindices t₁ i
+liftindices z i = z
+liftindices (s t) i = s (liftindices t i) 
+liftindices nill i = nill
+liftindices (t ∷l t₁) i = liftindices t i ∷l liftindices t₁ i
+liftindices nilv i = nilv
+liftindices (t ∷v t₁) i = liftindices t i ∷v liftindices t₁ i
+liftindices (elimnat t P∶ t₁ zb∶ t₂ sb∶ t₃) i = 
+    elimnat_P∶_zb∶_sb∶_ (liftindices t i) (liftindices t₁ i) (liftindices t₂ i) (liftindices t₃ i)
+liftindices (eliml t P∶ t₁ ty∶ t₂ nb∶ t₃ cb∶ t₄) i = 
+    eliml_P∶_ty∶_nb∶_cb∶_ (liftindices t i) (liftindices t i) (liftindices t₂ i) (liftindices t₃ i) (liftindices t₃ i)
+liftindices (elimv t P∶ t₁ l∶ t₂ ty∶ t₃ nb∶ t₄ cb∶ t₅) i = 
+    elimv_P∶_l∶_ty∶_nb∶_cb∶_ (liftindices t i) (liftindices t i) (liftindices t₂ i) (liftindices t₃ i) (liftindices t₃ i) (liftindices t₄ i)
+liftindices Nat i = Nat
+liftindices (List t) i = List (liftindices t i)
+liftindices (Vec t t₁) i = Vec (liftindices t i) (liftindices t₁ i)
+liftindices (∶ t ⟶ t₁) i = ∶ liftindices t i ⟶ liftindices t₁ i
+liftindices Sett i = Sett
+liftindices (El t) i = El (liftindices t i)
+
+-- Consider parallel subtitutions to deal with free variable capture
 
 -- Could reflection make this more efficient?
 _[_/_]  : ∀ {Γ A} →  Term → Term → Γ ∋ A → Term
 var 0 [ a / Z ] = a
-var b [ a / i ] = var b
-_[_/_] (ƛ∶ bₜ ♭ b) a i = ƛ∶ bs ♭ (b [ a / S {B = bs} i ])
+var b [ a / i ] = var b -- may need reindexing for free vars
+_[_/_] (ƛ∶ bₜ ♭ b) a i = ƛ∶ bs ♭ (b [ liftindices a (S {B = bs} i) / S {B = bs} i ])
     where 
         bs = bₜ [ a / i ]
 (b · c) [ a / i ] = (b [ a / i ]) · (c [ a / i ])
-(∶ b ⟶ c) [ a / i ] = ∶ bs ⟶ (c [ a / S {B = bs} i ]) -- Propagate substitution here (telescoping?)
+(∶ b ⟶ c) [ a / i ] = ∶ bs ⟶ (c [ liftindices a (S {B = bs} i) / S {B = bs} i ]) -- Propagate substitution here (telescoping?)
     where 
         bs = b [ a / i ]
 Sett [ a / i ] = Sett
@@ -102,32 +128,6 @@ Nat [ a / i ] = Nat
 List b [ a / i ] = List (b [ a / i ])
 Vec n b [ a / i ] = Vec (n [ a / i ]) (b [ a / i ])
 
-∋→ℕ : Γ ∋ A → ℕ 
-∋→ℕ Z = 0
-∋→ℕ (S i) = suc (∋→ℕ i)
-
-liftindices : Term → Γ ∋ A → Term
-liftindices (var x) i = var (x + (1 + ∋→ℕ i)) 
-liftindices (ƛ∶ t ♭ t₁) i = ƛ∶ liftindices t i ♭ liftindices t₁ i
-liftindices (t · t₁) i = liftindices t i · liftindices t₁ i
-liftindices z i = z
-liftindices (s t) i = s (liftindices t i) 
-liftindices nill i = nill
-liftindices (t ∷l t₁) i = liftindices t i ∷l liftindices t₁ i
-liftindices nilv i = nilv
-liftindices (t ∷v t₁) i = liftindices t i ∷v liftindices t₁ i
-liftindices (elimnat t P∶ t₁ zb∶ t₂ sb∶ t₃) i = 
-    elimnat_P∶_zb∶_sb∶_ (liftindices t i) (liftindices t₁ i) (liftindices t₂ i) (liftindices t₃ i)
-liftindices (eliml t P∶ t₁ ty∶ t₂ nb∶ t₃ cb∶ t₄) i = 
-    eliml_P∶_ty∶_nb∶_cb∶_ (liftindices t i) (liftindices t i) (liftindices t₂ i) (liftindices t₃ i) (liftindices t₃ i)
-liftindices (elimv t P∶ t₁ l∶ t₂ ty∶ t₃ nb∶ t₄ cb∶ t₅) i = 
-    elimv_P∶_l∶_ty∶_nb∶_cb∶_ (liftindices t i) (liftindices t i) (liftindices t₂ i) (liftindices t₃ i) (liftindices t₃ i) (liftindices t₄ i)
-liftindices Nat i = Nat
-liftindices (List t) i = List (liftindices t i)
-liftindices (Vec t t₁) i = Vec (liftindices t i) (liftindices t₁ i)
-liftindices (∶ t ⟶ t₁) i = ∶ liftindices t i ⟶ liftindices t₁ i
-liftindices Sett i = Sett
-liftindices (El t) i = El (liftindices t i)
 
 data _⊢_＝_ : Context → Term → Term → Set
 
@@ -179,7 +179,7 @@ data _⊢_∶_ : Context → Term → Term → Set where
     ⊢listel : 
         Γ ⊢ l ∶ List A →
         Γ ⊢ P ∶ (∶ List A ⟶ Sett) → 
-        Γ ⊢ nb ∶ (P · nill) →
+        Γ ⊢ nb ∶ (P · nill) → -- Could put things in the context
         Γ ⊢ cb ∶ (∶ A ⟶ (∶ List A ⟶ (∶ P · var 0 ⟶ (P · (var 2 ∷l var 1))))) → 
         Γ ⊢ eliml l P∶ P ty∶ A 
                 nb∶ nb 
@@ -315,111 +315,25 @@ data _⊢_＝_ where
             ＝ 
             ((((cb · n) · a) · as) · b)
     
-    -- For easier comparison of Data types 
+    ---- Cong rules for datatypes 
+    -- Nat
+    ＝s : 
+        Γ ⊢ n ＝ m →
+        Γ ⊢ s n ＝ s m
+    -- List
     ＝list : 
         Γ ⊢ A ＝ B →
         Γ ⊢ List A ＝ List B
+    ＝∷l :
+        Γ ⊢ a ＝ c →
+        Γ ⊢ as ＝ cs →
+        Γ ⊢ a ∷l as ＝ (c ∷l cs)
+    -- Vec
     ＝vec : 
         Γ ⊢ n ＝ m →
         Γ ⊢ A ＝ B →
         Γ ⊢ Vec n A ＝ Vec m B
-       
--- Id example
-
-idTy : Term 
-idTy = ∶ Sett ⟶ (∶ var 0 ⟶ (var 0))
-
-idDef : Term
-idDef = ƛ∶ Sett ♭ (ƛ∶ var 0 ♭ (var 0))
-
-idTyped : Γ ⊢ idDef ∶ idTy
-idTyped {Γ} = ⊢lam (⊢lam (⊢conv (⊢var Z) (＝sym (＝var Z))) (⊢var Z)) ⊢Sett
-
-listLengthTy : Term 
-listLengthTy = ∶ Sett ⟶ (∶ List (var 0) ⟶ Nat)
-
-listLengthDef : Term
-listLengthDef = 
-    ƛ∶ Sett ♭ 
-        (ƛ∶ List (var 0) ♭ 
-            (eliml var 0 P∶ ƛ∶ List (var 1) ♭ Nat ty∶ var 1 
-                nb∶ z 
-                cb∶ (ƛ∶ var 1 ♭ (ƛ∶ List (var 1) ♭ (ƛ∶ Nat ♭ s (var 0))))))
- 
-listLengthTyped : [] ⊢ listLengthDef ∶ listLengthTy
-listLengthTyped = 
-    ⊢lam 
-        (⊢lam 
-            (⊢conv 
-            (⊢listel 
-                (⊢conv (⊢var Z) ＝refl) 
-                (⊢lam ⊢Nat ⊢List) 
-                (⊢conv ⊢z (＝sym ＝beta)) 
-                (⊢lam 
-                    (⊢lam 
-                        (⊢conv (⊢lam (⊢s (⊢var Z)) ⊢Nat) (＝sym (＝pi ＝beta ＝beta))) 
-                        ⊢List) 
-                    (⊢var (S Z))) 
-                ) 
-                ＝beta) 
-            ⊢List) 
-        ⊢Sett
-
--- Assume A in context
-listToVecTy : Term 
-listToVecTy = ∶ List Nat ⟶ Vec ((listLengthDef · Nat) · var 0) Nat
-
-listToVecDef : Term
-listToVecDef = 
-    ƛ∶ List Nat ♭ 
-        (eliml var 0 P∶ ƛ∶ List Nat ♭ Vec ((listLengthDef · Nat) · var 0) Nat ty∶ Nat 
-            nb∶ nilv 
-            cb∶ (ƛ∶ Nat ♭ 
-                    (ƛ∶ List Nat ♭ 
-                        (ƛ∶ Vec ((listLengthDef · Nat) · var 0) Nat ♭ (var 2 ∷v var 0)))))
-
-listToVecTyped : [] ⊢ listToVecDef ∶ listToVecTy
-listToVecTyped = 
-    ⊢lam 
-        (⊢conv 
-            (⊢listel 
-                (⊢var Z) 
-                (⊢lam ⊢Vec ⊢List) 
-                (⊢conv 
-                    (⊢nilv {A = Nat}) 
-                    (＝sym (＝trans 
-                        ＝beta 
-                        (＝vec 
-                            (＝trans 
-                                (＝app 
-                                    ＝beta 
-                                    ＝refl) 
-                                (＝trans 
-                                    ＝beta 
-                                    (＝listeln ＝refl))) 
-                            ＝refl)))) 
-                (⊢lam 
-                    (⊢lam 
-                        (⊢conv 
-                            (⊢lam 
-                                (⊢∷v (⊢var (S (S Z))) (⊢var Z)) 
-                                ⊢Vec) 
-                            (＝sym (＝pi 
-                                ＝beta 
-                                (＝trans 
-                                    ＝beta 
-                                    (＝vec 
-                                        (＝trans 
-                                            (＝app 
-                                                ＝beta 
-                                                ＝refl) 
-                                            (＝trans 
-                                                ＝beta 
-                                                (＝trans 
-                                                    {!   !}
-                                                    {!   !}))) 
-                                        ＝refl)))))
-                        ⊢List) 
-                    ⊢Nat)) 
-            ＝beta) 
-        ⊢List  
+    ＝∷v :
+        Γ ⊢ a ＝ c →
+        Γ ⊢ as ＝ cs →
+        Γ ⊢ a ∷v as ＝ (c ∷v cs)

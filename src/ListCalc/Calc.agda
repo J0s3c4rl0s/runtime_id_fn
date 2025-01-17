@@ -1,6 +1,7 @@
 module Calc where
 
-open import Data.Nat using (ℕ; zero; suc; _+_)
+open import Data.Nat using (ℕ; zero; suc; _+_; _≤ᵇ_)
+open import Data.Bool using (if_then_else_)
 open import Relation.Nullary.Decidable using (True; toWitness)
 
 data Context : Set
@@ -68,40 +69,38 @@ data Term where
 ∋→ℕ Z = 0
 ∋→ℕ (S i) = suc (∋→ℕ i)
 
-liftindices : Term → Γ ∋ A → Term -- Only do this for free variables, lower and upper bound
-liftindices (var x) i = var (x + (1 + ∋→ℕ i)) 
-liftindices (ƛ∶ t ♭ t₁) i = ƛ∶ liftindices t i ♭ liftindices t₁ i
-liftindices (t · t₁) i = liftindices t i · liftindices t₁ i
-liftindices z i = z
-liftindices (s t) i = s (liftindices t i) 
-liftindices nill i = nill
-liftindices (t ∷l t₁) i = liftindices t i ∷l liftindices t₁ i
-liftindices nilv i = nilv
-liftindices (t ∷v t₁) i = liftindices t i ∷v liftindices t₁ i
-liftindices (elimnat t P∶ t₁ zb∶ t₂ sb∶ t₃) i = 
-    elimnat_P∶_zb∶_sb∶_ (liftindices t i) (liftindices t₁ i) (liftindices t₂ i) (liftindices t₃ i)
-liftindices (eliml t P∶ t₁ ty∶ t₂ nb∶ t₃ cb∶ t₄) i = 
-    eliml_P∶_ty∶_nb∶_cb∶_ (liftindices t i) (liftindices t i) (liftindices t₂ i) (liftindices t₃ i) (liftindices t₃ i)
-liftindices (elimv t P∶ t₁ l∶ t₂ ty∶ t₃ nb∶ t₄ cb∶ t₅) i = 
-    elimv_P∶_l∶_ty∶_nb∶_cb∶_ (liftindices t i) (liftindices t i) (liftindices t₂ i) (liftindices t₃ i) (liftindices t₃ i) (liftindices t₄ i)
-liftindices Nat i = Nat
-liftindices (List t) i = List (liftindices t i)
-liftindices (Vec t t₁) i = Vec (liftindices t i) (liftindices t₁ i)
-liftindices (∶ t ⟶ t₁) i = ∶ liftindices t i ⟶ liftindices t₁ i
-liftindices Sett i = Sett
-liftindices (El t) i = El (liftindices t i)
+shiftindices : Term → ℕ → ℕ → Term -- Only do this for free variables, lower and upper bound
+shiftindices (var x) i l = if l ≤ᵇ x then var (x + i) else var x 
+shiftindices (ƛ∶ t ♭ t₁) i l = ƛ∶ shiftindices t i l ♭ shiftindices t₁ i (suc l)
+shiftindices (t · t₁) i l = shiftindices t i l · shiftindices t₁ i l
+shiftindices z i l = z
+shiftindices (s t) i l = s (shiftindices t i l) 
+shiftindices nill i l = nill
+shiftindices (t ∷l t₁) i l = shiftindices t i l ∷l shiftindices t₁ i l
+shiftindices nilv i l = nilv
+shiftindices (t ∷v t₁) i l = shiftindices t i l ∷v shiftindices t₁ i l
+shiftindices (elimnat t P∶ t₁ zb∶ t₂ sb∶ t₃) i l = 
+    elimnat_P∶_zb∶_sb∶_ (shiftindices t i l) (shiftindices t₁ i l) (shiftindices t₂ i l) (shiftindices t₃ i l)
+shiftindices (eliml t P∶ t₁ ty∶ t₂ nb∶ t₃ cb∶ t₄) i l = 
+    eliml_P∶_ty∶_nb∶_cb∶_ (shiftindices t i l) (shiftindices t₁ i l) (shiftindices t₂ i l) (shiftindices t₃ i l) (shiftindices t₄ i l)
+shiftindices (elimv t P∶ t₁ l∶ t₂ ty∶ t₃ nb∶ t₄ cb∶ t₅) i l = 
+    elimv_P∶_l∶_ty∶_nb∶_cb∶_ (shiftindices t i l) (shiftindices t₁ i l) (shiftindices t₂ i l) (shiftindices t₃ i l) (shiftindices t₄ i l) (shiftindices t₅ i l)
+shiftindices Nat i l = Nat
+shiftindices (List t) i l = List (shiftindices t i l)
+shiftindices (Vec t t₁) i l = Vec (shiftindices t i l) (shiftindices t₁ i l)
+shiftindices (∶ t ⟶ t₁) i l = ∶ shiftindices t i l ⟶ shiftindices t₁ i (suc l)
+shiftindices Sett i l = Sett
+shiftindices (El t) i l = El (shiftindices t i l)
 
 -- Consider parallel subtitutions to deal with free variable capture
 
 -- Could reflection make this more efficient?
-_[_/_]  : ∀ {Γ A} →  Term → Term → Γ ∋ A → Term
-var 0 [ a / Z ] = a
-var b [ a / i ] = var b -- may need reindexing for free vars
-_[_/_] (ƛ∶ bₜ ♭ b) a i = ƛ∶ bs ♭ (b [ liftindices a (S {B = bs} i) / S {B = bs} i ])
-    where 
-        bs = bₜ [ a / i ]
+_[_/_]  : Term → Term → ℕ → Term
+var 0 [ a / 0 ] = a
+var b [ a / i ] = var b 
+(ƛ∶ bₜ ♭ b) [ a / i ] = ƛ∶ bₜ [ a / i ] ♭ (b [ shiftindices a 1 0 / suc i ])
 (b · c) [ a / i ] = (b [ a / i ]) · (c [ a / i ])
-(∶ b ⟶ c) [ a / i ] = ∶ bs ⟶ (c [ liftindices a (S {B = bs} i) / S {B = bs} i ]) -- Propagate substitution here (telescoping?)
+(∶ b ⟶ c) [ a / i ] = ∶ bs ⟶ (c [ shiftindices a 1 0 / suc i ]) 
     where 
         bs = b [ a / i ]
 Sett [ a / i ] = Sett
@@ -115,7 +114,7 @@ nilv [ a / i ] = nilv
 (elimnat b P∶ P zb∶ zb sb∶ sb) [ a / i ] = 
     elimnat b [ a / i ] P∶ P [ a / i ] 
         zb∶ zb [ a / i ] 
-        sb∶ (sb [ a / S {B = Nat} i ])
+        sb∶ (sb [ a / suc i ])
 (eliml b P∶ P ty∶ bty nb∶ nb cb∶ cb) [ a / i ] = 
     eliml b [ a / i ] P∶ P [ a / i ] ty∶ bty [ a / i ] 
         nb∶ nb [ a / i ] 
@@ -134,7 +133,7 @@ data _⊢_＝_ : Context → Term → Term → Set
 data _⊢_∶_ : Context → Term → Term → Set where
     ⊢var : ∀ {Γ A}
         (i : Γ ∋ A) →
-        Γ ⊢ var (∋→ℕ i) ∶ liftindices A i
+        Γ ⊢ var (∋→ℕ i) ∶ shiftindices A (suc (∋→ℕ i)) 0
     
     -- functions
     ⊢pi :
@@ -148,7 +147,7 @@ data _⊢_∶_ : Context → Term → Term → Set where
     ⊢app : 
         Γ ⊢ a ∶ (∶ A ⟶ B) →
         Γ ⊢ b ∶ A →
-        Γ ⊢ a · b ∶  (_[_/_] {A = A} B b (Z {Γ = Γ}))
+        Γ ⊢ a · b ∶  (B [ b / 0 ])
     -- Nats
     ⊢Nat : 
         Γ ⊢ Nat ∶ Sett
@@ -220,10 +219,12 @@ data _⊢ : Context → Set where
 -}
 
 data _⊢_＝_ where
+    {-
     ＝var :
         (i : Γ ∋ a)  →
-        Γ ⊢ var (∋→ℕ i) ＝ liftindices a i
-
+        Γ ⊢ var (∋→ℕ i) ＝ shiftindices a (suc (∋→ℕ i)) 0
+    -}
+    
     ＝pi : 
         Γ ⊢ A ＝ C → 
         (Γ , A) ⊢ B ＝ D →
@@ -236,12 +237,12 @@ data _⊢_＝_ where
         Γ ⊢ a ＝ c →
         Γ ⊢ b · a ＝ (d · c)
 
-    ＝beta : Γ ⊢ (ƛ∶ A ♭ b) · a ＝ (b [ a / Z {A} {Γ} ])
+    ＝beta : Γ ⊢ (ƛ∶ A ♭ b) · a ＝ (b [ a / 0 ])
 
     ＝lift : 
         (Γ , A) ⊢ b ∶ B →
         Γ ⊢ a ＝ c →
-        Γ ⊢ b [ a / Z {A} {Γ} ] ＝ ( b [ c / Z {A} {Γ} ]) 
+        Γ ⊢ b [ a / 0 ] ＝ ( b [ c / 0 ]) 
     
     -- equiv properties
     ＝refl : Γ ⊢ A ＝ A

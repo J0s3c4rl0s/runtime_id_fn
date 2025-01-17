@@ -1,17 +1,21 @@
-module CalcExamples where
+module QTTCalcExamples where
 
-open import Calc
+open import Data.Unit
+
+open import QTTCalc
 
 -- Id example
 
 idTy : Term 
-idTy = ∶ Sett ⟶ (∶ var 0 ⟶ (var 1))
+idTy = ∶ Sett 𝕢 𝟘 ⟶ (∶ var 0 𝕢 ω ⟶ (var 1))
 
 idDef : Term
-idDef = ƛ∶ Sett ♭ (ƛ∶ var 0 ♭ (var 0))
+idDef = ƛ∶ Sett 𝕢 𝟘 ♭ (ƛ∶ var 0 𝕢 ω ♭ (var 0))
 
-idTyped : [] ⊢ idDef ∶ idTy
-idTyped = ⊢lam (⊢lam (⊢var Z) (⊢var Z)) ⊢Sett
+idTyped : [] ⊢ idDef 𝕢 ω ∶ idTy
+idTyped = ⊢lam (⊢lam (⊢var Z tt) (⊢var Z tt)) ⊢Sett
+
+{-
 
 listLengthTy : Term 
 listLengthTy = ∶ Sett ⟶ (∶ List (var 0) ⟶ Nat)
@@ -141,3 +145,4 @@ listToVecTyped =
                     ⊢Nat)) 
             ＝beta) 
         ⊢List    
+-} 

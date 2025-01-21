@@ -1,4 +1,4 @@
-module QTTCalc where
+module RunIdCalc where
 
 open import Data.Nat using (ℕ; zero; suc; _+_; _≤ᵇ_)
 open import Data.Bool using (if_then_else_)
@@ -9,6 +9,8 @@ open import Data.Product using (_×_; _,_)
 open import Relation.Nullary.Decidable using (True; toWitness)
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl; trans; sym; cong; cong-app; subst)
+open import Calc using () renaming (Term to TTerm; Context to TContext;_⊢_∶_ to _T⊢_T∶_;_⊢_＝_ to _T⊢_T＝_)
+
 
 data PreContext : Set
 data Context : PreContext → Set
@@ -35,12 +37,16 @@ private variable
     cΓ cΓ' cΓ'' : Context Γ
     cΔ cΔ' cΔ'' : Context Δ
     cΘ : Context Θ
-    A B C D P : Term
     σ σ' π π' ρ ρ' ρ'' ρ''' δ : Quantity
+    A B C D P : Term
     a b c d e f g h l m n  : Term
     as cs : Term
     nb cb zb sb : Term
-    
+
+    Aᵣ Bᵣ : Term
+    aᵣ bᵣ : Term
+
+
 
 data Annotation : Term → Quantity → Set where
     _𝕢_ : (A : Term) → (σ : Quantity) → Annotation A σ
@@ -86,6 +92,8 @@ data Term where
     
     -- function stuff
     ƛ∶_♭_ : Annotation A σ → Term → Term
+    -- RuntimeId, any erased args? Forced annotations?
+    ƛr∶_♭_ : Annotation A σ → Term → Term
     _·_ : Term → Term → Term
 
     -- data cons
@@ -114,6 +122,7 @@ data Term where
     List : Term → Term
     Vec : Annotation A σ → Term → Term
     ∶_⟶_ : Annotation A σ → Term → Term -- Pi type
+    r∶_⟶_ : Annotation A σ → Term → Term -- Runtime Pi type
     Sett : Term -- Universe 
 
 
@@ -125,6 +134,7 @@ data Term where
 shiftindices : Term → ℕ → ℕ → Term -- Only do this for free variables, lower and upper bound
 shiftindices (var x) i l = if l ≤ᵇ x then var (x + i) else var x 
 shiftindices (ƛ∶ t 𝕢 σ ♭ t₁) i l = ƛ∶ shiftindices t i l 𝕢 σ ♭ shiftindices t₁ i (suc l)
+shiftindices (ƛr∶ t 𝕢 σ ♭ t₁) i l = (ƛr∶ shiftindices t i l 𝕢 σ ♭ shiftindices t₁ i (suc l))
 shiftindices (t · t₁) i l = shiftindices t i l · shiftindices t₁ i l
 shiftindices z i l = z
 shiftindices (s t) i l = s (shiftindices t i l) 
@@ -140,8 +150,9 @@ shiftindices (elimv t P∶ t₁ l∶ t₂ ty∶ t₃ nb∶ t₄ cb∶ t₅) i l 
     elimv_P∶_l∶_ty∶_nb∶_cb∶_ (shiftindices t i l) (shiftindices t₁ i l) (shiftindices t₂ i l) (shiftindices t₃ i l) (shiftindices t₄ i l) (shiftindices t₅ i l)
 shiftindices Nat i l = Nat
 shiftindices (List t) i l = List (shiftindices t i l)
-shiftindices (Vec (n 𝕢 σ) t₁) i l = Vec (shiftindices n i l 𝕢 σ) (shiftindices t₁ i l)
+shiftindices (Vec (A 𝕢 σ) t₁) i l = Vec (shiftindices A i l 𝕢 σ) (shiftindices t₁ i l)
 shiftindices (∶ t 𝕢 σ ⟶ t₁) i l = ∶ shiftindices t i l 𝕢 σ ⟶ shiftindices t₁ i (suc l)
+shiftindices (r∶ t 𝕢 σ ⟶ t₁) i l = r∶ shiftindices t i l 𝕢 σ ⟶ shiftindices t₁ i (suc l)
 shiftindices Sett i l = Sett
 
 -- There are some hijinks around when substitution is admissible, dont think quants change
@@ -149,8 +160,10 @@ _[_/_]  : Term → Term → ℕ → Term
 var 0 [ a / 0 ] = a
 var b [ a / i ] = var b 
 (ƛ∶ bₜ 𝕢 σ ♭ b) [ a / i ] = ƛ∶ bₜ [ a / i ]  𝕢 σ ♭ (b [ shiftindices a 1 0 / suc i ])
+(ƛr∶ b 𝕢 x ♭ b₁) [ a / i ] = (ƛr∶ b [ a / i ] 𝕢 x ♭ (b₁ [ shiftindices a 1 0 / suc i ]))
 (b · c) [ a / i ] = (b [ a / i ]) · (c [ a / i ])
 (∶ b 𝕢 σ ⟶ c) [ a / i ] = ∶ b [ a / i ] 𝕢 σ ⟶ (c [ shiftindices a 1 0 / suc i ]) 
+(r∶ b 𝕢 σ ⟶ c) [ a / i ] = r∶ b [ a / i ] 𝕢 σ ⟶ (c [ shiftindices a 1 0 / suc i ]) 
 Sett [ a / i ] = Sett
 z [ a / i ] = z
 s b [ a / i ] = s (b [ a / i ]) 
@@ -172,12 +185,25 @@ nilv [ a / i ] = nilv
         cb∶ (cb [ a / i ])
 Nat [ a / i ] = Nat
 List b [ a / i ] = List (b [ a / i ])
-Vec (n 𝕢 σ) b [ a / i ] = Vec ((n [ a / i ]) 𝕢 σ) (b [ a / i ])
+Vec (n 𝕢 σ) b [ a / i ] = Vec (((n [ a / i ])) 𝕢 σ) (b [ a / i ])
 
 data _⊢_＝_ : Context Γ → Term → Term → Set
+data _⊢_∶_ : Context Γ → Annotation A σ → Term → Set
+-- Type erasure into Calc.agda (dependently typed but no erasure)
+data _⊢_⇒ᵣ_ : Context Γ → Term → TTerm → Set
+
+erase : cΓ ⊢ a 𝕢 σ ∶ A → Calc.Term
+
+-- maybe this shit? Maybe already define what target is 
+_⊢_＝₀_ :{Aᵣ Bᵣ : TTerm} → Context Γ → Term → Term → Set
+_⊢_＝₀_ {Aᵣ = Aᵣ} {Bᵣ = Bᵣ} cΓ A B = 
+    cΓ ⊢ A ⇒ᵣ Aᵣ → 
+    cΓ ⊢ B ⇒ᵣ Bᵣ → 
+    {!   !} T⊢ Aᵣ T＝ Bᵣ
+
 
 -- For now it can be an annotation bc quants are only 0 or 1
-data _⊢_∶_ : Context Γ → Annotation A σ → Term → Set where
+data _⊢_∶_ where
     ⊢var :
         (i : cΓ ∋ (A 𝕢 σ)) →
         -- weird hack to do selected zeroing, may be nicer to have pre PreContext
@@ -188,11 +214,28 @@ data _⊢_∶_ : Context Γ → Annotation A σ → Term → Set where
         zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett →
         (zeroC Γ , A 𝕢 𝟘) ⊢ B 𝕢 𝟘 ∶ Sett →
         zeroC Γ ⊢ ∶ A 𝕢 π ⟶ B 𝕢 𝟘 ∶ Sett
+    ⊢rpi : 
+        -- A =>r Ar
+        -- B => Br
+        -- Γr Ar C.= Br 
+        {! zero Γ ⊢ A ⇒ᵣ Aᵣ  !} →
+        -- Not sure if this should be 0 usage for : Sett
+        zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett →
+        (zeroC Γ , A 𝕢 𝟘) ⊢ B 𝕢 𝟘 ∶ Sett →
+        -- needs to be nonzero arg
+        zeroC Γ ⊢ r∶ A 𝕢 ω ⟶ B 𝕢 𝟘 ∶ Sett
     ⊢lam : ∀ {cΓ : Context Γ} →
         -- Are the annotations in cΓ arbitrary? 
         (cΓ , A 𝕢 (π *q σ)) ⊢ b 𝕢 σ ∶ B →
         zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett →
         cΓ ⊢ (ƛ∶ A 𝕢 π ♭ b) 𝕢 σ ∶ (∶ A 𝕢 π ⟶ B)
+    ⊢rlam : ∀ {cΓ : Context Γ} →
+        -- Are the annotations in cΓ arbitrary? 
+        (cΓ , A 𝕢 (π *q σ)) ⊢ b 𝕢 σ ∶ B →
+        {!   !} →
+        zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett →
+        -- needs to be nonzero arg
+        cΓ ⊢ (ƛr∶ A 𝕢 ω ♭ b) 𝕢 σ ∶ (r∶ A 𝕢 ω ⟶ B)
     ⊢app : 
         cΓ ⊢ a 𝕢 σ ∶ (∶ A 𝕢 π ⟶ B) →
         cΓ' ⊢ b 𝕢 selectQ π σ ∶ A →
@@ -237,15 +280,16 @@ data _⊢_∶_ : Context Γ → Annotation A σ → Term → Set where
                 nb∶ nb 
                 cb∶ cb 
             𝕢 σ ∶ (P · l)
+
     -- Vecs
     ⊢Vec : 
-        zeroC Γ ⊢ Vec (n 𝕢 σ) A 𝕢 𝟘 ∶ Sett
+        zeroC Γ ⊢ Vec (z 𝕢 δ) A 𝕢 𝟘 ∶ Sett
     ⊢nilv : 
-        zeroC Γ ⊢ nilv 𝕢 σ ∶ Vec (z 𝕢 π) A
+        zeroC Γ ⊢ nilv 𝕢 σ ∶ Vec (s n 𝕢 δ) A
     ⊢∷v :
         cΓ ⊢ a 𝕢 σ ∶ A →
-        cΓ ⊢ b 𝕢 σ ∶ Vec (n 𝕢 π) A →
-        cΓ ⊢ a ∷v b 𝕢 σ ∶ Vec (s n 𝕢 π) A
+        cΓ ⊢ b 𝕢 σ ∶ Vec (n 𝕢 δ) A →
+        cΓ ⊢ a ∷v b 𝕢 σ ∶ Vec (s n 𝕢 δ) A
     ⊢vecel : {cΓ cΓ' : Context Γ} → 
         cΓ ⊢ b 𝕢 σ ∶ Vec (n 𝕢 δ) A →
         zeroC Γ ⊢ P 𝕢 σ ∶ (∶ Nat 𝕢 π ⟶ (∶ Vec (var 0 𝕢 δ) A  𝕢 π' ⟶ Sett)) →
@@ -269,6 +313,28 @@ data _⊢_∶_ : Context Γ → Annotation A σ → Term → Set where
         cΓ ⊢ a 𝕢 σ ∶ A →
         zeroC Γ ⊢ a 𝕢 𝟘 ∶ A
     
+erase {σ = σ} (⊢var i) = {!   !}
+erase (⊢pi ⊢d ⊢d₁) = {!   !}
+erase (⊢rpi x ⊢d ⊢d₁) = {!   !}
+erase (⊢lam ⊢d ⊢d₁) = {!   !}
+erase (⊢rlam ⊢d x ⊢d₁) = {!   !}
+erase (⊢app ⊢d ⊢d₁) = {!   !}
+erase ⊢Nat = {!   !}
+erase ⊢z = {!   !}
+erase (⊢s ⊢d) = {!   !}
+erase (⊢natel ⊢d ⊢d₁ ⊢d₂ ⊢d₃) = {!   !}
+erase ⊢List = {!   !}
+erase ⊢nill = {!   !}
+erase (⊢∷l ⊢d ⊢d₁) = {!   !}
+erase (⊢listel ⊢d ⊢d₁ ⊢d₂ ⊢d₃) = {!   !}
+erase ⊢Vec = {!   !}
+erase ⊢nilv = {!   !}
+erase (⊢∷v ⊢d ⊢d₁) = {!   !}
+erase (⊢vecel ⊢d ⊢d₁ ⊢d₂ ⊢d₃) = {!   !}
+erase ⊢Sett = {!   !}
+erase (⊢conv ⊢d x) = {!   !}
+erase (⊢TM-𝟘 ⊢d) = {!   !}
+
 -- Do I need to make all judgements be in 𝟘
 data _⊢_＝_ where
     {-   
@@ -336,7 +402,7 @@ data _⊢_＝_ where
                 cb∶ cb 
             ＝ 
             nb
-    ＝listelc :     
+    ＝listelc : 
         cΓ ⊢ cs ＝ (a ∷l as) →
         cΓ ⊢ eliml as P∶ P ty∶ A 
                 nb∶ nb 
@@ -386,7 +452,7 @@ data _⊢_＝_ where
     ＝vec : 
         cΓ ⊢ n ＝ m →
         cΓ ⊢ A ＝ B →
-        cΓ ⊢ Vec (n 𝕢 σ) A ＝ Vec (m 𝕢 σ) B
+        cΓ ⊢ Vec (n  𝕢 σ) A ＝ Vec (m 𝕢 σ) B
     ＝∷v :
         cΓ ⊢ a ＝ c →
         cΓ ⊢ as ＝ cs →
@@ -397,3 +463,18 @@ data _⊢_＝_ where
     ⊢TM＝𝟘 : {cΓ : Context Γ} →
         cΓ ⊢ a ＝ b →
         zeroC Γ ⊢ a ＝ b
+{-
+data _⊢_＝₀_ where
+    -- seems weird
+    ＝₀var : 
+        {!   !} →
+        (i : cΓ ∋ (A 𝕢 σ))  →
+        cΓ ⊢ var (∋→ℕ i) ＝₀ var (∋→ℕ i)
+    ＝₀vectolist : 
+        cΓ ⊢ A ＝₀ B →
+        cΓ ⊢ Vec (n 𝕢 𝟘) A ＝₀ List B
+    
+    -- Not sure this is right
+    ＝₀refl :
+        cΓ ⊢ A ＝₀ A
+-}

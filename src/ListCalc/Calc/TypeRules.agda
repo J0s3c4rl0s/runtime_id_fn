@@ -1,26 +1,10 @@
-module Calc where
+module ListCalc.Calc.TypeRules where
 
-open import Data.Nat using (ℕ; zero; suc; _+_; _≤ᵇ_)
-open import Data.Bool using (if_then_else_)
-open import Relation.Nullary.Decidable using (True; toWitness)
+open import ListCalc.Calc.Syntax
+open import ListCalc.Calc.Utils
 
-data Context : Set
-data Term : Set 
--- data Type : Set
+open import Data.Nat using (ℕ; suc)
 
-
-data Context where
-    [] : Context
-    _,_ : (Γ : Context) → Term → Context
-
-data _∋_ : (Γ : Context) → Term → Set where
-  Z : ∀ {A} {Γ : Context}
-    →  (Γ , A) ∋ A
-
-  S : ∀ {A} {B} {Γ : Context}
-    -- Ensure there is a lookup judgement in submodule
-    → Γ ∋ A
-    →  (Γ , B) ∋ A
 
 private variable 
     Γ : Context
@@ -28,105 +12,6 @@ private variable
     a b c d e f g h l m n  : Term
     as cs : Term
     nb cb zb sb : Term
-
-data Term where
-    var :  ℕ → Term 
-    
-    -- function stuff
-    ƛ∶_♭_ : Term → Term → Term
-    _·_ : Term → Term → Term
-
-    -- data cons
-    ---- Nats
-    z : Term
-    s : Term → Term 
-    -- list 
-    nill : Term 
-    _∷l_ : Term → Term → Term 
-    -- vec
-    nilv : Term 
-    _∷v_ : Term → Term → Term 
-
-    ---- elims 
-    -- Nat
-    elimnat_P∶_zb∶_sb∶_ : Term → Term → Term → Term → Term
-    -- List
-    -- For now annotate parametrized type
-    eliml_P∶_ty∶_nb∶_cb∶_ : (list : Term) → Term → (innerTy : Term) → (nilB : Term) → (∷B : Term) → Term
-    -- vec
-    -- For now annotate length
-    elimv_P∶_l∶_ty∶_nb∶_cb∶_ : (vec : Term) → Term → (length : Term) → (innerTy : Term) → (nilB : Term) → (∷B : Term) → Term
-    
-    -- Types
-    Nat : Term
-    List : Term → Term
-    Vec : Term → Term → Term
-    ∶_⟶_ : Term → Term → Term -- Pi type
-    Sett : Term -- Universe 
-    El : Term → Term
-
-∋→ℕ : Γ ∋ A → ℕ 
-∋→ℕ Z = 0
-∋→ℕ (S i) = suc (∋→ℕ i)
-
-shiftindices : Term → ℕ → ℕ → Term -- Only do this for free variables, lower and upper bound
-shiftindices (var x) i l = if l ≤ᵇ x then var (x + i) else var x 
-shiftindices (ƛ∶ t ♭ t₁) i l = ƛ∶ shiftindices t i l ♭ shiftindices t₁ i (suc l)
-shiftindices (t · t₁) i l = shiftindices t i l · shiftindices t₁ i l
-shiftindices z i l = z
-shiftindices (s t) i l = s (shiftindices t i l) 
-shiftindices nill i l = nill
-shiftindices (t ∷l t₁) i l = shiftindices t i l ∷l shiftindices t₁ i l
-shiftindices nilv i l = nilv
-shiftindices (t ∷v t₁) i l = shiftindices t i l ∷v shiftindices t₁ i l
-shiftindices (elimnat t P∶ t₁ zb∶ t₂ sb∶ t₃) i l = 
-    elimnat_P∶_zb∶_sb∶_ (shiftindices t i l) (shiftindices t₁ i l) (shiftindices t₂ i l) (shiftindices t₃ i l)
-shiftindices (eliml t P∶ t₁ ty∶ t₂ nb∶ t₃ cb∶ t₄) i l = 
-    eliml_P∶_ty∶_nb∶_cb∶_ (shiftindices t i l) (shiftindices t₁ i l) (shiftindices t₂ i l) (shiftindices t₃ i l) (shiftindices t₄ i l)
-shiftindices (elimv t P∶ t₁ l∶ t₂ ty∶ t₃ nb∶ t₄ cb∶ t₅) i l = 
-    elimv_P∶_l∶_ty∶_nb∶_cb∶_ (shiftindices t i l) (shiftindices t₁ i l) (shiftindices t₂ i l) (shiftindices t₃ i l) (shiftindices t₄ i l) (shiftindices t₅ i l)
-shiftindices Nat i l = Nat
-shiftindices (List t) i l = List (shiftindices t i l)
-shiftindices (Vec t t₁) i l = Vec (shiftindices t i l) (shiftindices t₁ i l)
-shiftindices (∶ t ⟶ t₁) i l = ∶ shiftindices t i l ⟶ shiftindices t₁ i (suc l)
-shiftindices Sett i l = Sett
-shiftindices (El t) i l = El (shiftindices t i l)
-
--- Consider parallel subtitutions to deal with free variable capture
-
--- Could reflection make this more efficient?
-_[_/_]  : Term → Term → ℕ → Term
-var 0 [ a / 0 ] = a
-var b [ a / i ] = var b 
-(ƛ∶ bₜ ♭ b) [ a / i ] = ƛ∶ bₜ [ a / i ] ♭ (b [ shiftindices a 1 0 / suc i ])
-(b · c) [ a / i ] = (b [ a / i ]) · (c [ a / i ])
-(∶ b ⟶ c) [ a / i ] = ∶ bs ⟶ (c [ shiftindices a 1 0 / suc i ]) 
-    where 
-        bs = b [ a / i ]
-Sett [ a / i ] = Sett
-El b [ a / i ] = El (b [ a / i ])
-z [ a / i ] = z
-s b [ a / i ] = s (b [ a / i ]) 
-nill [ a / i ] = nill
-(h ∷l t) [ a / i ] = (h [ a / i ]) ∷l (t [ a / i ])
-nilv [ a / i ] = nilv
-(h ∷v t) [ a / i ] = (h [ a / i ]) ∷v (t [ a / i ])
-(elimnat b P∶ P zb∶ zb sb∶ sb) [ a / i ] = 
-    elimnat b [ a / i ] P∶ P [ a / i ] 
-        zb∶ zb [ a / i ] 
-        sb∶ (sb [ a / suc i ])
-(eliml b P∶ P ty∶ bty nb∶ nb cb∶ cb) [ a / i ] = 
-    eliml b [ a / i ] P∶ P [ a / i ] ty∶ bty [ a / i ] 
-        nb∶ nb [ a / i ] 
-        cb∶ (cb [ a / i ])
-(elimv b P∶ P l∶ n ty∶ ty nb∶ nb cb∶ cb) [ a / i ] = 
-    elimv b [ a / i ] P∶ P [ a / i ] l∶ n [ a / i ] ty∶ ty [ a / i ] 
-        nb∶ nb [ a / i ] 
-        cb∶ (cb [ a / i ])
-Nat [ a / i ] = Nat
-List b [ a / i ] = List (b [ a / i ])
-Vec n b [ a / i ] = Vec (n [ a / i ]) (b [ a / i ])
-
 
 data _⊢_＝_ : Context → Term → Term → Set
 
@@ -168,6 +53,7 @@ data _⊢_∶_ : Context → Term → Term → Set where
 
     -- Lists
     ⊢List : 
+        Γ ⊢ A ∶ Sett →
         Γ ⊢ List A ∶ Sett
     ⊢nill :
         Γ ⊢ nill ∶ List A -- may need to add annotations later
@@ -187,8 +73,11 @@ data _⊢_∶_ : Context → Term → Term → Set where
 
     -- Vecs
     ⊢Vec : 
+        Γ ⊢ A ∶ Sett →
+        Γ ⊢ A ∶ Sett →
         Γ ⊢ Vec n A ∶ Sett
     ⊢nilv : 
+        Γ ⊢ A ∶ Sett → 
         Γ ⊢ nilv ∶ Vec z A
     ⊢∷v :
         Γ ⊢ a ∶ A →

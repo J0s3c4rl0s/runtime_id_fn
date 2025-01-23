@@ -1,6 +1,7 @@
-module CalcExamples where
+module ListCalc.Calc.Examples where
 
-open import Calc
+open import ListCalc.Calc.Syntax
+open import ListCalc.Calc.TypeRules
 
 -- Id example
 

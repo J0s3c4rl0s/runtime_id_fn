@@ -84,8 +84,8 @@ data _⊢_∶_ : Context Γ → Annotation A σ → Term → Set where
                 cb∶ cb 
             𝕢 σ ∶ (P · l)
     -- Vecs
-    ⊢Vec : 
-        zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁  →
+    ⊢Vec : {cΓ : Context Γ} →
+        cΓ ⊢ n 𝕢 σ ∶ Nat  →
         zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁  →
         zeroC Γ ⊢ Vec (n 𝕢 σ) A 𝕢 𝟘 ∶ Sett 𝓁 
     ⊢nilv :  
@@ -109,9 +109,25 @@ data _⊢_∶_ : Context Γ → Annotation A σ → Term → Set where
                 cb∶ cb 
             𝕢 σ ∶ ((P · n) · b)
     
-    -- Pretty sure this breaks soundness
     ⊢Sett : 
         zeroC Γ ⊢ Sett 𝓁 𝕢 𝟘 ∶ Sett (suc 𝓁) 
+    {-
+    ---- Prop equility
+    -- bit superfluous/code duplication could make a = a and rely directly on ⊢conv
+    ⊢≡ :
+        zeroC Γ ⊢ a 𝕢 𝟘 ∶ A →
+        zeroC Γ ⊢ b 𝕢 𝟘 ∶ A →
+        zeroC Γ ⊢ (a ≡ b) 𝕢 𝟘 ∶ Sett 𝓁 
+    ⊢refl : {cΓ : Context Γ} →
+        zeroC Γ ⊢ a ＝ b →
+        zeroC Γ ⊢ (a ≡ b) 𝕢 𝟘 ∶ Sett 𝓁 →
+        cΓ ⊢ refl 𝕢 σ ∶ (a ≡ b)
+    ⊢contra :
+        {!   !} →
+        {!   !} →
+        {!   !} ⊢ {!   !} ∶ {!   !} 
+    -}
+    
     ⊢conv : {cΓ : Context Γ} → 
         cΓ ⊢ a 𝕢 σ ∶ A →
         zeroC Γ ⊢ A ＝ B →
@@ -121,7 +137,8 @@ data _⊢_∶_ : Context Γ → Annotation A σ → Term → Set where
     ⊢TM-𝟘 : {cΓ : Context Γ} →
         cΓ ⊢ a 𝕢 σ ∶ A →
         zeroC Γ ⊢ a 𝕢 𝟘 ∶ A
-    
+    -- Maybe add TM-EQ-Zero?
+
 -- Do I need to make all judgements be in 𝟘
 data _⊢_＝_ where
 
@@ -175,7 +192,8 @@ data _⊢_＝_ where
                 zb∶ zb 
                 sb∶ sb 
             ＝ 
-            ((sb · n) · a)
+            ((sb [ n / 1 ]) [ a / 0 ])
+            -- ((sb · n) · a)
     -- list
     ＝listeln :
         cΓ ⊢ cs ＝ nill →
@@ -246,6 +264,7 @@ data _⊢_＝_ where
 
     ---- QTT stuff
     -- Unsure if I am interpreting this right
+    -- Might need to make this prop eq
     ⊢TM＝𝟘 : {cΓ : Context Γ} →
         cΓ ⊢ a ＝ b →
         zeroC Γ ⊢ a ＝ b

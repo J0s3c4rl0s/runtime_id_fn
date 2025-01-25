@@ -65,6 +65,8 @@ data Term where
     -- vec
     nilv : Term 
     _∷v_𝕟_ : Term → Term → Term → Term 
+    -- Id 
+    -- refl : Term
 
     ---- elims 
     -- Nat
@@ -75,10 +77,13 @@ data Term where
     -- vec
     -- For now annotate length
     elimv_P∶_nb∶_cb∶_ : (vec : Term) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
-    
+    -- Id
+    -- subst_usingg_ : Term → Term → Term
+
     -- Types
     Nat : Term
     List : Term → Term
     Vec : Annotation A σ → Term → Term
     ∶_⟶_ : Annotation A σ → Term → Term -- Pi type
+    -- _≡_ : Term → Term → Term 
     Sett : ℕ → Term -- Universe 

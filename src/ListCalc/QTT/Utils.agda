@@ -49,7 +49,7 @@ shiftindices nill i l = nill
 shiftindices (t ∷l t₁) i l = shiftindices t i l ∷l shiftindices t₁ i l
 shiftindices nilv i l = nilv
 shiftindices (t ∷v t₁ 𝕟 n) i l = (shiftindices t i l) ∷v (shiftindices t₁ i l) 𝕟 shiftindices n i l
--- !! Update to deal with context
+-- shiftindices refl i l = refl
 shiftindices (elimnat t P∶ t₁ zb∶ t₂ sb∶ t₃) i l = 
     elimnat (shiftindices t i l) P∶ (shiftindices t₁ i l) 
             zb∶ (shiftindices t₂ i l) 
@@ -63,10 +63,12 @@ shiftindices (elimv t P∶ t₁ nb∶ t₄ cb∶ t₅) i l =
         (shiftindices t i l) (shiftindices t₁ i l) 
             (shiftindices t₄ i l) 
             (shiftindices t₅ i (l + 4))
+-- shiftindices (subst a usingg eq) i l = subst {!   !} usingg {!   !}
 shiftindices Nat i l = Nat
 shiftindices (List t) i l = List (shiftindices t i l)
 shiftindices (Vec (n 𝕢 σ) t₁) i l = Vec (shiftindices n i l 𝕢 σ) (shiftindices t₁ i l)
 shiftindices (∶ t 𝕢 σ ⟶ t₁) i l = ∶ shiftindices t i l 𝕢 σ ⟶ shiftindices t₁ i (suc l)
+-- shiftindices (a ≡ b) i l = shiftindices a i l ≡ shiftindices b i l
 shiftindices (Sett level) i l = Sett level
 
 -- There are some hijinks around when substitution is admissible, dont think quants change
@@ -76,13 +78,13 @@ var b [ a / i ] = var b
 (ƛ∶ bₜ 𝕢 σ ♭ b) [ a / i ] = ƛ∶ bₜ [ a / i ]  𝕢 σ ♭ (b [ shiftindices a 1 0 / suc i ])
 (b · c) [ a / i ] = (b [ a / i ]) · (c [ a / i ])
 (∶ b 𝕢 σ ⟶ c) [ a / i ] = ∶ b [ a / i ] 𝕢 σ ⟶ (c [ shiftindices a 1 0 / suc i ]) 
-Sett level [ a / i ] = Sett level
 z [ a / i ] = z
 s b [ a / i ] = s (b [ a / i ]) 
 nill [ a / i ] = nill
 (h ∷l t) [ a / i ] = (h [ a / i ]) ∷l (t [ a / i ])
 nilv [ a / i ] = nilv
 (h ∷v t 𝕟 n) [ a / i ] = (h [ a / i ]) ∷v (t [ a / i ]) 𝕟 (n [ a / i ])
+-- refl [ a / i ] = refl
 (elimnat b P∶ P zb∶ zb sb∶ sb) [ a / i ] = 
     elimnat b [ a / i ] P∶ P [ a / i ] 
         zb∶ zb [ a / i ] 
@@ -98,3 +100,5 @@ nilv [ a / i ] = nilv
 Nat [ a / i ] = Nat
 List b [ a / i ] = List (b [ a / i ])
 Vec (n 𝕢 σ) b [ a / i ] = Vec ((n [ a / i ]) 𝕢 σ) (b [ a / i ])
+-- (b ≡ c) [ a / i ] = (b [ a / i ]) ≡ (c [ a / i ]) 
+Sett level [ a / i ] = Sett level

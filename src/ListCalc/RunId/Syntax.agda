@@ -76,11 +76,9 @@ data Term where
     -- Nat
     elimnat_P∶_zb∶_sb∶_ : Term → Term → Term → Term → Term
     -- List
-    -- For now annotate parametrized type
-    eliml_P∶_ty∶_nb∶_cb∶_ : (list : Term) → Term → (innerTy : Term) → (nilB : Term) → (∷B : Term) → Term
+    eliml_P∶_nb∶_cb∶_ : (list : Term) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
     -- vec
-    -- For now annotate length
-    elimv_P∶_l∶_ty∶_nb∶_cb∶_ : (vec : Term) → Term → (length : Term) → (innerTy : Term) → (nilB : Term) → (∷B : Term) → Term
+    elimv_P∶_nb∶_cb∶_ : (vec : Term) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
     
     -- Types
     Nat : Term
@@ -88,4 +86,4 @@ data Term where
     Vec : Annotation A σ → Term → Term
     ∶_⟶_ : Annotation A σ → Term → Term -- Pi type
     r∶_⟶_ : Annotation A σ → Term → Term -- Runtime Pi type
-    Sett : Term -- Universe 
+    Sett : ℕ → Term -- Universe 

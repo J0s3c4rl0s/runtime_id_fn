@@ -24,6 +24,8 @@ data Type where
     -- Types
     Nat : Type
     List : Type → Type
+    -- stupid lists
+    Vec : Type → Type
     _⟶_ : Type → Type → Type
     
 data Term where
@@ -40,9 +42,14 @@ data Term where
     -- list 
     nill : Term 
     _∷l_ : Term → Term → Term 
+    -- vec
+    nilv : Term 
+    _∷v_𝕟_ : Term → Term → Term → Term 
     
     ---- elims 
     -- Nat
     elimnat_zb∶_sb∶_ : Term → Term → Term → Term
     -- List
     eliml_nb∶_cb∶_ : (list : Term) → (nilB : Term) → (∷B : Term) → Term
+    -- vec
+    elimv_nb∶_cb∶_ : (vec : Term) → (nilB : Term) → (∷B : Term) → Term

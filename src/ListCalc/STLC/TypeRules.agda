@@ -55,3 +55,22 @@ data _⊢_∶_ : Context → Term → Type → Set where
                 nb∶ nb 
                 cb∶ cb 
             ∶ P 
+    -- Vecs
+    ⊢nilv :  
+        Γ ⊢ nilv ∶ Vec A
+    ⊢∷v :
+        Γ ⊢ a ∶ A →
+        Γ ⊢ n ∶ Nat →
+        Γ ⊢ b ∶ Vec A →
+        Γ ⊢ a ∷v b 𝕟 n ∶ Vec A
+    ⊢vecel : 
+        Γ ⊢ b ∶ Vec A →
+        -- should pi = delta?
+        -- is it really 0 usage mode?
+        Γ ⊢ nb ∶ P →
+        -- assuming that the constructors are not heterogenous, I think they might need to be rho
+        ((((Γ , Nat) , A) , Vec A) , P) ⊢ cb ∶ P →
+        Γ ⊢ elimv b 
+                nb∶ nb 
+                cb∶ cb 
+            ∶ P

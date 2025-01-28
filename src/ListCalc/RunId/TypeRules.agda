@@ -9,12 +9,15 @@ open T using ()
         _·_ to _T·_;
         _∷l_ to _T∷l_;
         _∷v_𝕟_ to _T∷v_T𝕟_;
+        _,_ to _T,_;
         _⊢_∶_ to _T⊢_T∶_
     )
 
+open import Data.Product using (_×_) renaming (_,_ to _,'_)
 open import Data.Nat using (ℕ; zero; suc; _+_; _≤ᵇ_)
 open import Data.Bool using (if_then_else_)
 open import Data.Maybe
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 private variable
     Γ Δ Θ : PreContext
@@ -39,8 +42,10 @@ data _⊢_∶_ : Context Γ → Annotation A σ → Term → Set
 data _⊢_∶_ where
     ⊢var :
         (i : cΓ ∋ (A 𝕢 σ)) →
-        -- weird hack to do selected zeroing, may be nicer to have pre PreContext
-        cΓ ⊢ var (∋→ℕ i) 𝕢 σ ∶ shiftindices A (suc (∋→ℕ i)) 0
+        -- Avoiding green slime in the easiest way possible
+        {num : ℕ} →
+        {eq : (∋→ℕ i) ≡ num} →
+        cΓ ⊢ var num 𝕢 σ ∶ shiftindices A (suc (∋→ℕ i)) 0
     -- functions
     ⊢pi :
         -- Not sure if this should be 0 usage for : Sett ? 
@@ -53,13 +58,14 @@ data _⊢_∶_ where
         -- A =>r Ar
         -- B => Br
         -- Γr Ar C.= Br 
-        {!   !} →
+        {!   !} ≡ {!   !} →
+        {!   !} ≡ {!   !} →
         -- Not sure if this should be 0 usage for : Sett ? 
         zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁  →
         (zeroC Γ , A 𝕢 𝟘) ⊢ B 𝕢 𝟘 ∶ Sett 𝓁  →
         -- needs to be nonzero arg
         -- same universe level?
-        zeroC Γ ⊢ r∶ A 𝕢 π ⟶ B 𝕢 𝟘 ∶ Sett 𝓁 
+        zeroC Γ ⊢ r∶ A 𝕢 ω ⟶ B 𝕢 𝟘 ∶ Sett 𝓁 
     ⊢lam : ∀ {cΓ : Context Γ} →
         -- Are the annotations in cΓ arbitrary? 
         (cΓ , A 𝕢 (π *q σ)) ⊢ b 𝕢 σ ∶ B →
@@ -71,12 +77,13 @@ data _⊢_∶_ where
         (cΓ , A 𝕢 (π *q σ)) ⊢ b 𝕢 σ ∶ B →
         zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁  →
         cΓ ⊢ (ƛr∶ A 𝕢 π ♭ b) 𝕢 σ ∶ (r∶ A 𝕢 π ⟶ B)
-    ⊢app : 
+    ⊢app : {cΓ cΓ' cΓ'' : Context Γ} → 
         cΓ ⊢ a 𝕢 σ ∶ (∶ A 𝕢 π ⟶ B) →
         cΓ' ⊢ b 𝕢 selectQ π σ ∶ A →
         -- Need something to limit substitution according to atkey 
-        -- addition in bottom sounds potentially annoying
-        ( cΓ +c (π *c cΓ') ) ⊢ a · b 𝕢 σ ∶  (B [ b / 0 ])
+        -- avoid green slime with eq
+        {eq : cΓ'' ≡ (cΓ +c (π *c cΓ'))} →
+        cΓ'' ⊢ a · b 𝕢 σ ∶  (B [ b / 0 ])
     -- Nats
     ⊢Nat : 
         zeroC Γ ⊢ Nat 𝕢 𝟘 ∶ Sett 𝓁 
@@ -290,11 +297,35 @@ data _⊢_＝_ where
         zeroC Γ ⊢ a ＝ b
 
 compileTy : zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁 → Maybe T.Type
-compileTy {Γ} {A = var x} d = {! d !}
+compileTy {A = Nat} d = just T.Nat
+compileTy {A = List A} (⊢List dA) = do 
+    Aᵣ ← compileTy dA
+    just (T.List Aᵣ)
+compileTy {A = Vec (_ 𝕢 𝟘) A} (⊢Vec _ dA) = do 
+    Aᵣ ← compileTy dA
+    just (T.List Aᵣ) 
+compileTy {A = Vec (_ 𝕢 ω) A} (⊢Vec dn dA) = do 
+    Aᵣ ← compileTy dA
+    just (T.Vec Aᵣ)
+-- I sense issues here with a lack of conversion
+compileTy {A = ∶ A 𝕢 𝟘 ⟶ B} (⊢pi dA dB) = do 
+    Bᵣ ← compileTy dB
+    just (Bᵣ)
+compileTy {A = ∶ A 𝕢 ω ⟶ B} (⊢pi dA dB) = do 
+    Aᵣ ← compileTy dA
+    Bᵣ ← compileTy dB
+    just (Aᵣ T⟶ Bᵣ)
+-- Run id compiled into Id fun? Or just into function?
+compileTy {A = r∶ A 𝕢 ω ⟶ B} d = {!   !}
+compileTy {A = Sett x} d = nothing
+-- Avoid all conversion/normalization needed for now
+compileTy d = nothing
+{-
+-- Can I avoid dealing with vars?
+compileTy {Γ} {A = var x} d = {!   !}
 compileTy {A = ƛ∶ A ♭ b} (⊢conv d x) = {! x  !}
 compileTy {A = ƛ∶ A ♭ b} (⊢TM-𝟘 d) = {!   !}
 compileTy {A = ƛr∶ x ♭ A} d = {!   !}
--- this guy has to eval lambda to create type right?
 compileTy {A = A · A₁} d = {! d  !}
 compileTy {A = z} d = {!   !}
 compileTy {A = s A} d = {!   !}
@@ -305,55 +336,155 @@ compileTy {A = A ∷v A₁ 𝕟 A₂} d = {!   !}
 compileTy {A = elimnat A P∶ A₁ zb∶ A₂ sb∶ A₃} d = {!   !}
 compileTy {A = eliml A P∶ A₁ nb∶ A₂ cb∶ A₃} d = {!   !}
 compileTy {A = elimv A P∶ A₁ nb∶ A₂ cb∶ A₃} d = {!   !}
-compileTy {A = Nat} d = just T.Nat
-compileTy {A = List A} (⊢List dA) = do 
-    Aᵣ ← compileTy dA
-    just (T.List Aᵣ)
 compileTy {A = List A} (⊢conv d x) = {!   !}
 compileTy {A = List A} (⊢TM-𝟘 d) = {!   !}
-compileTy {A = Vec x A} d = {!   !}
-compileTy {A = ∶ x ⟶ A} d = {!   !}
-compileTy {A = r∶ x ⟶ A} d = {!   !}
-compileTy {A = Sett x} d = {!   !}
+compileTy {A = Vec (_ 𝕢 𝟘) A} (⊢conv d x) = {!   !}
+compileTy {A = Vec (_ 𝕢 𝟘) A} (⊢TM-𝟘 d) = {!   !}
+compileTy {A = Vec (_ 𝕢 ω) A} (⊢conv d x) = {!   !}
+compileTy {A = Vec (_ 𝕢 ω) A} (⊢TM-𝟘 d) = {!   !}
+compileTy {A = ∶ A 𝕢 ω ⟶ B} (⊢conv d x) = {!   !}
+compileTy {A = ∶ A 𝕢 ω ⟶ B} (⊢TM-𝟘 d) = {!   !}
+compileTy {A = r∶ A 𝕢 ω ⟶ B} (⊢conv d x) = {!   !}
+compileTy {A = r∶ A 𝕢 ω ⟶ B} (⊢TM-𝟘 d) = {!   !}
+compileTy {A = r∶ A 𝕢 𝟘 ⟶ B} (⊢conv d x) = {!   !}
+compileTy {A = r∶ A 𝕢 𝟘 ⟶ B} (⊢TM-𝟘 d) = {!   !}
+compileTy {A = ∶ A 𝕢 𝟘 ⟶ B} (⊢conv d x) = {!   !}
+compileTy {A = ∶ A 𝕢 𝟘 ⟶ B} (⊢TM-𝟘 d) = {!   !}
+-}
 
-compileTerm : Term → Maybe T.Term
--- Need context for this no? 
-compileTerm (var x) = {!   !}
--- Do I even need to check A?
-compileTerm (ƛ∶ A 𝕢 𝟘 ♭ b) = {!   !}
-compileTerm (ƛ∶ A 𝕢 ω ♭ b) = do 
-    Aᵣ ← {!   !}
-    bᵣ ← compileTerm b
-    just (T.ƛ bᵣ)
-compileTerm (ƛr∶ x ♭ a) = {!   !}
-compileTerm (f · a) = do 
-    fᵣ ← compileTerm f 
-    aᵣ ← compileTerm a
+compileTys : Term → Maybe T.Type
+
+-- Kind of annoying because I need to exclude invalid contexts
+compileTes : Context Γ → Term → Maybe T.Term
+
+compileTys Nat = just T.Nat
+compileTys (List A) = do 
+    Aᵣ ← compileTys A
+    just (T.List Aᵣ) 
+compileTys (Vec (n 𝕢 𝟘) A) = do 
+    Aᵣ ← compileTys A
+    just (T.List Aᵣ)
+-- Should I only compile if valid n?
+compileTys (Vec (n 𝕢 ω) A) = do 
+    Aᵣ ← compileTys A
+    just (T.Vec Aᵣ)
+compileTys (∶ A 𝕢 𝟘 ⟶ B) = do 
+    Bᵣ ← compileTys B
+    just Bᵣ
+compileTys (∶ A 𝕢 ω ⟶ B) = do 
+    Aᵣ ← compileTys A
+    Bᵣ ← compileTys B
+    just (Aᵣ T⟶ Bᵣ)
+-- Can a RunId function be 0 use? I think not right?
+compileTys (r∶ A 𝕢 𝟘 ⟶ B) = nothing
+-- Same compilation as for regular functions or not?
+compileTys (r∶ A 𝕢 ω ⟶ B) = do 
+    Aᵣ ← compileTys A
+    Bᵣ ← compileTys B
+    just (Aᵣ T⟶ Bᵣ)
+-- Exclude sett?
+compileTys (Sett x) = nothing
+-- Dont normalize yet
+compileTys A = nothing
+
+
+-- Annoying to compile this without the typing derivation, maybe a data type of mapping old indices to new?
+compileTes cΓ (var x) = {!   !}
+compileTes cΓ (ƛ∶ x ♭ b) = {!   !}
+compileTes cΓ (ƛr∶ x ♭ b) = {!   !}
+compileTes cΓ (f · a) = do
+    -- Which context... same one? depends if f is 0 or not right?
+    fᵣ ← compileTes {!   !} f
+    aᵣ ← compileTes {!   !} a
     just (fᵣ T· aᵣ)
-compileTerm z = just T.z
-compileTerm (s a) = do 
-    aᵣ ← compileTerm a
-    just (T.s aᵣ)
-compileTerm nill = just T.nill
-compileTerm (a ∷l as) = do 
-    aᵣ ← compileTerm a
-    asᵣ ← compileTerm as
-    just (aᵣ T∷l asᵣ)
-compileTerm nilv = just T.nilv
-compileTerm (a ∷v as 𝕟 n) = do 
-    aᵣ ← compileTerm a
-    asᵣ ← compileTerm as
-    nᵣ ← compileTerm n
-    just (aᵣ T∷v asᵣ T𝕟 nᵣ)
-compileTerm (elimnat n P∶ a₁ zb∶ zb sb∶ sb) = {!    !}
-compileTerm (eliml a P∶ a₁ nb∶ a₂ cb∶ a₃) = {!   !}
-compileTerm (elimv a P∶ a₁ nb∶ a₂ cb∶ a₃) = {!   !}
-compileTerm Nat = nothing
-compileTerm (List a) = nothing
-compileTerm (Vec x a) = nothing
-compileTerm (∶ x ⟶ a) = nothing
-compileTerm (r∶ x ⟶ a) = nothing
-compileTerm (Sett x) = nothing  
+compileTes cΓ z = just T.z
+compileTes cΓ (s a) = do 
+    aᵣ ← compileTes cΓ a 
+    just aᵣ
+compileTes cΓ nill = {!   !}
+compileTes cΓ (a ∷l a₁) = {!   !}
+compileTes cΓ nilv = {!   !}
+compileTes cΓ (a ∷v a₁ 𝕟 a₂) = {!   !}
+compileTes cΓ (elimnat a P∶ a₁ zb∶ a₂ sb∶ a₃) = {!   !}
+compileTes cΓ (eliml a P∶ a₁ nb∶ a₂ cb∶ a₃) = {!   !}
+compileTes cΓ (elimv a P∶ a₁ nb∶ a₂ cb∶ a₃) = {!   !}
+-- No types in Term position
+compileTes cΓ Ty = nothing
+
+-- Can make contexts correct by construction....
+-- Then I can make use of the derivation here as well and know that terms are well typed...
+-- Honestly will be faster to not deal with that though 
+compileContextS : Context Γ → Maybe T.Context
+compileContextS [] = just T.[]
+compileContextS (cΓ , A 𝕢 𝟘) = compileContextS cΓ
+compileContextS (cΓ , A 𝕢 ω) = do 
+    Γᵣ ← compileContextS cΓ
+    -- Might want to pass Γᵣ in future when smarter
+    Aᵣ ← compileTys A
+    just (Γᵣ T, Aᵣ)
+
+-- What if one function with Maybe (Context x (Either Term or Type))
+-- Either context x term, or a relation that says term is well scoped?
+compileTerm : cΓ ⊢ a 𝕢 ω ∶ A → Maybe (T.Context × T.Term)
+compileTerm {a = var x} (⊢var i) = just ({!   !} ,' {!   !}) 
+-- can I be certain this is correct Γᵣ? Should get it from d
+compileTerm {a = ƛ∶ A 𝕢 𝟘 ♭ b} (⊢lam db dA) = do 
+    -- uncertain about this destructing
+    (Γᵣ T, Aᵣ) ,' bᵣ ← compileTerm db 
+    just (Γᵣ ,' bᵣ)
+-- how do I get context here vs with 0 case?
+compileTerm {a = ƛ∶ A 𝕢 ω ♭ b} (⊢lam db dA) = do 
+    Aᵣ ← compileTy dA
+    -- Not sure if this enforces what Aᵣ is supposed to be
+    (Γᵣ T, Aᵣ) ,' bᵣ ← compileTerm db
+    just (Γᵣ ,' T.ƛ bᵣ)
+compileTerm {a = ƛr∶ x ♭ a} d = {!   !}
+compileTerm {a = f · a} (⊢app {π = 𝟘} df da {eq = refl}) = {!   !}
+compileTerm {a = f · a} (⊢app {π = ω} df da {eq = refl}) = do 
+    Γᵣf ,' fᵣ ← compileTerm df
+    Γᵣa ,' aᵣ ← compileTerm da
+    -- Context should not matter, they have same PreContext, should I check?
+    just (Γᵣf ,' (fᵣ T· aᵣ))  
+-- Will context be emptied here?
+compileTerm {a = z} (⊢z {Γ = Γ}) = just ({!   !} ,' T.z)
+compileTerm {a = s a} (⊢s da) = do 
+    (Γᵣ ,' aᵣ) ← compileTerm da
+    just (Γᵣ ,' aᵣ)
+compileTerm {a = nill} (⊢nill {Γ = Γ}) = just ({!   !} ,' T.nill)
+compileTerm {a = a ∷l as} (⊢∷l da das) = do
+    (Γᵣ ,' aᵣ) ← compileTerm da
+    -- Again should be same, should I check?
+    (Γᵣ ,' asᵣ) ← compileTerm das
+    just (Γᵣ ,' (aᵣ T∷l asᵣ))
+compileTerm {a = nilv} (⊢nilv {Γ = Γ} d) = just ({!   !} ,' T.nilv)
+compileTerm {a = a ∷v as 𝕟 n} (⊢∷v {π = 𝟘} da dn das) = do 
+    (Γᵣ ,' aᵣ) ← compileTerm da 
+    -- Check Γᵣ?
+    (Γᵣ ,' asᵣ) ← compileTerm das
+    -- check n?
+    just (Γᵣ ,' (aᵣ T∷l asᵣ))
+compileTerm {a = a ∷v as 𝕟 n} (⊢∷v {π = ω} da das dn) = {!   !}
+compileTerm {a = elimnat a P∶ a₁ zb∶ a₂ sb∶ a₃} d = {!   !}
+compileTerm {a = eliml a P∶ a₁ nb∶ a₂ cb∶ a₃} d = {!   !}
+compileTerm {a = elimv a P∶ a₁ nb∶ a₂ cb∶ a₃} d = {!   !}
+-- No conversion for terms
+compileTerm {a = var x} (⊢conv d x₁) = {!   !}
+compileTerm {a = ƛ∶ A 𝕢 ω ♭ b} (⊢conv d x) = {!   !}
+compileTerm {a = ƛ∶ A 𝕢 𝟘 ♭ b} (⊢conv d x) = {!   !}
+compileTerm {a = f · a} (⊢conv d x) = {!   !} 
+compileTerm {a = z} (⊢conv d x) = {!   !}
+compileTerm {a = s a} (⊢conv d x) = {!   !}
+compileTerm {a = nill} (⊢conv d x) = {!   !}
+compileTerm {a = a ∷l as} (⊢conv d x) = {!   !}
+compileTerm {a = nilv} (⊢conv d x) = {!   !}
+compileTerm {a = a ∷v a₁ 𝕟 a₂} (⊢conv d x) = {!   !}
+-- No types in terms
+compileTerm {a = Nat} d = {!   !}
+compileTerm {a = List a} d = {!   !}
+compileTerm {a = Vec x a} d = {!   !}
+compileTerm {a = ∶ x ⟶ a} d = {!   !}
+compileTerm {a = r∶ x ⟶ a} d = {!   !}
+compileTerm {a = Sett x} d = {!   !}
 
 
 compileProgram : {cΓ : Context Γ} → 
@@ -414,12 +545,12 @@ data _⇒c_ : zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁 → T.Type → Set where
     ⇒cTM : {cΓ : Context Γ}
         {da : cΓ ⊢ a 𝕢 σ ∶ A} →
         {! da  !} ⇒c {!   !} →
-        ⊢TM-𝟘 {!   !} ⇒c {!   !}
+        ⊢TM-𝟘 {!   !} ⇒c {!   !} 
     
 
 -- Does this have to be nonzero?
 data _⇒_ : cΓ ⊢ a 𝕢 ω ∶ A → Γᵣ T⊢ aᵣ T∶ Aᵣ → Set where
-    ⇒var : ∀ {j} →
+    ⇒var : ∀ {j} →  
         (v :  cΓ ⊢ var j  𝕢 ω ∶ A) →
         {!   !} →         
         {!   !} ⇒ {!   !}   
@@ -431,5 +562,5 @@ data _⇒_ : cΓ ⊢ a 𝕢 ω ∶ A → Γᵣ T⊢ aᵣ T∶ Aᵣ → Set where
         {db : (cΓ , A  𝕢 {!   !} ) ⊢ b 𝕢 ω ∶ B} →
         dB ⇒c Bᵣ →
         {dbᵣ : {!   !} T⊢ bᵣ T∶ {!   !}} →
-        db ⇒ dbᵣ →
-        ⊢lam db dA ⇒ T.⊢lam dbᵣ
+        db ⇒ dbᵣ →                
+        ⊢lam db dA ⇒ T.⊢lam dbᵣ   

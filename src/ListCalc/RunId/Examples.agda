@@ -98,6 +98,7 @@ vecLengthDef {n} =
 listToVecTy : Term 
 listToVecTy = ∶ List Nat 𝕢 ω ⟶ Vec (((listLengthDef · Nat) · var 0) 𝕢 𝟘 ) Nat
 
+
 listToVecDef : Term
 listToVecDef = 
     ƛ∶ List Nat 𝕢 ω ♭ 

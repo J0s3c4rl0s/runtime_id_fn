@@ -32,7 +32,7 @@ data Term where
     var :  ℕ → Term 
     
     -- function stuff
-    ƛ_ : Term → Term
+    ƛ : Term → Term
     _·_ : Term → Term → Term
 
     -- data cons

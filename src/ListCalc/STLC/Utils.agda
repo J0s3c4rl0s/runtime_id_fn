@@ -7,7 +7,7 @@ open import Data.Bool using (if_then_else_)
 
 shiftindices : Term → ℕ → ℕ → Term -- Only do this for free variables, lower and upper bound
 shiftindices (var x) i l = if l ≤ᵇ x then var (x + i) else var x 
-shiftindices (ƛ t₁) i l = ƛ shiftindices t₁ i (suc l)
+shiftindices (ƛ t₁) i l = ƛ (shiftindices t₁ i (suc l))
 shiftindices (t · t₁) i l = shiftindices t i l · shiftindices t₁ i l
 shiftindices z i l = z
 shiftindices (s t) i l = s (shiftindices t i l) 

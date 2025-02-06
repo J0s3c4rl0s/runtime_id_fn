@@ -56,13 +56,17 @@ shiftindices : Term → ℕ → ℕ → Term -- Only do this for free variables,
 shiftindices (var x) i l = if l ≤ᵇ x then var (x + i) else var x 
 shiftindices (ƛ∶ t 𝕢 σ ♭ t₁) i l = ƛ∶ shiftindices t i l 𝕢 σ ♭ shiftindices t₁ i (suc l)
 shiftindices (ƛr∶ (t 𝕢 σ) ♭ t₁) i l = (ƛr∶ shiftindices t i l 𝕢 σ ♭ shiftindices t₁ i (suc l))
-shiftindices (t · t₁) i l = shiftindices t i l · shiftindices t₁ i l
+shiftindices (t ·𝟘 t₁) i l = shiftindices t i l ·𝟘 shiftindices t₁ i l
+shiftindices (t ·ω t₁) i l = shiftindices t i l ·ω shiftindices t₁ i l
+shiftindices (f ·ᵣ a) i l = shiftindices f i l ·ᵣ shiftindices a i l
 shiftindices z i l = z
 shiftindices (s t) i l = s (shiftindices t i l) 
 shiftindices nill i l = nill
 shiftindices (t ∷l t₁) i l = shiftindices t i l ∷l shiftindices t₁ i l
-shiftindices nilv i l = nilv
-shiftindices (t ∷v t₁ 𝕟 n) i l = shiftindices t i l ∷v shiftindices t₁ i l 𝕟 shiftindices n i l
+shiftindices nilv𝟘 i l = nilv𝟘
+shiftindices nilvω i l = nilvω
+shiftindices (t ∷v t₁ 𝕟𝟘 n) i l = shiftindices t i l ∷v shiftindices t₁ i l 𝕟𝟘 shiftindices n i l
+shiftindices (t ∷v t₁ 𝕟ω n) i l = shiftindices t i l ∷v shiftindices t₁ i l 𝕟ω shiftindices n i l
 shiftindices (elimnat t P∶ t₁ zb∶ t₂ sb∶ t₃) i l = 
     elimnat (shiftindices t i l) P∶ (shiftindices t₁ i l) 
             zb∶ (shiftindices t₂ i l) 
@@ -89,15 +93,19 @@ var 0 [ a / 0 ] = a
 var b [ a / i ] = var b 
 (ƛ∶ bₜ 𝕢 σ ♭ b) [ a / i ] = ƛ∶ bₜ [ a / i ]  𝕢 σ ♭ (b [ shiftindices a 1 0 / suc i ])
 (ƛr∶ b 𝕢 x ♭ b₁) [ a / i ] = (ƛr∶ b [ a / i ] 𝕢 x ♭ (b₁ [ shiftindices a 1 0 / suc i ]))
-(b · c) [ a / i ] = (b [ a / i ]) · (c [ a / i ])
+(b ·𝟘 c) [ a / i ] = (b [ a / i ]) ·𝟘 (c [ a / i ])
+(b ·ω c) [ a / i ] = (b [ a / i ]) ·ω (c [ a / i ])
+(f ·ᵣ b) [ a / i ] = (f [ a / i ]) ·ᵣ (b [ a / i ])
 (∶ b 𝕢 σ ⟶ c) [ a / i ] = ∶ b [ a / i ] 𝕢 σ ⟶ (c [ shiftindices a 1 0 / suc i ]) 
 (r∶ b 𝕢 σ ⟶ c) [ a / i ] = r∶ b [ a / i ] 𝕢 σ ⟶ (c [ shiftindices a 1 0 / suc i ]) 
 z [ a / i ] = z
 s b [ a / i ] = s (b [ a / i ]) 
 nill [ a / i ] = nill
 (h ∷l t) [ a / i ] = (h [ a / i ]) ∷l (t [ a / i ])
-nilv [ a / i ] = nilv
-(h ∷v t 𝕟 n) [ a / i ] = (h [ a / i ]) ∷v (t [ a / i ]) 𝕟 (n [ a / i ])
+nilv𝟘 [ a / i ] = nilv𝟘
+nilvω [ a / i ] = nilvω
+(h ∷v t 𝕟𝟘 n) [ a / i ] = (h [ a / i ]) ∷v (t [ a / i ]) 𝕟𝟘 (n [ a / i ])
+(h ∷v t 𝕟ω n) [ a / i ] = (h [ a / i ]) ∷v (t [ a / i ]) 𝕟ω (n [ a / i ])
 (elimnat b P∶ P zb∶ zb sb∶ sb) [ a / i ] = 
     elimnat b [ a / i ] P∶ P [ a / i ] 
         zb∶ zb [ a / i ] 

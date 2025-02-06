@@ -57,9 +57,11 @@ data Term where
     
     -- function stuff
     ƛ∶_♭_ : Annotation A σ → Term → Term
+    -- Better to take an extra arg to determine its a runtime ID (annot)
     -- RuntimeId, any erased args? Forced annotations?
     ƛr∶_♭_ : Annotation A σ → Term → Term
-    _·_ : Term → Term → Term
+    _·_𝕢_ : Term → Term → Quantity → Term
+    _·ᵣ_ : Term → Term → Term
 
     -- data cons
     ---- Nats
@@ -69,8 +71,8 @@ data Term where
     nill : Term 
     _∷l_ : Term → Term → Term 
     -- vec
-    nilv : Term 
-    _∷v_𝕟_ : Term → Term → Term → Term 
+    nilv𝕢_ : Quantity → Term 
+    _∷v_𝕟_𝕢_ : Term → Term → Term → Quantity → Term 
 
     ---- elims 
     -- Nat
@@ -87,3 +89,11 @@ data Term where
     ∶_⟶_ : Annotation A σ → Term → Term -- Pi type
     r∶_⟶_ : Annotation A σ → Term → Term -- Runtime Pi type
     Sett : ℕ → Term -- Universe 
+
+pattern _·𝟘_ f a = _·_𝕢_ f a 𝟘
+pattern _·ω_ f a = _·_𝕢_ f a ω
+
+pattern nilv𝟘 = nilv𝕢_ 𝟘
+pattern nilvω = nilv𝕢_ ω
+pattern _∷v_𝕟𝟘_ a as n = _∷v_𝕟_𝕢_ a as n 𝟘
+pattern _∷v_𝕟ω_ a as n = _∷v_𝕟_𝕢_ a as n ω

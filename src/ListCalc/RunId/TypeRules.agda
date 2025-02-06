@@ -29,14 +29,16 @@ private variable
     a b c d e f g h l m n  : Term
     as cs : Term
     nb cb zb sb : Term
-    𝓁 𝓁₁ 𝓁₂ : ℕ
+    
+    i j 𝓁 𝓁₁ 𝓁₂ : ℕ
     
     Γᵣ : T.Context
     Aᵣ Bᵣ Cᵣ : T.Type
     aᵣ bᵣ cᵣ : T.Term
 
-data _⊢_＝_ : Context Γ → Term → Term → Set
+data _＝_ : Term → Term → Set
 data _⊢_∶_ : Context Γ → Annotation A σ → Term → Set
+data _~ᵣ_ : Term → Term → Set
 
 -- For now it can be an annotation bc quants are only 0 or 1
 data _⊢_∶_ where
@@ -55,11 +57,7 @@ data _⊢_∶_ where
         zeroC Γ ⊢ ∶ A 𝕢 π ⟶ B 𝕢 𝟘 ∶ Sett 𝓁 
     -- Add special rules!!
     ⊢rpi : 
-        -- A =>r Ar
-        -- B => Br
-        -- Γr Ar C.= Br 
-        {!   !} ≡ {!   !} →
-        {!   !} ≡ {!   !} →
+        A ~ᵣ B →
         -- Not sure if this should be 0 usage for : Sett ? 
         zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁  →
         (zeroC Γ , A 𝕢 𝟘) ⊢ B 𝕢 𝟘 ∶ Sett 𝓁  →
@@ -72,18 +70,28 @@ data _⊢_∶_ where
         zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁  →
         cΓ ⊢ (ƛ∶ A 𝕢 π ♭ b) 𝕢 σ ∶ (∶ A 𝕢 π ⟶ B)
     ⊢rlam : ∀ {cΓ : Context Γ} →
-        {!   !} →
+        -- This may cause problems with patter matched expressions
+        b ~ᵣ var 0 →
         -- Are the annotations in cΓ arbitrary? 
-        (cΓ , A 𝕢 (π *q σ)) ⊢ b 𝕢 σ ∶ B →
+        (cΓ , A 𝕢 (ω *q σ)) ⊢ b 𝕢 σ ∶ B →
+        -- Is this rule redundant since there is a formation rule
         zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁  →
-        cΓ ⊢ (ƛr∶ A 𝕢 π ♭ b) 𝕢 σ ∶ (r∶ A 𝕢 π ⟶ B)
+        cΓ ⊢ (ƛr∶ A 𝕢 ω ♭ b) 𝕢 σ ∶ (r∶ A 𝕢 ω ⟶ B)
     ⊢app : {cΓ cΓ' cΓ'' : Context Γ} → 
         cΓ ⊢ a 𝕢 σ ∶ (∶ A 𝕢 π ⟶ B) →
         cΓ' ⊢ b 𝕢 selectQ π σ ∶ A →
         -- Need something to limit substitution according to atkey 
         -- avoid green slime with eq
         {eq : cΓ'' ≡ (cΓ +c (π *c cΓ'))} →
-        cΓ'' ⊢ a · b 𝕢 σ ∶  (B [ b / 0 ])
+        cΓ'' ⊢ (a · b 𝕢 π) 𝕢 σ ∶  (B [ b / 0 ])
+    ⊢appᵣ : {cΓ cΓ' cΓ'' : Context Γ} → 
+        cΓ ⊢ a 𝕢 σ ∶ (∶ A 𝕢 ω ⟶ B) →
+        cΓ' ⊢ b 𝕢 selectQ ω σ ∶ A →
+        -- Need something to limit substitution according to atkey 
+        -- avoid green slime with eq
+        {eq : cΓ'' ≡ (cΓ +c (ω *c cΓ'))} →
+        cΓ'' ⊢ (a ·ᵣ b) 𝕢 σ ∶  (B [ b / 0 ])
+
     -- Nats
     ⊢Nat : 
         zeroC Γ ⊢ Nat 𝕢 𝟘 ∶ Sett 𝓁 
@@ -97,12 +105,12 @@ data _⊢_∶_ where
         cΓ ⊢ n 𝕢 σ ∶ Nat →
         -- Maybe P and n should match usage (check?) or comes naturally from rule
         zeroC Γ ⊢ P 𝕢 𝟘 ∶ (∶ Nat 𝕢 π ⟶ Sett 𝓁 ) →
-        cΓ' ⊢ zb 𝕢 σ ∶ (P · z) →
-        ((cΓ' , Nat 𝕢 ρ) , (P · var 0) 𝕢 ρ' ) ⊢ sb 𝕢 σ ∶ (P · s (var 1)) →
+        cΓ' ⊢ zb 𝕢 σ ∶ (P · z 𝕢 π) →
+        ((cΓ' , Nat 𝕢 ρ) , (P · var 0 𝕢 π) 𝕢 ρ' ) ⊢ sb 𝕢 σ ∶ (P · s (var 1) 𝕢 π) →
         (cΓ +c cΓ') ⊢ elimnat n P∶ P 
                 zb∶ zb 
                 sb∶ sb 
-            𝕢 σ ∶ (P · n)
+            𝕢 σ ∶ (P · n 𝕢 π)
     -- Lists
     ⊢List : 
         zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁  →
@@ -117,13 +125,13 @@ data _⊢_∶_ where
         cΓ ⊢ l 𝕢 σ ∶ List A →
         -- is it really 0 usage mode?
         zeroC Γ ⊢ P 𝕢 𝟘 ∶ (∶ List A 𝕢 ρ ⟶ Sett 𝓁 ) → 
-        cΓ' ⊢ nb 𝕢 σ ∶ (P · nill) → 
+        cΓ' ⊢ nb 𝕢 σ ∶ (P · (nill) 𝕢 ρ) → 
         -- I presume list elements must have same erasure as List
-        (((cΓ' , A 𝕢 σ) , List A 𝕢 σ) , P · var 0 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P · (var 2 ∷l var 1)) → 
+        (((cΓ' , A 𝕢 σ) , List A 𝕢 σ) , (P · (var 0) 𝕢 ρ) 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P · (var 2 ∷l var 1) 𝕢 ρ) → 
         (cΓ +c cΓ') ⊢ eliml l P∶ P 
                 nb∶ nb 
                 cb∶ cb 
-            𝕢 σ ∶ (P · l)
+            𝕢 σ ∶ (P · l 𝕢 ρ)
     -- Vecs
     ⊢Vec : {cΓ : Context Γ} →
         cΓ ⊢ n 𝕢 σ ∶ Nat  →
@@ -131,30 +139,32 @@ data _⊢_∶_ where
         zeroC Γ ⊢ Vec (n 𝕢 σ) A 𝕢 𝟘 ∶ Sett 𝓁 
     ⊢nilv :  
         zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁  →
-        zeroC Γ ⊢ nilv 𝕢 σ ∶ Vec (z 𝕢 π) A
+        zeroC Γ ⊢ nilv𝕢 π 𝕢 σ ∶ Vec (z 𝕢 π) A
     ⊢∷v :
         cΓ ⊢ a 𝕢 σ ∶ A →
         cΓ ⊢ n 𝕢 π ∶ Nat →
+
+
         cΓ ⊢ b 𝕢 σ ∶ Vec (n 𝕢 π) A →
-        cΓ ⊢ a ∷v b 𝕟 n 𝕢 σ ∶ Vec (s n 𝕢 π) A
+        cΓ ⊢ (a ∷v b 𝕟 n 𝕢 π) 𝕢 σ ∶ Vec (s n 𝕢 π) A
     ⊢vecel : {cΓ cΓ' : Context Γ} → 
         cΓ ⊢ b 𝕢 σ ∶ Vec (n 𝕢 δ) A →
         -- should pi = delta?
         -- is it really 0 usage mode?
         zeroC Γ ⊢ P 𝕢 𝟘 ∶ (∶ Nat 𝕢 π ⟶ (∶ Vec (var 0 𝕢 δ) A 𝕢 ρ ⟶ Sett 𝓁 )) →
-        cΓ' ⊢ nb 𝕢 σ ∶ ((P · z) · nilv) →
+        cΓ' ⊢ nb 𝕢 σ ∶ ((P · z 𝕢 π) · (nilv𝕢 δ) 𝕢 ρ) →
         -- assuming that the constructors are not heterogenous, I think they might need to be rho
-        ((((cΓ' , Nat 𝕢 π) , A 𝕢 σ) , Vec (var 1 𝕢 δ) A 𝕢  σ) , P · var 0  𝕢 σ) ⊢ cb 𝕢 σ ∶ ((((((P · var 3) · (var 2 ∷v var 1 𝕟 var 3)))))) →
+        ((((cΓ' , Nat 𝕢 π) , A 𝕢 σ) , Vec (var 1 𝕢 δ) A 𝕢  σ) , (P · var 0 𝕢 π)  𝕢 σ) ⊢ cb 𝕢 σ ∶ ((((((P · var 3 𝕢 π) · (var 2 ∷v var 1 𝕟 var 3 𝕢 δ) 𝕢 ρ))))) →
         (cΓ +c cΓ') ⊢ elimv b P∶ P 
                 nb∶ nb 
                 cb∶ cb 
-            𝕢 σ ∶ ((P · n) · b)
+            𝕢 σ ∶ ((P · n 𝕢 π) · b 𝕢 ρ)
     
     ⊢Sett : 
         zeroC Γ ⊢ Sett 𝓁 𝕢 𝟘 ∶ Sett (suc 𝓁) 
     ⊢conv : {cΓ : Context Γ} → 
         cΓ ⊢ a 𝕢 σ ∶ A →
-        zeroC Γ ⊢ A ＝ B →
+        A ＝ B →
         cΓ ⊢ a 𝕢 σ ∶ B
 
     ---- QTT rules 
@@ -162,9 +172,10 @@ data _⊢_∶_ where
         cΓ ⊢ a 𝕢 σ ∶ A →
         zeroC Γ ⊢ a 𝕢 𝟘 ∶ A
     
-
+infix 30 _＝_
+-- rewrite this so its consistent in order (e.g. introducion-formation-congruence-reduction)
 -- Do I need to make all judgements be in 𝟘
-data _⊢_＝_ where
+data _＝_ where
     {-   
     ＝var :
         (i : Γ ∋ a)  →
@@ -172,95 +183,107 @@ data _⊢_＝_ where
     -}
 
     ＝pi : 
-        cΓ ⊢ A ＝ C → 
-        (cΓ , A 𝕢 σ) ⊢ B ＝ D →
-        cΓ ⊢ ∶ A 𝕢 σ ⟶ B ＝ (∶ C 𝕢 σ ⟶ D)
-    ＝lam :
-        (cΓ , A 𝕢 σ) ⊢ b ＝ c →
-        cΓ ⊢ ƛ∶ A 𝕢 σ ♭ b  ＝ (ƛ∶ A 𝕢 σ ♭ c)
-    ＝app : 
-        cΓ ⊢ b ＝ d →
-        cΓ ⊢ a ＝ c →
-        cΓ ⊢ b · a ＝ (d · c)
+        A ＝ C → 
+        B ＝ D →
+        (∶ A 𝕢 σ ⟶ B) ＝ (∶ C 𝕢 σ ⟶ D)
 
+    ＝piᵣ : 
+        A ＝ C → 
+        B ＝ D →
+        (r∶ A 𝕢 σ ⟶ B) ＝ (r∶ C 𝕢 σ ⟶ D)
+    ＝lam :
+        b ＝ c →
+        (ƛ∶ A 𝕢 σ ♭ b)  ＝ (ƛ∶ A 𝕢 σ ♭ c)
+    ＝lamᵣ :
+        b ＝ c →
+        (ƛr∶ A 𝕢 σ ♭ b)  ＝ (ƛr∶ A 𝕢 σ ♭ c)
+    ＝app : 
+        b ＝ d →
+        a ＝ c →
+        (b · a 𝕢 σ) ＝ (d · c 𝕢 σ)
+    ＝appᵣ : 
+        b ＝ d →
+        a ＝ c →
+        (b ·ᵣ a) ＝ (d ·ᵣ c)
     -- Look into substitution rules 
-    ＝beta : cΓ ⊢ (ƛ∶ A 𝕢 σ ♭ b) · a ＝ (b [ a / 0 ])
+    ＝beta : ((ƛ∶ A 𝕢 σ ♭ b) · a 𝕢 σ) ＝ (b [ a / 0 ])
+    ＝betaᵣ : ((ƛ∶ A 𝕢 ω ♭ b) ·ᵣ a) ＝ (b [ a / 0 ])
     {-
     ＝lift : 
         (cΓ , A 𝕢  σ) ⊢ b 𝕢 π ∶ B →
-        cΓ ⊢ a ＝ c →
-        cΓ ⊢ b [ a / 0 ] ＝ ( b [ c / 0 ]) 
+        a ＝ c →
+        b [ a / 0 ] ＝ ( b [ c / 0 ]) 
     -}
     -- equiv properties
-    ＝refl : cΓ ⊢ A ＝ A
+    ＝refl : A ＝ A
     ＝sym : 
-        cΓ ⊢ A ＝ B →
-        cΓ ⊢ B ＝ A 
+        A ＝ B →
+        B ＝ A 
     ＝trans : 
-        cΓ ⊢ A ＝ B →
-        cΓ ⊢ B ＝ C →
-        cΓ ⊢ A ＝ C
+        A ＝ B →
+        B ＝ C →
+        A ＝ C
     
     ---- eliminators 
     -- nats
     ＝natelz :
-        cΓ ⊢ m ＝ z →
-        cΓ ⊢ elimnat m P∶ P 
+        m ＝ z →
+        (elimnat m P∶ P 
             zb∶ zb 
-            sb∶ sb 
+            sb∶ sb) 
             ＝ 
             zb
     ＝natels :
-        cΓ ⊢ n ＝ s n →
-        cΓ ⊢ elimnat n P∶ P 
+        n ＝ s n →
+        (elimnat n P∶ P 
                 zb∶ zb 
-                sb∶ sb 
+                sb∶ sb) 
             ＝ 
             a →
-        cΓ ⊢ elimnat m P∶ P 
+        (elimnat m P∶ P 
                 zb∶ zb 
-                sb∶ sb 
+                sb∶ sb) 
             ＝ 
             ((sb [ n / 1 ]) [ a / 0 ])
     -- list
     ＝listeln :
-        cΓ ⊢ cs ＝ nill →
-        cΓ ⊢ eliml cs P∶ P 
+        cs ＝ nill →
+        (eliml cs P∶ P 
                 nb∶ nb 
-                cb∶ cb 
+                cb∶ cb) 
             ＝ 
             nb
     ＝listelc :     
-        cΓ ⊢ cs ＝ (a ∷l as) →
-        cΓ ⊢ eliml as P∶ P 
+        cs ＝ (a ∷l as) →
+        (eliml as P∶ P 
                 nb∶ nb 
-                cb∶ cb 
+                cb∶ cb) 
             ＝ 
             b →
-        cΓ ⊢ eliml cs P∶ P 
+        (eliml cs P∶ P 
                 nb∶ nb 
-                cb∶ cb 
+                cb∶ cb) 
             ＝ 
             (((cb [ a / 2 ]) [ as / 1 ]) [ b / 0 ])
             -- (((cb · a) · as) ·  b)
     -- vec
     ＝veceln :
-        cΓ ⊢ cs ＝ nilv →
-        cΓ ⊢ elimv cs P∶ P 
+        cs ＝ (nilv𝕢 σ) →
+        (elimv cs P∶ P 
                 nb∶ nb 
-                cb∶ cb 
+                cb∶ cb) 
             ＝ 
             nb
     ＝vecelc :
-        cΓ ⊢ cs ＝ (a ∷v as 𝕟 n) → 
-        cΓ ⊢ elimv nilv P∶ P
+        cs ＝ (a ∷v as 𝕟 n 𝕢 σ) → 
+        (elimv (nilv𝕢 σ) P∶ P
                 nb∶ nb 
-                cb∶ cb 
+                cb∶ cb) 
             ＝ 
             b →
-        cΓ ⊢ elimv cs P∶ P
+        (elimv cs P∶ P
                 nb∶ nb 
-                cb∶ cb 
+                cb∶ cb) 
             ＝ 
             -- Might be worthwhile to change n to fit the structure of ∷v
             ((((cb [ n / 3 ]) [ a / 2 ]) [ as / 1 ]) [ b / 0 ])
@@ -269,298 +292,229 @@ data _⊢_＝_ where
     ---- Cong rules for datatypes 
     -- Nat
     ＝s : 
-        cΓ ⊢ n ＝ m →
-        cΓ ⊢ s n ＝ s m
+        n ＝ m →
+        s n ＝ s m
     -- List
     ＝list : 
-        cΓ ⊢ A ＝ B →
-        cΓ ⊢ List A ＝ List B
+        A ＝ B →
+        List A ＝ List B
     ＝∷l :
-        cΓ ⊢ a ＝ c →
-        cΓ ⊢ as ＝ cs →
-        cΓ ⊢ a ∷l as ＝ (c ∷l cs)
+        a ＝ c →
+        as ＝ cs →
+        (a ∷l as) ＝ (c ∷l cs)
     -- Vec
     ＝vec : 
-        cΓ ⊢ n ＝ m →
-        cΓ ⊢ A ＝ B →
-        cΓ ⊢ Vec (n  𝕢 σ) A ＝ Vec (m 𝕢 σ) B
+        n ＝ m →
+        A ＝ B →
+        Vec (n  𝕢 σ) A ＝ Vec (m 𝕢 σ) B
     ＝∷v :
-        cΓ ⊢ a ＝ c →
-        cΓ ⊢ as ＝ cs →
-        cΓ ⊢ n ＝ m →
-        cΓ ⊢ a ∷v as 𝕟 n ＝ (c ∷v cs 𝕟 m)
+        a ＝ c →
+        as ＝ cs →
+        n ＝ m →
+        (a ∷v as 𝕟 n 𝕢 σ) ＝ (c ∷v cs 𝕟 m 𝕢 σ)
 
     ---- QTT stuff
     -- Unsure if I am interpreting this right
     ⊢TM＝𝟘 : {cΓ : Context Γ} →
-        cΓ ⊢ a ＝ b →
-        zeroC Γ ⊢ a ＝ b
+        a ＝ b →
+        a ＝ b
 
-compileTy : zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁 → Maybe T.Type
-compileTy {A = Nat} d = just T.Nat
-compileTy {A = List A} (⊢List dA) = do 
-    Aᵣ ← compileTy dA
-    just (T.List Aᵣ)
-compileTy {A = Vec (_ 𝕢 𝟘) A} (⊢Vec _ dA) = do 
-    Aᵣ ← compileTy dA
-    just (T.List Aᵣ) 
-compileTy {A = Vec (_ 𝕢 ω) A} (⊢Vec dn dA) = do 
-    Aᵣ ← compileTy dA
-    just (T.Vec Aᵣ)
--- I sense issues here with a lack of conversion
-compileTy {A = ∶ A 𝕢 𝟘 ⟶ B} (⊢pi dA dB) = do 
-    Bᵣ ← compileTy dB
-    just (Bᵣ)
-compileTy {A = ∶ A 𝕢 ω ⟶ B} (⊢pi dA dB) = do 
-    Aᵣ ← compileTy dA
-    Bᵣ ← compileTy dB
-    just (Aᵣ T⟶ Bᵣ)
--- Run id compiled into Id fun? Or just into function?
-compileTy {A = r∶ A 𝕢 ω ⟶ B} d = {!   !}
-compileTy {A = Sett x} d = nothing
--- Avoid all conversion/normalization needed for now
-compileTy d = nothing
-{-
--- Can I avoid dealing with vars?
-compileTy {Γ} {A = var x} d = {!   !}
-compileTy {A = ƛ∶ A ♭ b} (⊢conv d x) = {! x  !}
-compileTy {A = ƛ∶ A ♭ b} (⊢TM-𝟘 d) = {!   !}
-compileTy {A = ƛr∶ x ♭ A} d = {!   !}
-compileTy {A = A · A₁} d = {! d  !}
-compileTy {A = z} d = {!   !}
-compileTy {A = s A} d = {!   !}
-compileTy {A = nill} d = {!   !}
-compileTy {A = A ∷l A₁} d = {!   !}
-compileTy {A = nilv} d = {!   !}
-compileTy {A = A ∷v A₁ 𝕟 A₂} d = {!   !}
-compileTy {A = elimnat A P∶ A₁ zb∶ A₂ sb∶ A₃} d = {!   !}
-compileTy {A = eliml A P∶ A₁ nb∶ A₂ cb∶ A₃} d = {!   !}
-compileTy {A = elimv A P∶ A₁ nb∶ A₂ cb∶ A₃} d = {!   !}
-compileTy {A = List A} (⊢conv d x) = {!   !}
-compileTy {A = List A} (⊢TM-𝟘 d) = {!   !}
-compileTy {A = Vec (_ 𝕢 𝟘) A} (⊢conv d x) = {!   !}
-compileTy {A = Vec (_ 𝕢 𝟘) A} (⊢TM-𝟘 d) = {!   !}
-compileTy {A = Vec (_ 𝕢 ω) A} (⊢conv d x) = {!   !}
-compileTy {A = Vec (_ 𝕢 ω) A} (⊢TM-𝟘 d) = {!   !}
-compileTy {A = ∶ A 𝕢 ω ⟶ B} (⊢conv d x) = {!   !}
-compileTy {A = ∶ A 𝕢 ω ⟶ B} (⊢TM-𝟘 d) = {!   !}
-compileTy {A = r∶ A 𝕢 ω ⟶ B} (⊢conv d x) = {!   !}
-compileTy {A = r∶ A 𝕢 ω ⟶ B} (⊢TM-𝟘 d) = {!   !}
-compileTy {A = r∶ A 𝕢 𝟘 ⟶ B} (⊢conv d x) = {!   !}
-compileTy {A = r∶ A 𝕢 𝟘 ⟶ B} (⊢TM-𝟘 d) = {!   !}
-compileTy {A = ∶ A 𝕢 𝟘 ⟶ B} (⊢conv d x) = {!   !}
-compileTy {A = ∶ A 𝕢 𝟘 ⟶ B} (⊢TM-𝟘 d) = {!   !}
--}
+infix 30 _~ᵣ_ 
 
-compileTys : Term → Maybe T.Type
-
--- Kind of annoying because I need to exclude invalid contexts
-compileTes : Context Γ → Term → Maybe T.Term
-
-compileTys Nat = just T.Nat
-compileTys (List A) = do 
-    Aᵣ ← compileTys A
-    just (T.List Aᵣ) 
-compileTys (Vec (n 𝕢 𝟘) A) = do 
-    Aᵣ ← compileTys A
-    just (T.List Aᵣ)
--- Should I only compile if valid n?
-compileTys (Vec (n 𝕢 ω) A) = do 
-    Aᵣ ← compileTys A
-    just (T.Vec Aᵣ)
-compileTys (∶ A 𝕢 𝟘 ⟶ B) = do 
-    Bᵣ ← compileTys B
-    just Bᵣ
-compileTys (∶ A 𝕢 ω ⟶ B) = do 
-    Aᵣ ← compileTys A
-    Bᵣ ← compileTys B
-    just (Aᵣ T⟶ Bᵣ)
--- Can a RunId function be 0 use? I think not right?
-compileTys (r∶ A 𝕢 𝟘 ⟶ B) = nothing
--- Same compilation as for regular functions or not?
-compileTys (r∶ A 𝕢 ω ⟶ B) = do 
-    Aᵣ ← compileTys A
-    Bᵣ ← compileTys B
-    just (Aᵣ T⟶ Bᵣ)
--- Exclude sett?
-compileTys (Sett x) = nothing
--- Dont normalize yet
-compileTys A = nothing
-
-
--- Annoying to compile this without the typing derivation, maybe a data type of mapping old indices to new?
-compileTes cΓ (var x) = {!   !}
-compileTes cΓ (ƛ∶ x ♭ b) = {!   !}
-compileTes cΓ (ƛr∶ x ♭ b) = {!   !}
-compileTes cΓ (f · a) = do
-    -- Which context... same one? depends if f is 0 or not right?
-    fᵣ ← compileTes {!   !} f
-    aᵣ ← compileTes {!   !} a
-    just (fᵣ T· aᵣ)
-compileTes cΓ z = just T.z
-compileTes cΓ (s a) = do 
-    aᵣ ← compileTes cΓ a 
-    just aᵣ
-compileTes cΓ nill = {!   !}
-compileTes cΓ (a ∷l a₁) = {!   !}
-compileTes cΓ nilv = {!   !}
-compileTes cΓ (a ∷v a₁ 𝕟 a₂) = {!   !}
-compileTes cΓ (elimnat a P∶ a₁ zb∶ a₂ sb∶ a₃) = {!   !}
-compileTes cΓ (eliml a P∶ a₁ nb∶ a₂ cb∶ a₃) = {!   !}
-compileTes cΓ (elimv a P∶ a₁ nb∶ a₂ cb∶ a₃) = {!   !}
--- No types in Term position
-compileTes cΓ Ty = nothing
-
--- Can make contexts correct by construction....
--- Then I can make use of the derivation here as well and know that terms are well typed...
--- Honestly will be faster to not deal with that though 
-compileContextS : Context Γ → Maybe T.Context
-compileContextS [] = just T.[]
-compileContextS (cΓ , A 𝕢 𝟘) = compileContextS cΓ
-compileContextS (cΓ , A 𝕢 ω) = do 
-    Γᵣ ← compileContextS cΓ
-    -- Might want to pass Γᵣ in future when smarter
-    Aᵣ ← compileTys A
-    just (Γᵣ T, Aᵣ)
-
--- What if one function with Maybe (Context x (Either Term or Type))
--- Either context x term, or a relation that says term is well scoped?
-compileTerm : cΓ ⊢ a 𝕢 ω ∶ A → Maybe (T.Context × T.Term)
-compileTerm {a = var x} (⊢var i) = just ({!   !} ,' {!   !}) 
--- can I be certain this is correct Γᵣ? Should get it from d
-compileTerm {a = ƛ∶ A 𝕢 𝟘 ♭ b} (⊢lam db dA) = do 
-    -- uncertain about this destructing
-    (Γᵣ T, Aᵣ) ,' bᵣ ← compileTerm db 
-    just (Γᵣ ,' bᵣ)
--- how do I get context here vs with 0 case?
-compileTerm {a = ƛ∶ A 𝕢 ω ♭ b} (⊢lam db dA) = do 
-    Aᵣ ← compileTy dA
-    -- Not sure if this enforces what Aᵣ is supposed to be
-    (Γᵣ T, Aᵣ) ,' bᵣ ← compileTerm db
-    just (Γᵣ ,' T.ƛ bᵣ)
-compileTerm {a = ƛr∶ x ♭ a} d = {!   !}
-compileTerm {a = f · a} (⊢app {π = 𝟘} df da {eq = refl}) = {!   !}
-compileTerm {a = f · a} (⊢app {π = ω} df da {eq = refl}) = do 
-    Γᵣf ,' fᵣ ← compileTerm df
-    Γᵣa ,' aᵣ ← compileTerm da
-    -- Context should not matter, they have same PreContext, should I check?
-    just (Γᵣf ,' (fᵣ T· aᵣ))  
--- Will context be emptied here?
-compileTerm {a = z} (⊢z {Γ = Γ}) = just ({!   !} ,' T.z)
-compileTerm {a = s a} (⊢s da) = do 
-    (Γᵣ ,' aᵣ) ← compileTerm da
-    just (Γᵣ ,' aᵣ)
-compileTerm {a = nill} (⊢nill {Γ = Γ}) = just ({!   !} ,' T.nill)
-compileTerm {a = a ∷l as} (⊢∷l da das) = do
-    (Γᵣ ,' aᵣ) ← compileTerm da
-    -- Again should be same, should I check?
-    (Γᵣ ,' asᵣ) ← compileTerm das
-    just (Γᵣ ,' (aᵣ T∷l asᵣ))
-compileTerm {a = nilv} (⊢nilv {Γ = Γ} d) = just ({!   !} ,' T.nilv)
-compileTerm {a = a ∷v as 𝕟 n} (⊢∷v {π = 𝟘} da dn das) = do 
-    (Γᵣ ,' aᵣ) ← compileTerm da 
-    -- Check Γᵣ?
-    (Γᵣ ,' asᵣ) ← compileTerm das
-    -- check n?
-    just (Γᵣ ,' (aᵣ T∷l asᵣ))
-compileTerm {a = a ∷v as 𝕟 n} (⊢∷v {π = ω} da das dn) = {!   !}
-compileTerm {a = elimnat a P∶ a₁ zb∶ a₂ sb∶ a₃} d = {!   !}
-compileTerm {a = eliml a P∶ a₁ nb∶ a₂ cb∶ a₃} d = {!   !}
-compileTerm {a = elimv a P∶ a₁ nb∶ a₂ cb∶ a₃} d = {!   !}
--- No conversion for terms
-compileTerm {a = var x} (⊢conv d x₁) = {!   !}
-compileTerm {a = ƛ∶ A 𝕢 ω ♭ b} (⊢conv d x) = {!   !}
-compileTerm {a = ƛ∶ A 𝕢 𝟘 ♭ b} (⊢conv d x) = {!   !}
-compileTerm {a = f · a} (⊢conv d x) = {!   !} 
-compileTerm {a = z} (⊢conv d x) = {!   !}
-compileTerm {a = s a} (⊢conv d x) = {!   !}
-compileTerm {a = nill} (⊢conv d x) = {!   !}
-compileTerm {a = a ∷l as} (⊢conv d x) = {!   !}
-compileTerm {a = nilv} (⊢conv d x) = {!   !}
-compileTerm {a = a ∷v a₁ 𝕟 a₂} (⊢conv d x) = {!   !}
--- No types in terms
-compileTerm {a = Nat} d = {!   !}
-compileTerm {a = List a} d = {!   !}
-compileTerm {a = Vec x a} d = {!   !}
-compileTerm {a = ∶ x ⟶ a} d = {!   !}
-compileTerm {a = r∶ x ⟶ a} d = {!   !}
-compileTerm {a = Sett x} d = {!   !}
-
-
-compileProgram : {cΓ : Context Γ} → 
-    zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁 → 
-    cΓ ⊢ a 𝕢 ω ∶ A → 
-    Maybe ({!   !} T⊢ {!   !} T∶ {!   !}) 
-compileProgram dTy dTerm = {!   !}
-
--- Should be in compile time mode right?
-data _⇒c_ : zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁 → T.Type → Set where
-    -- Do I need a var option here?
-
-    ⇒cNat :
-        {d : zeroC Γ ⊢ Nat 𝕢 𝟘 ∶ Sett 𝓁} →
-        d ⇒c T.Nat
-     
-    ⇒cPiω :
-        {dA : zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁} 
-        {dB : (zeroC Γ , A 𝕢 𝟘) ⊢  B  𝕢 𝟘 ∶ Sett 𝓁} →
-        dA ⇒c Aᵣ →
-        dB ⇒c Bᵣ →
-        ⊢pi {π = ω} dA dB ⇒c (Aᵣ T⟶ Bᵣ)
-     
-    ⇒cPi𝟘 :
-        {dA : zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁} 
-        {dB : (zeroC Γ , A 𝕢 𝟘) ⊢  B  𝕢 𝟘 ∶ Sett 𝓁} →
-        dA ⇒c Aᵣ →
-        dB ⇒c Bᵣ →
-        ⊢pi {π = 𝟘} dA dB ⇒c (Aᵣ T⟶ Bᵣ)
-
-    ⇒cList :
-        {dA : zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁} →
-        dA ⇒c Aᵣ →
-        ⊢List dA ⇒c T.List Aᵣ 
-
-    ⇒cVec𝟘 : {cΓ : Context Γ} →
-        {dn : cΓ ⊢ n 𝕢 𝟘 ∶ Nat}
-        {dA : zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁} →
-        dA ⇒c Aᵣ →
-        ⊢Vec dn dA ⇒c T.List Aᵣ
-    ⇒cVecω : {cΓ : Context Γ} →
-        {dn : cΓ ⊢ n 𝕢 ω ∶ Nat}
-        {dA : zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁} →
-        dA ⇒c Aᵣ →
-        ⊢Vec dn dA ⇒c T.Vec Aᵣ 
-
-    ---- Maybe I dont need this and im enforcing some "high level" quality/entry point
-
-    -- Does this have to be 0? Can I "normalize" non-erased portions?
-    ⇒cConv : {cΓ : Context Γ}
-        {da : cΓ ⊢ b 𝕢 {!   !} ∶ a}
-        {dA : zeroC Γ ⊢ a 𝕢 𝟘 ∶ A} 
-        {＝Sett : zeroC Γ ⊢ A ＝ Sett 𝓁}  →
-        {!  da  !} ⇒c {!   !} →
-        ⊢conv dA ＝Sett ⇒c {!   !}
+-- Rearrenge this with boring and interesting rules
+-- Should I only define this 
+-- Could add types 
+data _~ᵣ_ where
+    ~ᵣrefl :
+        A ~ᵣ A
+    ~ᵣsym :
+        B ~ᵣ A →
+        A ~ᵣ B
+    ~ᵣtrans :
+        A ~ᵣ B →
+        B ~ᵣ C →
+        A ~ᵣ C
     
-    -- Feel like I may need conv here or vice versa
-    ⇒cTM : {cΓ : Context Γ}
-        {da : cΓ ⊢ a 𝕢 σ ∶ A} →
-        {! da  !} ⇒c {!   !} →
-        ⊢TM-𝟘 {!   !} ⇒c {!   !} 
+    ---- eliminators 
+    -- nats
+    ~ᵣnatelz :
+        m ~ᵣ z →
+        (elimnat m P∶ P 
+            zb∶ zb 
+            sb∶ sb) 
+            ~ᵣ 
+            zb
+    ~ᵣnatels :
+        n ~ᵣ s n →
+        (elimnat n P∶ P 
+                zb∶ zb 
+                sb∶ sb) 
+            ~ᵣ 
+            a →
+        (elimnat m P∶ P 
+                zb∶ zb 
+                sb∶ sb) 
+            ~ᵣ 
+            ((sb [ n / 1 ]) [ a / 0 ])
+    -- list
+    ~ᵣlisteln :
+        cs ~ᵣ nill →
+        (eliml cs P∶ P 
+                nb∶ nb 
+                cb∶ cb )
+            ~ᵣ 
+            nb
+    ~ᵣlistelc :     
+        cs ~ᵣ (a ∷l as) →
+        (eliml as P∶ P 
+                nb∶ nb 
+                cb∶ cb )
+            ~ᵣ 
+            b →
+        (eliml cs P∶ P 
+                nb∶ nb 
+                cb∶ cb )
+            ~ᵣ 
+            (((cb [ a / 2 ]) [ as / 1 ]) [ b / 0 ])
+            -- (((cb · a) · as) ·  b)
+    -- vec
+    ~ᵣveceln :
+        -- generic computation rules
+        cs ~ᵣ (nilv𝕢 σ) →
+        (elimv cs P∶ P 
+                nb∶ nb 
+                cb∶ cb )
+            ~ᵣ 
+            nb
+    ~ᵣvecelc :
+        cs ~ᵣ (a ∷v as 𝕟 n 𝕢 σ) → 
+        (elimv (nilv𝕢 σ) P∶ P
+                nb∶ nb 
+                cb∶ cb )
+            ~ᵣ 
+            b →
+        (elimv cs P∶ P
+                nb∶ nb 
+                cb∶ cb )
+            ~ᵣ 
+            -- Might be worthwhile to change n to fit the structure of ∷v
+            ((((cb [ n / 3 ]) [ a / 2 ]) [ as / 1 ]) [ b / 0 ])
+            -- ((((cb · n) · a) · as) · b)
+    
+    ---- Cong rules for datatypes 
+    -- Nat
+    ~ᵣs : 
+        n ~ᵣ m →
+        s n ~ᵣ s m
+    -- List
+    ~ᵣlist : 
+        A ~ᵣ B →
+        List A ~ᵣ List B
+    ~ᵣ∷l :
+        a ~ᵣ c →
+        as ~ᵣ cs →
+        (a ∷l as) ~ᵣ (c ∷l cs)    
+
+    ------ interesting rules-- Do I need two rules depending on usage and then like ignore argument 
+    -- or just pass it along?
+    ~ᵣpiω : 
+        A ~ᵣ C  →
+        -- Which of the two should I extend it with? Does it matter? 
+        -- Must I "pass along" proof of equiv or maybe substitution? 
+        -- Does subst even work?
+        -- Must I shift the indiceses here?
+        B ~ᵣ D →
+        (∶ A 𝕢 ω ⟶ B) ~ᵣ (∶ C 𝕢 ω ⟶ D) 
+    -- does this make sense  
+    ~ᵣpi𝟘 : 
+        -- shift em, wait maybe shift B??
+        B ~ᵣ shiftindices D 1 0 →
+        (∶ A 𝕢 𝟘 ⟶ B) ~ᵣ D 
+    -- must I add some for the A being different or nah?
+    -- distinguish between usages?
+    ~ᵣlamω :
+        -- I guess this implicitly checks that the target types match
+        b ~ᵣ c →
+        (ƛ∶ A 𝕢 ω ♭ b)  ~ᵣ (ƛ∶ A 𝕢 ω ♭ c)
+    ~ᵣlam𝟘 :
+        -- I guess this implicitly checks that the target types match
+        b ~ᵣ shiftindices c 1 0 →
+        -- This feels like it wont play well with prev rule
+        (ƛ∶ A 𝕢 𝟘 ♭ b)  ~ᵣ c
+    -- I need distinguish between applications of erased or unerased functions? 
+    -- maybe distinguish erased and unerased application in syntax (or parametrize)
+    ~ᵣappω : 
+        b ~ᵣ d →
+        a ~ᵣ c →
+        (b ·ω a) ~ᵣ (d ·ω c)
+    ~ᵣapp𝟘 : 
+        b ~ᵣ d →
+        (b ·𝟘 a) ~ᵣ d
+    -- Any case where id accept ·𝟘?
+    ~ᵣbetaω : ((ƛ∶ A 𝕢 ω ♭ b) ·ω a) ~ᵣ (b [ a / 0 ])
+    -- isnt this covered by app0?
+    {-
+    -- ???? This feels very wrong, maybe it is even unnecessary
+    ~ᵣbeta𝟘 : (ƛ∶ A 𝕢 𝟘 ♭ b) · a ~ᵣ b
+    -}
+    -- Vec
+    ~ᵣvecω : 
+        n ~ᵣ m →
+        A ~ᵣ B →
+        Vec (n 𝕢 ω) A ~ᵣ Vec (m 𝕢 ω) B
+    ~ᵣvec𝟘 :
+        A ~ᵣ B →
+        Vec (n 𝕢 𝟘) A ~ᵣ List B
+    
+    -- redundant with refl
+    ~ᵣnilvω :
+        nilvω ~ᵣ nilvω
+    ~ᵣnilv𝟘 :
+        nilv𝟘 ~ᵣ nill 
+    ~ᵣ∷vω : 
+        a ~ᵣ c →
+        as ~ᵣ cs →
+        n ~ᵣ m →
+        (a ∷v as 𝕟ω n) ~ᵣ (c ∷v cs 𝕟ω m)
+    ~ᵣ∷v𝟘 : 
+        a ~ᵣ c →
+        as ~ᵣ cs →
+        (a ∷v as 𝕟𝟘 n) ~ᵣ (c ∷l cs)
+    
+    -- eta rules
+    ~ᵣηlist :
+        nb ~ᵣ (a [ nill / i ]) →
+        -- Make use of context rather than forall
+        -- Also not well typed because ill be mixing potentially different constructors
+        -- also what if cb is var 2 :: var 0 bc its a fucking vec
+        -- carry equivalences with me like a context?
+        -- current solution, use acc value instead of original list (but what if they do the orig list?)
+        -- Maybe also allow either orig list or accumulatior
+        cb ~ᵣ (a [ var 2 ∷l var 0 / i ]) →
+        (eliml var i P∶ P
+            nb∶ nb 
+            cb∶ cb) 
+            ~ᵣ 
+        a
+    ~ᵣηvec :
+        -- do I gotta shift any indices?
+        nb ~ᵣ (a [ nilv𝕢 σ / i ]) →
+        -- Make use of context rather than forall
+        -- Also not well typed because ill be mixing potentially different constructors
+        cb ~ᵣ (a [ var 2 ∷v var 1 𝕟 var 3 𝕢 σ / i ]) →
+        (elimv var i P∶ P
+            nb∶ nb 
+            cb∶ cb) 
+            ~ᵣ 
+        a
     
 
--- Does this have to be nonzero?
-data _⇒_ : cΓ ⊢ a 𝕢 ω ∶ A → Γᵣ T⊢ aᵣ T∶ Aᵣ → Set where
-    ⇒var : ∀ {j} →  
-        (v :  cΓ ⊢ var j  𝕢 ω ∶ A) →
-        {!   !} →         
-        {!   !} ⇒ {!   !}   
-    
-    ⇒lam : {cΓ : Context Γ} 
-        {dA : zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁} →
-        dA ⇒c Aᵣ →
-        {dB : zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁} → 
-        {db : (cΓ , A  𝕢 {!   !} ) ⊢ b 𝕢 ω ∶ B} →
-        dB ⇒c Bᵣ →
-        {dbᵣ : {!   !} T⊢ bᵣ T∶ {!   !}} →
-        db ⇒ dbᵣ →                
-        ⊢lam db dA ⇒ T.⊢lam dbᵣ   
+    -- add rules for runid funs (maybe)
+
+    {-
+    -- Do I even need these still after copying them? 
+    -- Should I remove the repeats? Or just remove this rule?
+    ~ᵣconv :
+        A ＝ C  →
+        A ~ᵣ C 
+    -}

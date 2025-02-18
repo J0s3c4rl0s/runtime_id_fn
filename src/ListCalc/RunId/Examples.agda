@@ -134,7 +134,6 @@ listToVecDef =
         ~ᵣnilv𝟘        
         (~ᵣ∷v𝟘
             ~ᵣrefl            
-            -- Pretty shitty solution currently I believe
             ~ᵣrefl) 
 
 listToVecTyped : [] ⊢ listToVecDef 𝕢 ω ∶ listToVecTy

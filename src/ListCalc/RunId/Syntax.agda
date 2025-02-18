@@ -97,3 +97,4 @@ pattern nilv𝟘 = nilv𝕢_ 𝟘
 pattern nilvω = nilv𝕢_ ω
 pattern _∷v_𝕟𝟘_ a as n = _∷v_𝕟_𝕢_ a as n 𝟘
 pattern _∷v_𝕟ω_ a as n = _∷v_𝕟_𝕢_ a as n ω
+

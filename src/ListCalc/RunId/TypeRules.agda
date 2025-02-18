@@ -433,7 +433,7 @@ data _~ᵣ_ where
     -- must I add some for the A being different or nah?
     -- distinguish between usages?
     ~ᵣlamω :
-        -- I guess this implicitly checks that the target types match
+        -- I guess this implicitly checks that the targ et types match
         b ~ᵣ c →
         (ƛ∶ A 𝕢 ω ♭ b)  ~ᵣ (ƛ∶ A 𝕢 ω ♭ c)
     ~ᵣlam𝟘 :
@@ -484,14 +484,9 @@ data _~ᵣ_ where
     -- eta rules
     ~ᵣηlist :
         nb ~ᵣ (a [ nill / i ]) →
-        -- Make use of context rather than forall
-        -- Also not well typed because ill be mixing potentially different constructors
-        -- also what if cb is var 2 :: var 0 bc its a fucking vec
-        -- carry equivalences with me like a context?
-        -- current solution, use acc value instead of original list (but what if they do the orig list?)
-        -- Maybe also allow either orig list or accumulatior
-        cb ~ᵣ (a [ var 2 ∷l var 0 / i ]) →
-        (eliml var i P∶ P
+        -- substitute into branch replacing tail with acc
+        (cb [ var 0 / 1 ]) ~ᵣ (a [ var 2 ∷l var 0 / i ]) →
+        (eliml var i P∶ P 
             nb∶ nb 
             cb∶ cb) 
             ~ᵣ 

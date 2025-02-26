@@ -11,13 +11,10 @@ private variable
     cΔ cΔ' cΔ'' : Context Δ
     cΘ : Context Θ
     σ σ' π π' ρ ρ' ρ'' ρ''' δ : Quantity
-    A B C D P : Term
+    A B C D P : Type
     a b c d e f g h l m n  : Term
-    as cs : Term
+    as : Term
     nb cb zb sb : Term
-
-    Aᵣ Bᵣ : Term
-    aᵣ bᵣ : Term
 
 _+q_ : Quantity → Quantity → Quantity
 𝟘 +q q2 = q2

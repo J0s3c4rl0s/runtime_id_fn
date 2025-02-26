@@ -11,29 +11,28 @@ data Quantity : Set where
     𝟘 : Quantity
     ω : Quantity
 
+-- Add an alias for types for clarity
+Type = Term
+
 private variable
     Γ Δ Θ : PreContext
     cΓ cΓ' cΓ'' : Context Γ
     cΔ cΔ' cΔ'' : Context Δ
     cΘ : Context Θ
     σ σ' π π' ρ ρ' ρ'' ρ''' δ : Quantity
-    A B C D P : Term
+    A B C D P : Type
     a b c d e f g h l m n  : Term
     as cs : Term
     nb cb zb sb : Term
 
-    Aᵣ Bᵣ : Term
-    aᵣ bᵣ : Term
 
 
+data Annotation : Type → Quantity → Set where
+    _𝕢_ : (A : Type) → (σ : Quantity) → Annotation A σ
 
-data Annotation : Term → Quantity → Set where
-    _𝕢_ : (A : Term) → (σ : Quantity) → Annotation A σ
-
--- might need well formed relation on this shit
 data PreContext where
     [] : PreContext
-    _,_ : (Γ : PreContext) → Term → PreContext
+    _,_ : (Γ : PreContext) → Type → PreContext
 
 data Context where
     [] : Context []
@@ -83,12 +82,12 @@ data Term where
     elimv_P∶_nb∶_cb∶_ : (vec : Term) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
     
     -- Types
-    Nat : Term
-    List : Term → Term
-    Vec : Annotation A σ → Term → Term
-    ∶_⟶_ : Annotation A σ → Term → Term -- Pi type
-    r∶_⟶_ : Annotation A σ → Term → Term -- Runtime Pi type
-    Sett : ℕ → Term -- Universe 
+    Nat : Type
+    List : Type → Type
+    Vec : Annotation A σ → Term → Type
+    ∶_⟶_ : Annotation A σ → Type → Type -- Pi type
+    r∶_⟶_ : Annotation A σ → Type → Type -- Runtime Pi type
+    Sett : ℕ → Type -- Universe 
 
 pattern _·𝟘_ f a = _·_𝕢_ f a 𝟘
 pattern _·ω_ f a = _·_𝕢_ f a ω
@@ -97,4 +96,3 @@ pattern nilv𝟘 = nilv𝕢_ 𝟘
 pattern nilvω = nilv𝕢_ ω
 pattern _∷v_𝕟𝟘_ a as n = _∷v_𝕟_𝕢_ a as n 𝟘
 pattern _∷v_𝕟ω_ a as n = _∷v_𝕟_𝕢_ a as n ω
-

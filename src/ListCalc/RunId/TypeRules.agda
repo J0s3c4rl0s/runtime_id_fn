@@ -25,7 +25,7 @@ private variable
     cΔ cΔ' cΔ'' : Context Δ
     cΘ : Context Θ
     σ σ' π π' ρ ρ' ρ'' ρ''' δ : Quantity
-    A B C D P : Term
+    A B C D P : Type
     a b c d e f g h l m n  : Term
     as cs : Term
     nb cb zb sb : Term
@@ -36,8 +36,9 @@ private variable
     Aᵣ Bᵣ Cᵣ : T.Type
     aᵣ bᵣ cᵣ : T.Term
 
+
 data _＝_ : Term → Term → Set
-data _⊢_∶_ : Context Γ → Annotation A σ → Term → Set
+data _⊢_∶_ : Context Γ → Annotation A σ → Type → Set
 data _~ᵣ_ : Term → Term → Set
 
 -- For now it can be an annotation bc quants are only 0 or 1
@@ -485,7 +486,7 @@ data _~ᵣ_ where
     ~ᵣηlist :
         nb ~ᵣ (a [ nill / i ]) →
         -- substitute into branch replacing tail with acc
-        (cb [ var 0 / 1 ]) ~ᵣ (a [ var 2 ∷l var 0 / i ]) →
+        (cb [ var 1 / 0 ]) ~ᵣ (a [ var 2 ∷l var 1 / i ]) →
         (eliml var i P∶ P 
             nb∶ nb 
             cb∶ cb) 

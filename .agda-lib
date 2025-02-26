@@ -1,7 +1,6 @@
 name: run-time-id-functions
 depend: 
     standard-library
-    graded-type-theory
+flags: --erasure
 include:
   ./src/
-  ./src/ListCalc

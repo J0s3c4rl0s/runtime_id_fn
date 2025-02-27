@@ -125,16 +125,14 @@ listToVecDef =
     (eliml var 0 P∶
        ƛ∶ List Nat 𝕢 𝟘 ♭
        Vec (((listLengthDef · Nat 𝕢 𝟘) · var 0 𝕢 ω) 𝕢 𝟘) Nat
-       nb∶ nilv𝕢 𝟘 cb∶
-       (var 2 ∷v var 0 𝕟 (listLengthDef · Nat 𝕢 𝟘) · var 1 𝕢 ω 𝕢 𝟘))
+       nb∶ nilv𝕢 𝟘 
+       cb∶ (var 2 ∷v var 0 𝕟 (listLengthDef · Nat 𝕢 𝟘) · var 1 𝕢 ω 𝕢 𝟘))
       ~ᵣ 
     var 0
 ~ᵣlemma = 
     ~ᵣηlist
         ~ᵣnilv𝟘        
-        (~ᵣ∷v𝟘
-            ~ᵣrefl            
-            ~ᵣrefl) 
+        {!   !} 
 
 listToVecTyped : [] ⊢ listToVecDef 𝕢 ω ∶ listToVecTy
 listToVecTyped = ⊢rlam

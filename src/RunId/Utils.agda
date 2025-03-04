@@ -85,37 +85,37 @@ shiftindices (r∶ t 𝕢 σ ⟶ t₁) i l = r∶ shiftindices t i l 𝕢 σ ⟶
 shiftindices (Sett level) i l = Sett level
 
 -- There are some hijinks around when substitution is admissible, dont think quants change
-_[_/_]  : Term → Term → ℕ → Term
-var 0 [ a / 0 ] = a
-var b [ a / i ] = var b 
-(ƛ∶ bₜ 𝕢 σ ♭ b) [ a / i ] = ƛ∶ bₜ [ a / i ]  𝕢 σ ♭ (b [ shiftindices a 1 0 / suc i ])
-(ƛr∶ b 𝕢 x ♭ b₁) [ a / i ] = (ƛr∶ b [ a / i ] 𝕢 x ♭ (b₁ [ shiftindices a 1 0 / suc i ]))
-(b ·𝟘 c) [ a / i ] = (b [ a / i ]) ·𝟘 (c [ a / i ])
-(b ·ω c) [ a / i ] = (b [ a / i ]) ·ω (c [ a / i ])
-(f ·ᵣ b) [ a / i ] = (f [ a / i ]) ·ᵣ (b [ a / i ])
-(∶ b 𝕢 σ ⟶ c) [ a / i ] = ∶ b [ a / i ] 𝕢 σ ⟶ (c [ shiftindices a 1 0 / suc i ]) 
-(r∶ b 𝕢 σ ⟶ c) [ a / i ] = r∶ b [ a / i ] 𝕢 σ ⟶ (c [ shiftindices a 1 0 / suc i ]) 
-z [ a / i ] = z
-s b [ a / i ] = s (b [ a / i ]) 
-nill [ a / i ] = nill
-(h ∷l t) [ a / i ] = (h [ a / i ]) ∷l (t [ a / i ])
-nilv𝟘 [ a / i ] = nilv𝟘
-nilvω [ a / i ] = nilvω
-(h ∷v t 𝕟𝟘 n) [ a / i ] = (h [ a / i ]) ∷v (t [ a / i ]) 𝕟𝟘 (n [ a / i ])
-(h ∷v t 𝕟ω n) [ a / i ] = (h [ a / i ]) ∷v (t [ a / i ]) 𝕟ω (n [ a / i ])
-(elimnat b P∶ P zb∶ zb sb∶ sb) [ a / i ] = 
-    elimnat b [ a / i ] P∶ P [ a / i ] 
-        zb∶ zb [ a / i ] 
-        sb∶ (sb [ shiftindices a 2 0 / i + 2 ])
-(eliml b P∶ P nb∶ nb cb∶ cb) [ a / i ] = 
-    eliml b [ a / i ] P∶ P [ a / i ] 
-        nb∶ nb [ a / i ] 
-        cb∶ (cb [ shiftindices a 3 0 / i + 3 ])
-(elimv b P∶ P nb∶ nb cb∶ cb) [ a / i ] = 
-    elimv b [ a / i ] P∶ P [ a / i ] 
-        nb∶ nb [ a / i ] 
-        cb∶ (cb [ shiftindices a 4 0 / i + 4 ])
-Nat [ a / i ] = Nat
-List b [ a / i ] = List (b [ a / i ])
-Vec (n 𝕢 σ) b [ a / i ] = Vec (((n [ a / i ])) 𝕢 σ) (b [ a / i ])
-Sett level [ a / i ] = Sett level
+_[_/_]  : Term → ℕ → Term → Term
+var 0 [  0 / a ] = a
+var b [ i / a  ] = var b 
+(ƛ∶ bₜ 𝕢 σ ♭ b) [ i / a ] = ƛ∶ bₜ [ i / a ]  𝕢 σ ♭ (b [ suc i / shiftindices a 1 0 ])
+(ƛr∶ b 𝕢 x ♭ b₁) [ i / a ] = (ƛr∶ b [ i / a ] 𝕢 x ♭ (b₁ [ suc i / shiftindices a 1 0 ]))
+(b ·𝟘 c) [ i / a ] = (b [ i / a ]) ·𝟘 (c [ i / a ])
+(b ·ω c) [ i / a ] = (b [ i / a ]) ·ω (c [ i / a ])
+(f ·ᵣ b) [ i / a ] = (f [ i / a ]) ·ᵣ (b [ i / a ])
+(∶ b 𝕢 σ ⟶ c) [ i / a ] = ∶ b [ i / a ] 𝕢 σ ⟶ (c [ suc i / shiftindices a 1 0 ]) 
+(r∶ b 𝕢 σ ⟶ c) [ i / a ] = r∶ b [ i / a ] 𝕢 σ ⟶ (c [ suc i / shiftindices a 1 0 ]) 
+z [ i / a ] = z
+s b [ i / a ] = s (b [ i / a ]) 
+nill [ i / a ] = nill
+(h ∷l t) [ i / a ] = (h [ i / a ]) ∷l (t [ i / a ])
+nilv𝟘 [ i / a ] = nilv𝟘
+nilvω [ i / a ] = nilvω
+(h ∷v t 𝕟𝟘 n) [ i / a ] = (h [ i / a ]) ∷v (t [ i / a ]) 𝕟𝟘 (n [ i / a ])
+(h ∷v t 𝕟ω n) [ i / a ] = (h [ i / a ]) ∷v (t [ i / a ]) 𝕟ω (n [ i / a ])
+(elimnat b P∶ P zb∶ zb sb∶ sb) [ i / a ] = 
+    elimnat b [ i / a ] P∶ P [ i / a ] 
+        zb∶ zb [ i / a ] 
+        sb∶ (sb [ i + 2 / shiftindices a 2 0 ])
+(eliml b P∶ P nb∶ nb cb∶ cb) [ i / a ] = 
+    eliml b [ i / a ] P∶ P [ i / a ] 
+        nb∶ nb [ i / a ] 
+        cb∶ (cb [ i + 3 / shiftindices a 3 0 ])
+(elimv b P∶ P nb∶ nb cb∶ cb) [ i / a ] = 
+    elimv b [ i / a ] P∶ P [ i / a ] 
+        nb∶ nb [ i / a ] 
+        cb∶ (cb [ i + 4 / shiftindices a 4 0 ])
+Nat [ i / a ] = Nat
+List b [ i / a ] = List (b [ i / a ])
+Vec (n 𝕢 σ) b [ i / a ] = Vec (((n [ i / a ])) 𝕢 σ) (b [ i / a ])
+Sett level [ i / a ] = Sett level

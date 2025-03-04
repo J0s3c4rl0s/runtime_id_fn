@@ -1,6 +1,6 @@
-module ListCalc.RunId.Utils where
+module RunId.Utils where
 
-open import ListCalc.RunId.Syntax
+open import RunId.Syntax
 
 open import Data.Nat using (ℕ; suc; _+_; _≤ᵇ_)
 open import Data.Bool using (if_then_else_)

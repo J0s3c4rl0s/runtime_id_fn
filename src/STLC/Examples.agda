@@ -1,7 +1,7 @@
-module ListCalc.STLC.Examples where
+module STLC.Examples where
 
-open import ListCalc.STLC.Syntax
-open import ListCalc.STLC.TypeRules
+open import STLC.Syntax
+open import STLC.TypeRules
 
 idNatTy : Type
 idNatTy = Nat ⟶ Nat

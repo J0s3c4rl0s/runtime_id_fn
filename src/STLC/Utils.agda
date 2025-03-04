@@ -1,6 +1,6 @@
-module ListCalc.STLC.Utils where
+module STLC.Utils where
 
-open import ListCalc.STLC.Syntax
+open import STLC.Syntax
 
 open import Data.Nat using (ℕ; zero; suc; _+_; _≤ᵇ_)
 open import Data.Bool using (if_then_else_)

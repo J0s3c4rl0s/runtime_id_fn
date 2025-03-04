@@ -1,10 +1,10 @@
-module ListCalc.STLC.TypeRules where
+module STLC.TypeRules where
 
-open import ListCalc.STLC.Syntax
-open import ListCalc.STLC.Utils
+open import STLC.Syntax
+open import STLC.Utils
 
 -- re-export Syntax constructs
-open ListCalc.STLC.Syntax public
+open STLC.Syntax public
 
 private variable 
     Γ : Context

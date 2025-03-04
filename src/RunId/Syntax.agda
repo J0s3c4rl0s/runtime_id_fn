@@ -1,4 +1,4 @@
-module ListCalc.RunId.Syntax where
+module RunId.Syntax where
 
 open import Data.Nat using (ℕ; zero; suc; _+_; _≤ᵇ_)
 

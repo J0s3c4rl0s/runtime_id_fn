@@ -1,13 +1,13 @@
-module ListCalc.RunId.Examples where
+module RunId.Examples where
 
 open import Data.Unit
 open import Data.Empty
 open import Relation.Nullary using (¬_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
-open import ListCalc.RunId.Syntax
-open import ListCalc.RunId.Utils
-open import ListCalc.RunId.TypeRules
+open import RunId.Syntax
+open import RunId.Utils
+open import RunId.TypeRules
 
 private variable
     Γ : PreContext

@@ -1,7 +1,7 @@
-module ListCalc.RunIdComp where
+module RunIdComp where
 
-import ListCalc.RunId as S 
-import ListCalc.STLC as T
+import RunId as S 
+import STLC as T
 
 open import Data.Unit using (⊤; tt)
 open import Data.List
@@ -18,7 +18,28 @@ private variable
     sΓ : S.PreContext
     scΓ : S.Context sΓ
     tΓ : T.Context
-    
+
+-- Figure out how it actually makes sense to keep track of indices 
+data ContextRemap : S.Context sΓ  → Set where
+    []ᵣ : ContextRemap S.[]
+    _,ᵣ_skip : ContextRemap scΓ → (sA : S.Term) → ContextRemap (scΓ S., sA S.𝕢 S.𝟘)  
+    _,ᵣ_↦_ : ContextRemap scΓ → (sA : S.Term) → (tA : T.Type) → ContextRemap (scΓ S., sA S.𝕢 S.ω)
+
+computeRemap : (scΓ : S.Context sΓ) → ContextRemap scΓ 
+computeRemap S.[] = []ᵣ 
+computeRemap (scΓ S., A S.𝕢 S.𝟘) = computeRemap scΓ ,ᵣ A skip 
+computeRemap (scΓ S., A S.𝕢 S.ω) = computeRemap scΓ ,ᵣ A ↦ T.Nat 
+
+-- outside of FP this could be a collection of ints to skip over and do maths instead
+remapIndex : ℕ → ContextRemap scΓ → Maybe ℕ
+remapIndex i []ᵣ = nothing
+remapIndex zero (scΓ ,ᵣ sA skip) = nothing
+-- this entry wont exist so decrement index
+remapIndex (suc i) (scΓ ,ᵣ sA skip) = remapIndex i scΓ
+remapIndex zero (scΓ ,ᵣ sA ↦ tA) = just zero
+remapIndex (suc i) (scΓ ,ᵣ sA ↦ tA) = do 
+    n ← remapIndex i scΓ 
+    just (suc n)
 
 lookupType : S.Context sΓ → ℕ → Maybe (S.Type × S.Quantity) 
 lookupType S.[] i = nothing
@@ -27,6 +48,9 @@ lookupType (scon S., A S.𝕢 σ) (suc i) = lookupType scon i
 
 compareTypes : S.Context sΓ → S.Type → S.Type → Maybe ⊤ 
 compareTypes scon A B = {!   !}
+
+typeinfer : S.Context sΓ → S.Term → Maybe S.Type
+typeinfer = {!   !}
 
 -- Perhaps only support basic options for now
 typecheck : S.Context sΓ → S.Term → S.Type → Maybe ⊤
@@ -63,18 +87,14 @@ typecheck scon (S.∶ x ⟶ x₁) stype = nothing
 typecheck scon (S.r∶ x ⟶ x₁) stype = nothing
 typecheck scon (S.Sett x) stype = nothing
 
-
 -- Compile term, context and maybe? context remap
 compileTerm : (scΓ : S.Context sΓ) → S.Term → Maybe T.Term
 compileTerm scon (S.var x) = do 
-    -- (need to fucking shift indices again) 
-    conty ← lookupType scon x
-    -- Do I have to compare?
-    -- not sure I can compare insofar as conty is expecting a different context 
-    compareTypes scon {!   !} {!   !}
+    -- Compute remap
+    let remap = computeRemap scon
     -- Recompute index (how)?
-    -- Maybe shift function takes SCon and TCon?
-    {!   !}
+    n ← remapIndex x remap
+    just (T.var n)
 compileTerm scon (S.ƛ∶ sA S.𝕢 S.𝟘 ♭ sbody) = do 
     tbody ← compileTerm (scon S., sA S.𝕢 S.𝟘) sbody
     -- shift indices in tbody?
@@ -126,7 +146,13 @@ compileTerm scon (S.eliml sa P∶ sP nb∶ sn cb∶ sc) = do
     tc ← compileTerm scon sc 
     just (T.eliml ta nb∶ tn cb∶ tc)
 -- Syntax for differentiating vec0 and vecomega
-compileTerm scon (S.elimv sa P∶ sP nb∶ sn cb∶ sb) = {!   !}
+compileTerm scon (S.elimv sa P∶ sP nb∶ sn cb∶ sc) = do 
+    tn ← compileTerm scon sn 
+    tc ← compileTerm scon sc 
+    taω@(S.Vec (n S.𝕢 S.ω) A) ← typeinfer scon sa where
+        -- Assume alterntive is 𝟘
+        ta𝟘 → just (T.eliml {!  ta𝟘  !} nb∶ {!   !} cb∶ {!   !})
+    just ({!   !})
 -- Reject types in term position
 compileTerm scon stype = nothing
 
@@ -153,18 +179,6 @@ compileType (S.Sett l) = nothing
 -- Reject terms in type positon.
 compileType sA = nothing
 
--- Figure out how it actually makes sense to keep track of indices 
-data ContextRemap : S.Context sΓ → T.Context → Set where
-    []ᵣ : ContextRemap S.[] T.[]
-    _,ᵣ_skip : ContextRemap scΓ tΓ → (sa : S.Term) → ContextRemap {!   !} {!   !}  
-    _,ᵣ_↦_ : ContextRemap scΓ tΓ → (sa : S.Term) → (ta : T.Term) → ContextRemap {!   !} {!   !}
-    {-
-    []ᵣ : ContextRemap S.[]
-    -- For now keep track of number that says how many things to skip
-    -- using _∋_ but not sure if possible
-    _,ᵣ_ : ContextRemap (scΓ) → {!   !} T.∋ {!   !} → ContextRemap (scΓ S., _ S.𝕢 _) 
-    -}
-
 compileContext : (scΓ : S.Context sΓ) → Maybe T.Context
 compileContext S.[] = just T.[]
 compileContext (scon S., A S.𝕢 S.𝟘) = compileContext scon
@@ -172,9 +186,6 @@ compileContext (scon S., A S.𝕢 S.ω) = do
     tcon ← compileContext scon 
     tty ← compileType A
     just (tcon T., tty) 
-    
-computeRemap : (scΓ : S.Context sΓ) → Maybe (T.Context × List ℕ) 
-computeRemap = {!   !}
 
 -- Would a compiler monad make sense? 
 -- Recursive Helper

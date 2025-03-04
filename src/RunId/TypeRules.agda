@@ -1,8 +1,8 @@
-module ListCalc.RunId.TypeRules where
+module RunId.TypeRules where
 
-open import ListCalc.RunId.Syntax
-open import ListCalc.RunId.Utils
-import ListCalc.STLC.TypeRules as T
+open import RunId.Syntax
+open import RunId.Utils
+import STLC.TypeRules as T
 open T using () 
     renaming (
         _⟶_ to _T⟶_;

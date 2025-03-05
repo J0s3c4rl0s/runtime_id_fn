@@ -147,14 +147,8 @@ compileTerm scon (S.eliml sa P∶ sP nb∶ sn cb∶ sc) = do
     tn ← compileTerm scon sn 
     tc ← compileTerm scon sc 
     just (T.eliml ta nb∶ tn cb∶ tc)
--- Syntax for differentiating vec0 and vecomega
-compileTerm scon (S.elimv sa P∶ sP nb∶ sn cb∶ sc) = do 
-    tn ← compileTerm scon sn 
-    tc ← compileTerm scon sc 
-    taω@(S.Vec A (n S.𝕢 S.ω)) ← typeinfer scon sa where
-        -- Assume alterntive is 𝟘
-        ta𝟘 → just (T.eliml {!  ta𝟘  !} nb∶ {!   !} cb∶ {!   !})
-    just ({!   !})
+compileTerm scon (S.elimv sa S.𝕢 S.𝟘 P∶ sP nb∶ sn cb∶ sc) = {!   !}
+compileTerm scon (S.elimv sa S.𝕢 S.ω P∶ sP nb∶ sn cb∶ sc) = {!   !}
 -- Reject types in term position
 compileTerm scon stype = nothing
 

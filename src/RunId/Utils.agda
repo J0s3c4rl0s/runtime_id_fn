@@ -72,9 +72,9 @@ shiftindices (eliml t P∶ t₁ nb∶ t₃ cb∶ t₄) i l =
     eliml (shiftindices t i l) P∶ (shiftindices t₁ i l) 
             nb∶ (shiftindices t₃ i l) 
             cb∶ (shiftindices t₄ i (l + 3))
-shiftindices (elimv t P∶ t₁ nb∶ t₄ cb∶ t₅) i l = 
+shiftindices (elimv (t 𝕢 σ) P∶ t₁ nb∶ t₄ cb∶ t₅) i l = 
     elimv_P∶_nb∶_cb∶_ 
-        (shiftindices t i l) (shiftindices t₁ i l) 
+        ((shiftindices t i l) 𝕢 σ) (shiftindices t₁ i l) 
             (shiftindices t₄ i l) 
             (shiftindices t₅ i (l + 4))
 shiftindices Nat i l = Nat
@@ -111,8 +111,8 @@ nilvω [ i / a ] = nilvω
     eliml b [ i / a ] P∶ P [ i / a ] 
         nb∶ nb [ i / a ] 
         cb∶ (cb [ i + 3 / shiftindices a 3 0 ])
-(elimv b P∶ P nb∶ nb cb∶ cb) [ i / a ] = 
-    elimv b [ i / a ] P∶ P [ i / a ] 
+(elimv (b 𝕢 σ) P∶ P nb∶ nb cb∶ cb) [ i / a ] = 
+    elimv (b [ i / a ] 𝕢 σ) P∶ P [ i / a ] 
         nb∶ nb [ i / a ] 
         cb∶ (cb [ i + 4 / shiftindices a 4 0 ])
 Nat [ i / a ] = Nat

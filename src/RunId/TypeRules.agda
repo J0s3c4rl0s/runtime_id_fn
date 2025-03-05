@@ -155,7 +155,7 @@ data _⊢_∶_ where
         cΓ' ⊢ nb 𝕢 σ ∶ ((P · z 𝕢 π) · (nilv𝕢 δ) 𝕢 ρ) →
         -- assuming that the constructors are not heterogenous, I think they might need to be rho
         ((((cΓ' , Nat 𝕢 π) , A 𝕢 σ) , Vec A (var 1 𝕢 δ) 𝕢  σ) , (P · var 0 𝕢 π)  𝕢 σ) ⊢ cb 𝕢 σ ∶ ((((((P · var 3 𝕢 π) · (var 2 ∷v var 1 𝕟 var 3 𝕢 δ) 𝕢 ρ))))) →
-        (cΓ +c cΓ') ⊢ elimv b P∶ P 
+        (cΓ +c cΓ') ⊢ elimv (b 𝕢 δ) P∶ P 
                 nb∶ nb 
                 cb∶ cb 
             𝕢 σ ∶ ((P · n 𝕢 π) · b 𝕢 ρ)
@@ -270,19 +270,19 @@ data _＝_ where
     -- vec
     ＝veceln :
         cs ＝ (nilv𝕢 σ) →
-        (elimv cs P∶ P 
+        (elimv (cs 𝕢 σ) P∶ P 
                 nb∶ nb 
                 cb∶ cb) 
             ＝ 
             nb
     ＝vecelc :
         cs ＝ (a ∷v as 𝕟 n 𝕢 σ) → 
-        (elimv (nilv𝕢 σ) P∶ P
+        (elimv ((nilv𝕢 σ) 𝕢 σ) P∶ P
                 nb∶ nb 
                 cb∶ cb) 
             ＝ 
             b →
-        (elimv cs P∶ P
+        (elimv (cs 𝕢 σ) P∶ P
                 nb∶ nb 
                 cb∶ cb) 
             ＝ 
@@ -382,19 +382,19 @@ data _~ᵣ_ where
     ~ᵣveceln :
         -- generic computation rules
         cs ~ᵣ (nilv𝕢 σ) →
-        (elimv cs P∶ P 
+        (elimv (cs 𝕢 σ) P∶ P 
                 nb∶ nb 
                 cb∶ cb )
             ~ᵣ 
             nb
     ~ᵣvecelc :
         cs ~ᵣ (a ∷v as 𝕟 n 𝕢 σ) → 
-        (elimv (nilv𝕢 σ) P∶ P
+        (elimv ((nilv𝕢 σ) 𝕢 σ) P∶ P
                 nb∶ nb 
                 cb∶ cb )
             ~ᵣ 
             b →
-        (elimv cs P∶ P
+        (elimv (cs 𝕢 σ) P∶ P
                 nb∶ nb 
                 cb∶ cb )
             ~ᵣ 
@@ -498,7 +498,7 @@ data _~ᵣ_ where
         -- Make use of context rather than forall
         -- Also not well typed because ill be mixing potentially different constructors
         cb ~ᵣ (a [ i / var 2 ∷v var 1 𝕟 var 3 𝕢 σ ]) →
-        (elimv var i P∶ P
+        (elimv (var i 𝕢 σ) P∶ P
             nb∶ nb 
             cb∶ cb) 
             ~ᵣ 

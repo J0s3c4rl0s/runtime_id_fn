@@ -79,7 +79,8 @@ data Term where
     -- List
     eliml_P∶_nb∶_cb∶_ : (list : Term) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
     -- vec
-    elimv_P∶_nb∶_cb∶_ : (vec : Term) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    -- Annotation is for if vec has erased index or not
+    elimv_P∶_nb∶_cb∶_ : Annotation a σ → (P : Term) → (nilB : Term) → (∷B : Term) → Term
     
     -- Types
     Nat : Type

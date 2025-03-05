@@ -84,14 +84,14 @@ data _⊢_∶_ where
         -- Need something to limit substitution according to atkey 
         -- avoid green slime with eq
         {eq : cΓ'' ≡ (cΓ +c (π *c cΓ'))} →
-        cΓ'' ⊢ (a · b 𝕢 π) 𝕢 σ ∶  (B [ b / 0 ])
+        cΓ'' ⊢ (a · b 𝕢 π) 𝕢 σ ∶  (B [ 0 / b ])
     ⊢appᵣ : {cΓ cΓ' cΓ'' : Context Γ} → 
         cΓ ⊢ a 𝕢 σ ∶ (∶ A 𝕢 ω ⟶ B) →
         cΓ' ⊢ b 𝕢 selectQ ω σ ∶ A →
         -- Need something to limit substitution according to atkey 
         -- avoid green slime with eq
         {eq : cΓ'' ≡ (cΓ +c (ω *c cΓ'))} →
-        cΓ'' ⊢ (a ·ᵣ b) 𝕢 σ ∶  (B [ b / 0 ])
+        cΓ'' ⊢ (a ·ᵣ b) 𝕢 σ ∶  (B [ 0 /  b ])
 
     -- Nats
     ⊢Nat : 
@@ -207,8 +207,8 @@ data _＝_ where
         a ＝ c →
         (b ·ᵣ a) ＝ (d ·ᵣ c)
     -- Look into substitution rules 
-    ＝beta : ((ƛ∶ A 𝕢 σ ♭ b) · a 𝕢 σ) ＝ (b [ a / 0 ])
-    ＝betaᵣ : ((ƛ∶ A 𝕢 ω ♭ b) ·ᵣ a) ＝ (b [ a / 0 ])
+    ＝beta : ((ƛ∶ A 𝕢 σ ♭ b) · a 𝕢 σ) ＝ (b [ 0 / a ])
+    ＝betaᵣ : ((ƛ∶ A 𝕢 ω ♭ b) ·ᵣ a) ＝ (b [ 0 / a ])
     {-
     ＝lift : 
         (cΓ , A 𝕢  σ) ⊢ b 𝕢 π ∶ B →
@@ -245,7 +245,7 @@ data _＝_ where
                 zb∶ zb 
                 sb∶ sb) 
             ＝ 
-            ((sb [ n / 1 ]) [ a / 0 ])
+            ((sb [ 1 / n ]) [ 0 / a ])
     -- list
     ＝listeln :
         cs ＝ nill →
@@ -265,7 +265,7 @@ data _＝_ where
                 nb∶ nb 
                 cb∶ cb) 
             ＝ 
-            (((cb [ a / 2 ]) [ as / 1 ]) [ b / 0 ])
+            (((cb [ 2 / a ]) [ 1 / as ]) [ 0 / b ])
             -- (((cb · a) · as) ·  b)
     -- vec
     ＝veceln :
@@ -287,7 +287,7 @@ data _＝_ where
                 cb∶ cb) 
             ＝ 
             -- Might be worthwhile to change n to fit the structure of ∷v
-            ((((cb [ n / 3 ]) [ a / 2 ]) [ as / 1 ]) [ b / 0 ])
+            ((((cb [ 3 / n ]) [ 2 / a ]) [ 1 / as ]) [ 0 / b ])
             -- ((((cb · n) · a) · as) · b)
     
     ---- Cong rules for datatypes 
@@ -356,7 +356,7 @@ data _~ᵣ_ where
                 zb∶ zb 
                 sb∶ sb) 
             ~ᵣ 
-            ((sb [ n / 1 ]) [ a / 0 ])
+            ((sb [ 1 / n ]) [ 0 / a ])
     -- list
     ~ᵣlisteln :
         cs ~ᵣ nill →
@@ -376,7 +376,7 @@ data _~ᵣ_ where
                 nb∶ nb 
                 cb∶ cb )
             ~ᵣ 
-            (((cb [ a / 2 ]) [ as / 1 ]) [ b / 0 ])
+            (((cb [ 2 / a ]) [ 1 / as ]) [ 0 / b ])
             -- (((cb · a) · as) ·  b)
     -- vec
     ~ᵣveceln :
@@ -399,7 +399,7 @@ data _~ᵣ_ where
                 cb∶ cb )
             ~ᵣ 
             -- Might be worthwhile to change n to fit the structure of ∷v
-            ((((cb [ n / 3 ]) [ a / 2 ]) [ as / 1 ]) [ b / 0 ])
+            ((((cb [ 3 / n ]) [ 2 / a ]) [ 1 / as ]) [ 0 / b ])
             -- ((((cb · n) · a) · as) · b)
     
     ---- Cong rules for datatypes 
@@ -452,7 +452,7 @@ data _~ᵣ_ where
         b ~ᵣ d →
         (b ·𝟘 a) ~ᵣ d
     -- Any case where id accept ·𝟘?
-    ~ᵣbetaω : ((ƛ∶ A 𝕢 ω ♭ b) ·ω a) ~ᵣ (b [ a / 0 ])
+    ~ᵣbetaω : ((ƛ∶ A 𝕢 ω ♭ b) ·ω a) ~ᵣ (b [ 0 / a ])
     -- isnt this covered by app0?
     {-
     -- ???? This feels very wrong, maybe it is even unnecessary
@@ -484,9 +484,9 @@ data _~ᵣ_ where
     
     -- eta rules
     ~ᵣηlist :
-        nb ~ᵣ (a [ nill / i ]) →
+        nb ~ᵣ (a [ i / nill ]) →
         -- substitute into branch replacing tail with acc
-        (cb [ var 1 / 0 ]) ~ᵣ (a [ var 2 ∷l var 1 / i ]) →
+        (cb [ 0 / var 1 ]) ~ᵣ (a [ i / var 2 ∷l var 1 ]) →
         (eliml var i P∶ P 
             nb∶ nb 
             cb∶ cb) 
@@ -494,10 +494,10 @@ data _~ᵣ_ where
         a
     ~ᵣηvec :
         -- do I gotta shift any indices?
-        nb ~ᵣ (a [ nilv𝕢 σ / i ]) →
+        nb ~ᵣ (a [ i / nilv𝕢 σ ]) →
         -- Make use of context rather than forall
         -- Also not well typed because ill be mixing potentially different constructors
-        cb ~ᵣ (a [ var 2 ∷v var 1 𝕟 var 3 𝕢 σ / i ]) →
+        cb ~ᵣ (a [ i / var 2 ∷v var 1 𝕟 var 3 𝕢 σ ]) →
         (elimv var i P∶ P
             nb∶ nb 
             cb∶ cb) 

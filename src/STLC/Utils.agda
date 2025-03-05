@@ -31,29 +31,29 @@ shiftindices (elimv x nb∶ nb cb∶ cb) i l =
 -- Consider parallel subtitutions to deal with free variable capture
 
 -- Could reflection make this more efficient?
-_[_/_]  : Term → Term → ℕ → Term
-var 0 [ a / 0 ] = a
-var b [ a / i ] = var b 
-(ƛ b) [ a / i ] = ƛ (b [ shiftindices a 1 0 / suc i ])
-(b · c) [ a / i ] = (b [ a / i ]) · (c [ a / i ])
-z [ a / i ] = z
-s b [ a / i ] = s (b [ a / i ]) 
-nill [ a / i ] = nill
-(h ∷l t) [ a / i ] = (h [ a / i ]) ∷l (t [ a / i ])
-nilv [ a / i ] = nilv
-(h ∷v t 𝕟 n) [ a / i ] = (h [ a / i ]) ∷v (t [ a / i ]) 𝕟 (n [ a / i ])
-(elimnat b zb∶ zb sb∶ sb) [ a / i ] = 
-    elimnat b [ a / i ] 
-        zb∶ zb [ a / i ] 
-        sb∶ (sb [ shiftindices a 1 0 / suc i ])
-(eliml b nb∶ nb cb∶ cb) [ a / i ] = 
-    eliml b [ a / i ] 
-        nb∶ nb [ a / i ] 
-        cb∶ (cb [ shiftindices a 2 0 / i + 2 ])
-(elimv b nb∶ nb cb∶ cb) [ a / i ] = 
-    elimv b [ a / i ]
-        nb∶ nb [ a / i ]
-        cb∶ (cb [ shiftindices a 3 0 / i + 3 ])
+_[_/_]  : Term → ℕ → Term → Term
+var 0 [ 0 / a ] = a
+var b [ i / a ] = var b 
+(ƛ b) [ i / a ] = ƛ (b [ suc i / shiftindices a 1 0 ])
+(b · c) [ i / a ] = (b [ i / a ]) · (c [ i / a ])
+z [ i / a ] = z
+s b [ i / a ] = s (b [ i / a ]) 
+nill [ i / a ] = nill
+(h ∷l t) [ i / a ] = (h [ i / a ]) ∷l (t [ i / a ])
+nilv [ i / a ] = nilv
+(h ∷v t 𝕟 n) [ i / a ] = (h [ i / a ]) ∷v (t [ i / a ]) 𝕟 (n [ i / a ])
+(elimnat b zb∶ zb sb∶ sb) [ i / a ] = 
+    elimnat b [ i / a ] 
+        zb∶ zb [ i / a ] 
+        sb∶ (sb [ suc i / shiftindices a 1 0 ])
+(eliml b nb∶ nb cb∶ cb) [ i / a ] = 
+    eliml b [ i / a ] 
+        nb∶ nb [ i / a ] 
+        cb∶ (cb [ i + 2 / shiftindices a 2 0 ])
+(elimv b nb∶ nb cb∶ cb) [ i / a ] = 
+    elimv b [ i / a ]
+        nb∶ nb [ i / a ]
+        cb∶ (cb [ i + 3 / shiftindices a 3 0 ])
 
 ∋→ℕ : ∀ {Γ A} → Γ ∋ A → ℕ 
 ∋→ℕ Z = 0

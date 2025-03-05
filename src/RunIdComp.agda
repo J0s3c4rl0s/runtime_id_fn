@@ -8,6 +8,7 @@ open import Data.List
 open import Data.Nat
 open import Data.Product using (_×_; _,_)
 open import Data.Maybe using (Maybe; just; nothing; _>>=_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 -- For some reason not included in the stdlib
 infixl 1 _>>_
@@ -46,50 +47,32 @@ lookupType S.[] i = nothing
 lookupType (scon S., A S.𝕢 σ) zero = just (A , σ) 
 lookupType (scon S., A S.𝕢 σ) (suc i) = lookupType scon i
 
-compareTypes : S.Context sΓ → S.Type → S.Type → Maybe ⊤ 
-compareTypes scon A B = {!   !}
 
-typeinfer : S.Context sΓ → S.Term → Maybe S.Type
-typeinfer = {!   !}
+compileType : S.Type → Maybe T.Type
+compileType S.Nat = just T.Nat
+compileType (S.List sA) = do 
+    tA ← compileType sA 
+    just (T.List tA) 
+compileType (S.Vec sA (_ S.𝕢 S.𝟘)) = do 
+    tA ← compileType sA
+    just (T.List tA) 
+compileType (S.Vec sA (_ S.𝕢 S.ω)) = do 
+    tA ← compileType sA
+    just (T.Vec tA)
+compileType (S.∶ sA S.𝕢 σ ⟶ sB) = do 
+    tA ← compileType sA 
+    tB ← compileType sB
+    just (tA T.⟶ tB) 
+-- Force into id? Or compile normally?
+compileType (S.r∶ sA ⟶ sB) = do 
+    tA ← compileType sA 
+    tB ← compileType sB
+    just (tA T.⟶ tB)
+-- Not sure what to do here... reject?
+compileType (S.Sett l) = nothing
+-- Reject terms in type positon.
+compileType sA = nothing
 
--- Perhaps only support basic options for now
-{-
-typecheck : S.Context sΓ → S.Term → S.Type → Maybe ⊤
-typecheck scon (S.var x) stype = do 
-    (contype , _) ← lookupType scon x
-    -- compare contype and stype
-    {!   !}
-typecheck scon (S.ƛ∶ At S.𝕢 σt ♭ sterm) stype = do 
-    -- Need to type infer.... Maybe should just be annotated
-    Bt ← {! typecheck  !} 
-    compareTypes scon (S.∶ At S.𝕢 σt ⟶ Bt) stype 
-    just tt
-typecheck scon (S.ƛr∶ At ♭ sterm) stype = do 
-    -- Need to type infer.... Maybe should just be annotated
-    Bt ← {! typecheck  !} 
-    compareTypes scon (S.r∶ At ⟶ Bt) stype 
-    just tt 
-typecheck scon (sterm S.· sterm₁ 𝕢 σ) stype = {!   !}
-typecheck scon (sterm S.·ᵣ sterm₁) stype = {!   !}
-typecheck scon S.z stype = {!   !}
-typecheck scon (S.s sterm) stype = {!   !}
-typecheck scon S.nill stype = {!   !}
-typecheck scon (sterm S.∷l sterm₁) stype = {!   !}
-typecheck scon (S.nilv𝕢 x) stype = {!   !}
-typecheck scon (sterm S.∷v sterm₁ 𝕟 sterm₂ 𝕢 x) stype = {!   !}
-typecheck scon (S.elimnat sterm P∶ sterm₁ zb∶ sterm₂ sb∶ sterm₃) stype = {!   !}
-typecheck scon (S.eliml sterm P∶ sterm₁ nb∶ sterm₂ cb∶ sterm₃) stype = {!   !}
-typecheck scon (S.elimv sterm P∶ sterm₁ nb∶ sterm₂ cb∶ sterm₃) stype = {!   !}
--- Reject types as terms 
-typecheck scon S.Nat stype = nothing
-typecheck scon (S.List x) stype = nothing
-typecheck scon (S.Vec x sterm) stype = nothing
-typecheck scon (S.∶ x ⟶ x₁) stype = nothing
-typecheck scon (S.r∶ x ⟶ x₁) stype = nothing
-typecheck scon (S.Sett x) stype = nothing
--}
-
--- Compile term, context and maybe? context remap
 compileTerm : (scΓ : S.Context sΓ) → S.Term → Maybe T.Term
 compileTerm scon (S.var x) = do 
     -- Compute remap
@@ -99,21 +82,23 @@ compileTerm scon (S.var x) = do
     just (T.var n)
 compileTerm scon (S.ƛ∶ sA S.𝕢 S.𝟘 ♭ sbody) = do 
     tbody ← compileTerm (scon S., sA S.𝕢 S.𝟘) sbody
-    -- shift indices in tbody?
-    just {!   !}
+    -- shift indices tbody
+    just (T.shiftindices tbody 1 0)
 compileTerm scon (S.ƛ∶ sA S.𝕢 S.ω ♭ sbody) = do 
     tbody ← compileTerm (scon S., sA S.𝕢 S.ω) sbody
     just (T.ƛ tbody) 
 -- reject when erased? 
 -- builtin id function?
-compileTerm scon (S.ƛr∶ sA ♭ sterm) = {!   !}
+compileTerm scon (S.ƛr∶ sA ♭ sterm) = do 
+    -- should I try compiling sA just in case?
+    just (T.ƛ (T.var 0))
 compileTerm scon (sf S.· sa 𝕢 S.𝟘) = do 
     -- should compile away sf to its body
     tf ← compileTerm scon sf
     just tf  
 compileTerm scon (sf S.· sa 𝕢 S.ω) = do 
-    tf ← {!   !} 
-    ta ← {!   !} 
+    tf ← compileTerm scon sf 
+    ta ← compileTerm scon sa 
     just (tf T.· ta) 
 -- Replace by arg
 compileTerm scon (sf S.·ᵣ sa) = compileTerm scon sa
@@ -147,33 +132,19 @@ compileTerm scon (S.eliml sa P∶ sP nb∶ sn cb∶ sc) = do
     tn ← compileTerm scon sn 
     tc ← compileTerm scon sc 
     just (T.eliml ta nb∶ tn cb∶ tc)
-compileTerm scon (S.elimv sa S.𝕢 S.𝟘 P∶ sP nb∶ sn cb∶ sc) = {!   !}
-compileTerm scon (S.elimv sa S.𝕢 S.ω P∶ sP nb∶ sn cb∶ sc) = {!   !}
+compileTerm scon (S.elimv sa S.𝕢 S.𝟘 P∶ sP nb∶ sn cb∶ sc) = do 
+    ta ← compileTerm scon sa 
+    tn ← compileTerm scon sn 
+    tc ← compileTerm scon sc 
+    just (T.eliml ta nb∶ tn cb∶ tc)
+compileTerm scon (S.elimv sa S.𝕢 S.ω P∶ sP nb∶ sn cb∶ sc) = do 
+    ta ← compileTerm scon sa 
+    tn ← compileTerm scon sn 
+    tc ← compileTerm scon sc 
+    just (T.elimv ta nb∶ tn cb∶ tc)
 -- Reject types in term position
 compileTerm scon stype = nothing
 
--- Do I even need context? Should I exclude anything here or rely on type checker?
-compileType : S.Type → Maybe T.Type
-compileType S.Nat = just T.Nat
-compileType (S.List sA) = do 
-    tA ← compileType sA 
-    just (T.List tA) 
-compileType (S.Vec sA (_ S.𝕢 S.𝟘)) = do 
-    tA ← compileType sA
-    just (T.List tA) 
-compileType (S.Vec sA (_ S.𝕢 S.ω)) = do 
-    tA ← compileType sA
-    just (T.Vec tA)
-compileType (S.∶ sA S.𝕢 σ ⟶ sB) = do 
-    tA ← compileType sA 
-    tB ← compileType sB
-    just (tA T.⟶ tB) 
--- Force into id? Or compile normally?
-compileType (S.r∶ sA ⟶ sB) = {!   !}
--- Not sure what to do here... reject?
-compileType (S.Sett l) = nothing
--- Reject terms in type positon.
-compileType sA = nothing
 
 compileContext : (scΓ : S.Context sΓ) → Maybe T.Context
 compileContext S.[] = just T.[]
@@ -184,31 +155,36 @@ compileContext (scon S., A S.𝕢 S.ω) = do
     just (tcon T., tty) 
 
 -- Would a compiler monad make sense? 
--- Recursive Helper
-compileH : S.Context sΓ → S.Term → S.Type → Maybe (T.Context × T.Term × T.Type)
-compileH scon sterm stype = do
-    -- Reject ill typed terms
-    -- typecheck scon sterm stype
-    ---- alternative approach 
-    -- 1. compute remap (and thus new context?)
-    -- 2. shift all variables 
-    -- 3. Implement naive compilation (term to term?) 
-
-    -- compile recursively...? 
-    -- do I gotta pattern match anyways?
-    -- maybe another compile function that does the recursion? 
-    -- termination checker?
-    tterm ← compileTerm {!   !} {!   !} 
-    -- Consider creating a data type to keep track of context shifts
-    c ← {!   !} 
-    d ← {!   !}
-    {!   !}
-
--- Top level assumes empty context and then helper function takes context 
+-- Top level assumes empty context
 compile : S.Term → S.Type → Maybe (T.Term × T.Type) 
-compile sterm stype = do 
-    (T.[] , tterm , ttype) ← compileH S.[] sterm stype where 
-    -- If context is nonempty then there are free variables which is nono
-        ((_ T., _) , _ , _) → nothing
+compile sterm stype = do
+    tterm ← compileTerm S.[] sterm
+    ttype ← compileType stype 
     just (tterm , ttype)
-   
+
+private variable
+    sA sB : S.Type
+    sa sb sas sbs : S.Term
+    σ π ρ : S.Quantity
+
+    tA tB : T.Type
+    ta tb : T.Term
+
+-- Find a way to exclude : Set from input?
+-- Define normal form of STLC for comparison?
+~ᵣ⇒comp≡ : 
+    S.[] S.⊢ sa S.𝕢 σ ∶ sA → 
+    S.[] S.⊢ sb S.𝕢 σ ∶ sB → 
+    sa S.~ᵣ sb → 
+    sA S.~ᵣ sB → 
+    compile sa sA ≡  compile sb sB
+~ᵣ⇒comp≡ = {!   !}
+
+~ᵣ⇒＝ : 
+    S.[] S.⊢ sa S.𝕢 σ ∶ sA → 
+    S.[] S.⊢ sb S.𝕢 σ ∶ sB → 
+    sa S.~ᵣ sb → 
+    sA S.~ᵣ sB → 
+    {!   !} →
+    {!   !}
+~ᵣ⇒＝ = {!   !}

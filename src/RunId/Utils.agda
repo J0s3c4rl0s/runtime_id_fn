@@ -52,7 +52,7 @@ _+c_ : Context Γ → Context Γ → Context Γ
 shiftindices : Term → ℕ → ℕ → Term -- Only do this for free variables, lower and upper bound
 shiftindices (var x) i l = if l ≤ᵇ x then var (x + i) else var x 
 shiftindices (ƛ∶ t 𝕢 σ ♭ t₁) i l = ƛ∶ shiftindices t i l 𝕢 σ ♭ shiftindices t₁ i (suc l)
-shiftindices (ƛr∶ (t 𝕢 σ) ♭ t₁) i l = (ƛr∶ shiftindices t i l 𝕢 σ ♭ shiftindices t₁ i (suc l))
+shiftindices (ƛr∶ t ♭ t₁) i l = (ƛr∶ shiftindices t i l ♭ shiftindices t₁ i (suc l))
 shiftindices (t ·𝟘 t₁) i l = shiftindices t i l ·𝟘 shiftindices t₁ i l
 shiftindices (t ·ω t₁) i l = shiftindices t i l ·ω shiftindices t₁ i l
 shiftindices (f ·ᵣ a) i l = shiftindices f i l ·ᵣ shiftindices a i l
@@ -81,7 +81,7 @@ shiftindices Nat i l = Nat
 shiftindices (List t) i l = List (shiftindices t i l)
 shiftindices (Vec (A 𝕢 σ) t₁) i l = Vec (shiftindices A i l 𝕢 σ) (shiftindices t₁ i l)
 shiftindices (∶ t 𝕢 σ ⟶ t₁) i l = ∶ shiftindices t i l 𝕢 σ ⟶ shiftindices t₁ i (suc l)
-shiftindices (r∶ t 𝕢 σ ⟶ t₁) i l = r∶ shiftindices t i l 𝕢 σ ⟶ shiftindices t₁ i (suc l)
+shiftindices (r∶ t ⟶ t₁) i l = r∶ shiftindices t i l ⟶ shiftindices t₁ i (suc l)
 shiftindices (Sett level) i l = Sett level
 
 -- There are some hijinks around when substitution is admissible, dont think quants change
@@ -89,12 +89,12 @@ _[_/_]  : Term → ℕ → Term → Term
 var 0 [  0 / a ] = a
 var b [ i / a  ] = var b 
 (ƛ∶ bₜ 𝕢 σ ♭ b) [ i / a ] = ƛ∶ bₜ [ i / a ]  𝕢 σ ♭ (b [ suc i / shiftindices a 1 0 ])
-(ƛr∶ b 𝕢 x ♭ b₁) [ i / a ] = (ƛr∶ b [ i / a ] 𝕢 x ♭ (b₁ [ suc i / shiftindices a 1 0 ]))
+(ƛr∶ b ♭ b₁) [ i / a ] = (ƛr∶ b [ i / a ] ♭ (b₁ [ suc i / shiftindices a 1 0 ]))
 (b ·𝟘 c) [ i / a ] = (b [ i / a ]) ·𝟘 (c [ i / a ])
 (b ·ω c) [ i / a ] = (b [ i / a ]) ·ω (c [ i / a ])
 (f ·ᵣ b) [ i / a ] = (f [ i / a ]) ·ᵣ (b [ i / a ])
 (∶ b 𝕢 σ ⟶ c) [ i / a ] = ∶ b [ i / a ] 𝕢 σ ⟶ (c [ suc i / shiftindices a 1 0 ]) 
-(r∶ b 𝕢 σ ⟶ c) [ i / a ] = r∶ b [ i / a ] 𝕢 σ ⟶ (c [ suc i / shiftindices a 1 0 ]) 
+(r∶ b ⟶ c) [ i / a ] = r∶ b [ i / a ] ⟶ (c [ suc i / shiftindices a 1 0 ]) 
 z [ i / a ] = z
 s b [ i / a ] = s (b [ i / a ]) 
 nill [ i / a ] = nill

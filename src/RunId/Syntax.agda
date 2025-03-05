@@ -58,7 +58,7 @@ data Term where
     ƛ∶_♭_ : Annotation A σ → Term → Term
     -- Better to take an extra arg to determine its a runtime ID (annot)
     -- RuntimeId, any erased args? Forced annotations?
-    ƛr∶_♭_ : Annotation A σ → Term → Term
+    ƛr∶_♭_ : Type → Term → Term
     _·_𝕢_ : Term → Term → Quantity → Term
     _·ᵣ_ : Term → Term → Term
 
@@ -86,7 +86,7 @@ data Term where
     List : Type → Type
     Vec : Annotation A σ → Term → Type
     ∶_⟶_ : Annotation A σ → Type → Type -- Pi type
-    r∶_⟶_ : Annotation A σ → Type → Type -- Runtime Pi type
+    r∶_⟶_ : Type → Type → Type -- Runtime Pi type
     Sett : ℕ → Type -- Universe 
 
 pattern _·𝟘_ f a = _·_𝕢_ f a 𝟘

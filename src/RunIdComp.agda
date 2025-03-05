@@ -53,6 +53,7 @@ typeinfer : S.Context sΓ → S.Term → Maybe S.Type
 typeinfer = {!   !}
 
 -- Perhaps only support basic options for now
+{-
 typecheck : S.Context sΓ → S.Term → S.Type → Maybe ⊤
 typecheck scon (S.var x) stype = do 
     (contype , _) ← lookupType scon x
@@ -63,10 +64,10 @@ typecheck scon (S.ƛ∶ At S.𝕢 σt ♭ sterm) stype = do
     Bt ← {! typecheck  !} 
     compareTypes scon (S.∶ At S.𝕢 σt ⟶ Bt) stype 
     just tt
-typecheck scon (S.ƛr∶ At S.𝕢 σt ♭ sterm) stype = do 
+typecheck scon (S.ƛr∶ At ♭ sterm) stype = do 
     -- Need to type infer.... Maybe should just be annotated
     Bt ← {! typecheck  !} 
-    compareTypes scon (S.r∶ At S.𝕢 σt ⟶ Bt) stype 
+    compareTypes scon (S.r∶ At ⟶ Bt) stype 
     just tt 
 typecheck scon (sterm S.· sterm₁ 𝕢 σ) stype = {!   !}
 typecheck scon (sterm S.·ᵣ sterm₁) stype = {!   !}
@@ -86,6 +87,7 @@ typecheck scon (S.Vec x sterm) stype = nothing
 typecheck scon (S.∶ x ⟶ x₁) stype = nothing
 typecheck scon (S.r∶ x ⟶ x₁) stype = nothing
 typecheck scon (S.Sett x) stype = nothing
+-}
 
 -- Compile term, context and maybe? context remap
 compileTerm : (scΓ : S.Context sΓ) → S.Term → Maybe T.Term
@@ -104,7 +106,7 @@ compileTerm scon (S.ƛ∶ sA S.𝕢 S.ω ♭ sbody) = do
     just (T.ƛ tbody) 
 -- reject when erased? 
 -- builtin id function?
-compileTerm scon (S.ƛr∶ sA S.𝕢 σ ♭ sterm) = {!   !}
+compileTerm scon (S.ƛr∶ sA ♭ sterm) = {!   !}
 compileTerm scon (sf S.· sa 𝕢 S.𝟘) = do 
     -- should compile away sf to its body
     tf ← compileTerm scon sf
@@ -173,7 +175,7 @@ compileType (S.∶ sA S.𝕢 σ ⟶ sB) = do
     tB ← compileType sB
     just (tA T.⟶ tB) 
 -- Force into id? Or compile normally?
-compileType (S.r∶ sA S.𝕢 σ ⟶ sB) = {!   !}
+compileType (S.r∶ sA ⟶ sB) = {!   !}
 -- Not sure what to do here... reject?
 compileType (S.Sett l) = nothing
 -- Reject terms in type positon.
@@ -192,7 +194,7 @@ compileContext (scon S., A S.𝕢 S.ω) = do
 compileH : S.Context sΓ → S.Term → S.Type → Maybe (T.Context × T.Term × T.Type)
 compileH scon sterm stype = do
     -- Reject ill typed terms
-    typecheck scon sterm stype
+    -- typecheck scon sterm stype
     ---- alternative approach 
     -- 1. compute remap (and thus new context?)
     -- 2. shift all variables 

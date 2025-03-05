@@ -64,20 +64,19 @@ data _⊢_∶_ where
         (zeroC Γ , A 𝕢 𝟘) ⊢ B 𝕢 𝟘 ∶ Sett 𝓁  →
         -- needs to be nonzero arg
         -- same universe level?
-        zeroC Γ ⊢ r∶ A 𝕢 ω ⟶ B 𝕢 𝟘 ∶ Sett 𝓁 
+        zeroC Γ ⊢ r∶ A ⟶ B 𝕢 𝟘 ∶ Sett 𝓁 
     ⊢lam : ∀ {cΓ : Context Γ} →
         -- Are the annotations in cΓ arbitrary? 
         (cΓ , A 𝕢 (π *q σ)) ⊢ b 𝕢 σ ∶ B →
         zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁  →
         cΓ ⊢ (ƛ∶ A 𝕢 π ♭ b) 𝕢 σ ∶ (∶ A 𝕢 π ⟶ B)
     ⊢rlam : ∀ {cΓ : Context Γ} →
-        -- This may cause problems with patter matched expressions
         b ~ᵣ var 0 →
         -- Are the annotations in cΓ arbitrary? 
         (cΓ , A 𝕢 (ω *q σ)) ⊢ b 𝕢 σ ∶ B →
         -- Is this rule redundant since there is a formation rule
         zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁  →
-        cΓ ⊢ (ƛr∶ A 𝕢 ω ♭ b) 𝕢 σ ∶ (r∶ A 𝕢 ω ⟶ B)
+        cΓ ⊢ (ƛr∶ A ♭ b) 𝕢 σ ∶ (r∶ A ⟶ B)
     ⊢app : {cΓ cΓ' cΓ'' : Context Γ} → 
         cΓ ⊢ a 𝕢 σ ∶ (∶ A 𝕢 π ⟶ B) →
         cΓ' ⊢ b 𝕢 selectQ π σ ∶ A →
@@ -191,13 +190,14 @@ data _＝_ where
     ＝piᵣ : 
         A ＝ C → 
         B ＝ D →
-        (r∶ A 𝕢 σ ⟶ B) ＝ (r∶ C 𝕢 σ ⟶ D)
+        (r∶ A ⟶ B) ＝ (r∶ C ⟶ D)
     ＝lam :
         b ＝ c →
         (ƛ∶ A 𝕢 σ ♭ b)  ＝ (ƛ∶ A 𝕢 σ ♭ c)
     ＝lamᵣ :
+        A ＝ B →
         b ＝ c →
-        (ƛr∶ A 𝕢 σ ♭ b)  ＝ (ƛr∶ A 𝕢 σ ♭ c)
+        (ƛr∶ A ♭ b)  ＝ (ƛr∶ B ♭ c)
     ＝app : 
         b ＝ d →
         a ＝ c →

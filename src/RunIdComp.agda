@@ -8,7 +8,6 @@ open import Data.List
 open import Data.Nat
 open import Data.Product using (_×_; _,_)
 open import Data.Maybe using (Maybe; just; nothing; _>>=_)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 -- For some reason not included in the stdlib
 infixl 1 _>>_
@@ -161,53 +160,3 @@ compile sterm stype = do
     tterm ← compileTerm S.[] sterm
     ttype ← compileType stype 
     just (tterm , ttype)
-
-private variable
-    sA sB : S.Type
-    sa sb sas sbs sf sg : S.Term
-    σ π ρ : S.Quantity
-
-    tA tB : T.Type
-    ta tb : T.Term
-
--- Find a way to exclude : Set from input?
--- Define normal form of STLC for comparison?
-~ᵣ⇒comp≡ : 
-    S.[] S.⊢ sa S.𝕢 σ ∶ sA → 
-    S.[] S.⊢ sb S.𝕢 σ ∶ sB → 
-    sa S.~ᵣ sb → 
-    sA S.~ᵣ sB → 
-    compile sa sA ≡  compile sb sB
-~ᵣ⇒comp≡ da db S.~ᵣrefl A~B = {!   !}
-~ᵣ⇒comp≡ da db (S.~ᵣsym a~b) A~B = {!   !}
-~ᵣ⇒comp≡ da db (S.~ᵣtrans a~b a~b₁) A~B = {!   !}
-~ᵣ⇒comp≡ da db (S.~ᵣnatelz a~b) A~B = {!   !}
-~ᵣ⇒comp≡ da db (S.~ᵣnatels a~b a~b₁) A~B = {!   !}
-~ᵣ⇒comp≡ da db (S.~ᵣlisteln a~b) A~B = {!   !}
-~ᵣ⇒comp≡ da db (S.~ᵣlistelc a~b a~b₁) A~B = {!   !}
-~ᵣ⇒comp≡ da db (S.~ᵣveceln a~b) A~B = {!   !}
-~ᵣ⇒comp≡ da db (S.~ᵣvecelc a~b a~b₁) A~B = {!   !}
-~ᵣ⇒comp≡ da db (S.~ᵣs a~b) A~B = {!   !}
-~ᵣ⇒comp≡ da db (S.~ᵣlist a~b) A~B = {!   !}
-~ᵣ⇒comp≡ da db (S.~ᵣ∷l a~b a~b₁) A~B = {!   !}
-~ᵣ⇒comp≡ da db (S.~ᵣpiω a~b a~b₁) A~B = {!   !}
-~ᵣ⇒comp≡ da db (S.~ᵣpi𝟘 a~b) A~B = {!   !}
-~ᵣ⇒comp≡ da db (S.~ᵣlamω a~b) A~B = {!   !}
-~ᵣ⇒comp≡ da db (S.~ᵣlam𝟘 a~b) A~B = {!   !}
-~ᵣ⇒comp≡ da db (S.~ᵣappω a~b a~b₁) A~B = {!   !}
-~ᵣ⇒comp≡ da db (S.~ᵣapp𝟘 a~b) A~B = {!   !}
-~ᵣ⇒comp≡ da db S.~ᵣbetaω A~B = {!   !}
-~ᵣ⇒comp≡ da db (S.~ᵣvecω a~b a~b₁) A~B = {!   !}
-~ᵣ⇒comp≡ da db (S.~ᵣvec𝟘 a~b) A~B = {!   !}
-~ᵣ⇒comp≡ da db S.~ᵣnilvω A~B = {!   !}
-~ᵣ⇒comp≡ da db S.~ᵣnilv𝟘 A~B = {!   !}
-~ᵣ⇒comp≡ da db (S.~ᵣ∷vω a~b a~b₁ a~b₂) A~B = {!   !}
-~ᵣ⇒comp≡ da db (S.~ᵣ∷v𝟘 a~b a~b₁) A~B = {!   !}
-~ᵣ⇒comp≡ da db (S.~ᵣηlist a~b a~b₁) A~B = {!   !}
-~ᵣ⇒comp≡ da db (S.~ᵣηvec a~b a~b₁) A~B = {!   !}
-
--- Might need to shift in sB here
-runid⇒id : 
-    S.[] S.⊢ sf S.𝕢 σ ∶ (S.r∶ sA ⟶ sB) → 
-    (compileTerm S.[] sf ≡ just (T.ƛ (T.var 0))) × compileType sA ≡ compileType sB
-~ᵣ⇒＝ = {!   !}

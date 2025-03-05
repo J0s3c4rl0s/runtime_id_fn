@@ -84,7 +84,7 @@ data Term where
     -- Types
     Nat : Type
     List : Type → Type
-    Vec : Annotation A σ → Term → Type
+    Vec : Term → Annotation A σ → Type
     ∶_⟶_ : Annotation A σ → Type → Type -- Pi type
     r∶_⟶_ : Type → Type → Type -- Runtime Pi type
     Sett : ℕ → Type -- Universe 

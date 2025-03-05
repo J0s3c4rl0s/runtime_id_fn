@@ -151,7 +151,7 @@ compileTerm scon (S.eliml sa P∶ sP nb∶ sn cb∶ sc) = do
 compileTerm scon (S.elimv sa P∶ sP nb∶ sn cb∶ sc) = do 
     tn ← compileTerm scon sn 
     tc ← compileTerm scon sc 
-    taω@(S.Vec (n S.𝕢 S.ω) A) ← typeinfer scon sa where
+    taω@(S.Vec A (n S.𝕢 S.ω)) ← typeinfer scon sa where
         -- Assume alterntive is 𝟘
         ta𝟘 → just (T.eliml {!  ta𝟘  !} nb∶ {!   !} cb∶ {!   !})
     just ({!   !})
@@ -164,10 +164,10 @@ compileType S.Nat = just T.Nat
 compileType (S.List sA) = do 
     tA ← compileType sA 
     just (T.List tA) 
-compileType (S.Vec (_ S.𝕢 S.𝟘) sA) = do 
+compileType (S.Vec sA (_ S.𝕢 S.𝟘)) = do 
     tA ← compileType sA
     just (T.List tA) 
-compileType (S.Vec (_ S.𝕢 S.ω) sA) = do 
+compileType (S.Vec sA (_ S.𝕢 S.ω)) = do 
     tA ← compileType sA
     just (T.Vec tA)
 compileType (S.∶ sA S.𝕢 σ ⟶ sB) = do 

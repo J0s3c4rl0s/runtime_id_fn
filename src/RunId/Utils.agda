@@ -79,7 +79,7 @@ shiftindices (elimv t P∶ t₁ nb∶ t₄ cb∶ t₅) i l =
             (shiftindices t₅ i (l + 4))
 shiftindices Nat i l = Nat
 shiftindices (List t) i l = List (shiftindices t i l)
-shiftindices (Vec (A 𝕢 σ) t₁) i l = Vec (shiftindices A i l 𝕢 σ) (shiftindices t₁ i l)
+shiftindices (Vec t₁ (A 𝕢 σ)) i l = Vec (shiftindices t₁ i l) (shiftindices A i l 𝕢 σ)
 shiftindices (∶ t 𝕢 σ ⟶ t₁) i l = ∶ shiftindices t i l 𝕢 σ ⟶ shiftindices t₁ i (suc l)
 shiftindices (r∶ t ⟶ t₁) i l = r∶ shiftindices t i l ⟶ shiftindices t₁ i (suc l)
 shiftindices (Sett level) i l = Sett level
@@ -117,5 +117,5 @@ nilvω [ i / a ] = nilvω
         cb∶ (cb [ i + 4 / shiftindices a 4 0 ])
 Nat [ i / a ] = Nat
 List b [ i / a ] = List (b [ i / a ])
-Vec (n 𝕢 σ) b [ i / a ] = Vec (((n [ i / a ])) 𝕢 σ) (b [ i / a ])
+Vec b (n 𝕢 σ) [ i / a ] = Vec (b [ i / a ]) (((n [ i / a ])) 𝕢 σ)
 Sett level [ i / a ] = Sett level

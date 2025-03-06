@@ -21,11 +21,11 @@ private variable
     ta tb : T.Term
 
 -- Maybe a lemma or relation to from a derivation get its subterm proof
-
+-- mark as inline
 lemmabind : ∀ {a b body} → a ≡ b → (a >>= body) ≡ (b >>= body) 
 lemmabind {body = body} eq = cong (λ x → x >>= body) eq
+{-# INLINE lemmabind #-}
 
--- what about context?
 proofsimpler : 
     sa ~ᵣ sb → 
     compileTerm S.[] sa ≡ compileTerm S.[] sb × compileType sa ≡ compileType sb

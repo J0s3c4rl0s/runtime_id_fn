@@ -83,6 +83,10 @@ compileTerm scon (S.ƛ∶ sA S.𝕢 S.𝟘 ♭ sbody) = do
     tbody ← compileTerm (scon S., sA S.𝕢 S.𝟘) sbody
     -- shift indices tbody
     just (T.shiftindices tbody 1 0)
+-- what abt (lambda (f : a runid-> b). f 42)
+-- Options: 
+---- 1. Remove beta reduction 
+---- 2. Require well typed for beta reduction 
 compileTerm scon (S.ƛ∶ sA S.𝕢 S.ω ♭ sbody) = do 
     tbody ← compileTerm (scon S., sA S.𝕢 S.ω) sbody
     just (T.ƛ tbody) 

@@ -24,6 +24,44 @@ betapp inApp outApp =
             ＝refl)
         outApp
 
+-- may want to make lambda have 0 use
+jesper-ex : Term
+jesper-ex = (ƛ∶ (r∶ Nat ⟶ Nat) 𝕢 ω ♭ (var 0 ·ᵣ s z)) ·ω (ƛ∶ Nat 𝕢 ω ♭ z)
+
+jesper-l : jesper-ex ~ᵣ s z
+jesper-l = 
+    ~ᵣtrans
+        (~ᵣappω
+            (~ᵣlamω ~ᵣappr)
+            ~ᵣrefl)
+        ~ᵣbetaω
+
+jesper-r : jesper-ex ~ᵣ z
+jesper-r = 
+    ~ᵣtrans
+        ~ᵣbetaω
+        -- I cant do normal beta reduction bc application is marked
+        (~ᵣtrans
+            ~ᵣappr
+            -- Stuck with s z ~ z which is not provable
+            {!   !})
+
+
+jesper-ex0D : Term
+jesper-ex0D = ƛ∶ (r∶ Nat ⟶ Nat) 𝕢 𝟘 ♭ (var 0 ·ᵣ s z)
+
+jesper-ex0T : Type
+jesper-ex0T = ∶ (r∶ Nat ⟶ Nat) 𝕢 𝟘 ⟶ Nat
+
+-- This should be allowed, maybe even use runid as info
+jesper-ex0Typed : [] ⊢ jesper-ex0D 𝕢 ω ∶ jesper-ex0T
+jesper-ex0Typed = 
+    ⊢lam
+        (⊢appᵣ
+            (⊢var {!   !})
+            (⊢s ⊢z))
+        (⊢rpi ~ᵣrefl ⊢Nat ⊢Nat)
+
 -- Id example
 
 idTy : Term 
@@ -111,12 +149,12 @@ vecLengthDef {n} =
 -}
 
 listToVecTy : Term 
-listToVecTy = r∶ List Nat 𝕢 ω ⟶ Vec (((listLengthDef ·𝟘 Nat) ·ω var 0) 𝕢 𝟘 ) Nat
+listToVecTy = r∶ List Nat ⟶ Vec Nat (((listLengthDef ·𝟘 Nat) ·ω var 0) 𝕢 𝟘 )
 
 listToVecDef : Term
 listToVecDef = 
-    ƛr∶ List Nat 𝕢 ω ♭ 
-        (eliml var 0 P∶ ƛ∶ List Nat 𝕢 𝟘 ♭ Vec (((listLengthDef ·𝟘 Nat) ·ω var 0) 𝕢 𝟘) Nat 
+    ƛr∶ List Nat ♭ 
+        (eliml var 0 P∶ ƛ∶ List Nat 𝕢 𝟘 ♭ Vec Nat (((listLengthDef ·𝟘 Nat) ·ω var 0) 𝕢 𝟘) 
             nb∶ nilv𝟘 
             -- Too lazy to just fetch it directly from the vector 
             cb∶ (var 2 ∷v var 0 𝕟𝟘 ((listLengthDef ·𝟘 Nat) ·ω var 1)))  
@@ -124,7 +162,7 @@ listToVecDef =
 ~ᵣlemma : 
     (eliml var 0 P∶
        ƛ∶ List Nat 𝕢 𝟘 ♭
-       Vec (((listLengthDef · Nat 𝕢 𝟘) · var 0 𝕢 ω) 𝕢 𝟘) Nat
+       Vec Nat (((listLengthDef · Nat 𝕢 𝟘) · var 0 𝕢 ω) 𝕢 𝟘)
        nb∶ nilv𝕢 𝟘 
        cb∶ (var 2 ∷v var 0 𝕟 (listLengthDef · Nat 𝕢 𝟘) · var 1 𝕢 ω 𝕢 𝟘))
       ~ᵣ 

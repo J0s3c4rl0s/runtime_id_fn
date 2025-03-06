@@ -3,6 +3,8 @@ module RunIdComp where
 import RunId as S 
 import STLC as T
 
+open S using (𝟘; ω)
+
 open import Data.Unit using (⊤; tt)
 open import Data.List
 open import Data.Nat
@@ -83,7 +85,7 @@ compileTerm scon (S.ƛ∶ sA S.𝕢 S.𝟘 ♭ sbody) = do
     tbody ← compileTerm (scon S., sA S.𝕢 S.𝟘) sbody
     -- shift indices tbody
     just (T.shiftindices tbody 1 0)
--- what abt (lambda (f : a runid-> b). f 42)
+-- what abt (lambda (f : a runid-> b). f 42) (lambda. 6)
 -- Options: 
 ---- 1. Remove beta reduction 
 ---- 2. Require well typed for beta reduction 
@@ -95,10 +97,7 @@ compileTerm scon (S.ƛ∶ sA S.𝕢 S.ω ♭ sbody) = do
 compileTerm scon (S.ƛr∶ sA ♭ sterm) = do 
     -- should I try compiling sA just in case?
     just (T.ƛ (T.var 0))
-compileTerm scon (sf S.· sa 𝕢 S.𝟘) = do 
-    -- should compile away sf to its body
-    tf ← compileTerm scon sf
-    just tf  
+compileTerm scon (sf S.· sa 𝕢 S.𝟘) = compileTerm scon sf
 compileTerm scon (sf S.· sa 𝕢 S.ω) = do 
     tf ← compileTerm scon sf 
     ta ← compileTerm scon sa 
@@ -125,25 +124,39 @@ compileTerm scon (sa S.∷v sas 𝕟 sn 𝕢 S.ω) = do
     tas ← compileTerm scon sas 
     tn ← compileTerm scon sn 
     just (ta T.∷v tas 𝕟 tn)
+---- Attempt building basic reduction optimization into compiler
+-- Assume must be an unerased nat
+compileTerm scon (S.elimnat sa P∶ sP zb∶ sz sb∶ ss) = do 
+    tz ← compileTerm scon sz 
+    ts ← compileTerm (scon S., S.Nat S.𝕢 S.ω) ss 
+    T.z ← compileTerm scon sa where
+        -- substitute into ts?
+        T.s ta → just ({! ts   !})
+        ta → just (T.elimnat ta zb∶ tz sb∶ ts)  
+    just {!   !}
+{-
+---- dont optimize variant
 compileTerm scon (S.elimnat sa P∶ sP zb∶ sz sb∶ ss) = do 
     ta ← compileTerm scon sa 
     tz ← compileTerm scon sz 
     ts ← compileTerm scon ss 
     just (T.elimnat ta zb∶ tz sb∶ ts)
+-}
 compileTerm scon (S.eliml sa P∶ sP nb∶ sn cb∶ sc) = do 
     ta ← compileTerm scon sa 
-    tn ← compileTerm scon sn 
-    tc ← compileTerm scon sc 
+    -- How will compilation change the presence of the P entry? What should the usage of P be?
+    tn ← compileTerm (((scon S., {!   !} S.𝕢 ω) S., S.List {!   !} S.𝕢 ω) S., {! ? · ?  !} S.𝕢 {!   !}) sn 
+    tc ← compileTerm {!   !} sc 
     just (T.eliml ta nb∶ tn cb∶ tc)
 compileTerm scon (S.elimv sa S.𝕢 S.𝟘 P∶ sP nb∶ sn cb∶ sc) = do 
     ta ← compileTerm scon sa 
-    tn ← compileTerm scon sn 
-    tc ← compileTerm scon sc 
+    tn ← compileTerm {!   !} sn 
+    tc ← compileTerm {!   !} sc 
     just (T.eliml ta nb∶ tn cb∶ tc)
 compileTerm scon (S.elimv sa S.𝕢 S.ω P∶ sP nb∶ sn cb∶ sc) = do 
     ta ← compileTerm scon sa 
-    tn ← compileTerm scon sn 
-    tc ← compileTerm scon sc 
+    tn ← compileTerm {!   !} sn 
+    tc ← compileTerm {!   !} sc 
     just (T.elimv ta nb∶ tn cb∶ tc)
 -- Reject types in term position
 compileTerm scon stype = nothing

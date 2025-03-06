@@ -431,6 +431,10 @@ data _~ᵣ_ where
         -- shift em, wait maybe shift B??
         B ~ᵣ shiftindices D 1 0 →
         (∶ A 𝕢 𝟘 ⟶ B) ~ᵣ D 
+    -- should it be runid equiv to a fun?
+    ~ᵣpir : 
+        A ~ᵣ B →
+        (r∶ A ⟶ B) ~ᵣ (r∶ A ⟶ A) 
     -- must I add some for the A being different or nah?
     -- distinguish between usages?
     ~ᵣlamω :
@@ -442,6 +446,8 @@ data _~ᵣ_ where
         b ~ᵣ shiftindices c 1 0 →
         -- This feels like it wont play well with prev rule
         (ƛ∶ A 𝕢 𝟘 ♭ b)  ~ᵣ c
+    ~ᵣlamr : 
+        (ƛr∶ A ♭ b) ~ᵣ (ƛr∶ A ♭ var 0)
     -- I need distinguish between applications of erased or unerased functions? 
     -- maybe distinguish erased and unerased application in syntax (or parametrize)
     ~ᵣappω : 
@@ -451,13 +457,18 @@ data _~ᵣ_ where
     ~ᵣapp𝟘 : 
         b ~ᵣ d →
         (b ·𝟘 a) ~ᵣ d
+    ~ᵣappr : 
+        (b ·ᵣ a) ~ᵣ a
     -- Any case where id accept ·𝟘?
     ~ᵣbetaω : ((ƛ∶ A 𝕢 ω ♭ b) ·ω a) ~ᵣ (b [ 0 / a ])
+    -- Done by appr?
+    -- ~ᵣbetar : ((ƛr∶ A ♭ b) ·ᵣ a) ~ᵣ a
     -- isnt this covered by app0?
     {-
     -- ???? This feels very wrong, maybe it is even unnecessary
     ~ᵣbeta𝟘 : (ƛ∶ A 𝕢 𝟘 ♭ b) · a ~ᵣ b
     -}
+
     -- Vec
     ~ᵣvecω : 
         n ~ᵣ m →

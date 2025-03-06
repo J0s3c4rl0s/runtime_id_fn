@@ -41,7 +41,7 @@ proofsimpler {sa} {sb} (S.~ᵣvecelc a~b a~b₁) = {!   !}
 proofsimpler {sa} {sb} (S.~ᵣs {n} {m} a~b) = 
     let pt , _ = proofsimpler a~b in
     lemmabind pt , refl
-proofsimpler {sa} {sb} (S.~ᵣlist a~b) = refl , let _ , pt = proofsimpler a~b in lemmabind pt
+proofsimpler {sa} {sb} (S.~ᵣlist a~b) = refl , let _ , pt = proofsimpler a~b in {!   !} -- cong (λ x → x >>= λ v → just (T.List v)) pt
 proofsimpler {sa} {sb} (S.~ᵣ∷l a~b a~b₁) = (let pt , _ = proofsimpler a~b in lemmabind {! pt  !}) , refl 
 proofsimpler {sa} {sb} (S.~ᵣpiω a~b a~b₁) = {!   !}
 proofsimpler {sa} {sb} (S.~ᵣpi𝟘 a~b) = {!   !}

@@ -145,6 +145,7 @@ compileTerm scon (S.elimv sa S.𝕢 S.ω P∶ sP nb∶ sn cb∶ sc) = do
 compileTerm scon stype = nothing
 
 
+-- I dont actually use this rn
 compileContext : (scΓ : S.Context sΓ) → Maybe T.Context
 compileContext S.[] = just T.[]
 compileContext (scon S., A S.𝕢 S.𝟘) = compileContext scon

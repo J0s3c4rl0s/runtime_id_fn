@@ -127,7 +127,9 @@ data _⊢_∶_ where
         zeroC Γ ⊢ P 𝕢 𝟘 ∶ (∶ List A 𝕢 ρ ⟶ Sett 𝓁 ) → 
         cΓ' ⊢ nb 𝕢 σ ∶ (P · (nill) 𝕢 ρ) → 
         -- I presume list elements must have same erasure as List
-        (((cΓ' , A 𝕢 σ) , List A 𝕢 σ) , (P · (var 0) 𝕢 ρ) 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P · (var 2 ∷l var 1) 𝕢 ρ) → 
+        (((cΓ' , A 𝕢 σ) , 
+            List A 𝕢 σ) , 
+            (P · (var 0) 𝕢 ρ) 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P · (var 2 ∷l var 1) 𝕢 ρ) → 
         (cΓ +c cΓ') ⊢ eliml l P∶ P 
                 nb∶ nb 
                 cb∶ cb 
@@ -154,7 +156,11 @@ data _⊢_∶_ where
         zeroC Γ ⊢ P 𝕢 𝟘 ∶ (∶ Nat 𝕢 π ⟶ (∶ Vec A (var 0 𝕢 δ) 𝕢 ρ ⟶ Sett 𝓁 )) →
         cΓ' ⊢ nb 𝕢 σ ∶ ((P · z 𝕢 π) · (nilv𝕢 δ) 𝕢 ρ) →
         -- assuming that the constructors are not heterogenous, I think they might need to be rho
-        ((((cΓ' , Nat 𝕢 π) , A 𝕢 σ) , Vec A (var 1 𝕢 δ) 𝕢  σ) , (P · var 0 𝕢 π)  𝕢 σ) ⊢ cb 𝕢 σ ∶ ((((((P · var 3 𝕢 π) · (var 2 ∷v var 1 𝕟 var 3 𝕢 δ) 𝕢 ρ))))) →
+        ((((cΓ' , 
+            Nat 𝕢 π) , 
+            A 𝕢 σ) , 
+            Vec A (var 1 𝕢 δ) 𝕢  σ) , 
+            (P · var 0 𝕢 π)  𝕢 σ) ⊢ cb 𝕢 σ ∶ ((((((P · var 3 𝕢 π) · (var 2 ∷v var 1 𝕟 var 3 𝕢 δ) 𝕢 ρ))))) →
         (cΓ +c cΓ') ⊢ elimv (b 𝕢 δ) P∶ P 
                 nb∶ nb 
                 cb∶ cb 

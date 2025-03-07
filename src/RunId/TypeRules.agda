@@ -130,7 +130,7 @@ data _⊢_∶_ where
         (((cΓ' , A 𝕢 σ) , 
             List A 𝕢 σ) , 
             (P · (var 0) 𝕢 ρ) 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P · (var 2 ∷l var 1) 𝕢 ρ) → 
-        (cΓ +c cΓ') ⊢ eliml l P∶ P 
+        (cΓ +c cΓ') ⊢ eliml l ty∶ A P∶ P 
                 nb∶ nb 
                 cb∶ cb 
             𝕢 σ ∶ (P · l 𝕢 ρ)
@@ -161,7 +161,7 @@ data _⊢_∶_ where
             A 𝕢 σ) , 
             Vec A (var 1 𝕢 δ) 𝕢  σ) , 
             (P · var 0 𝕢 π)  𝕢 σ) ⊢ cb 𝕢 σ ∶ ((((((P · var 3 𝕢 π) · (var 2 ∷v var 1 𝕟 var 3 𝕢 δ) 𝕢 ρ))))) →
-        (cΓ +c cΓ') ⊢ elimv (b 𝕢 δ) P∶ P 
+        (cΓ +c cΓ') ⊢ elimv (b 𝕢 δ) ty∶ A P∶ P 
                 nb∶ nb 
                 cb∶ cb 
             𝕢 σ ∶ ((P · n 𝕢 π) · b 𝕢 ρ)
@@ -255,19 +255,19 @@ data _＝_ where
     -- list
     ＝listeln :
         cs ＝ nill →
-        (eliml cs P∶ P 
+        (eliml cs ty∶ A P∶ P 
                 nb∶ nb 
                 cb∶ cb) 
             ＝ 
             nb
     ＝listelc :     
         cs ＝ (a ∷l as) →
-        (eliml as P∶ P 
+        (eliml as ty∶ A P∶ P 
                 nb∶ nb 
                 cb∶ cb) 
             ＝ 
             b →
-        (eliml cs P∶ P 
+        (eliml cs ty∶ A P∶ P 
                 nb∶ nb 
                 cb∶ cb) 
             ＝ 
@@ -276,19 +276,19 @@ data _＝_ where
     -- vec
     ＝veceln :
         cs ＝ (nilv𝕢 σ) →
-        (elimv (cs 𝕢 σ) P∶ P 
+        (elimv (cs 𝕢 σ) ty∶ A P∶ P 
                 nb∶ nb 
                 cb∶ cb) 
             ＝ 
             nb
     ＝vecelc :
         cs ＝ (a ∷v as 𝕟 n 𝕢 σ) → 
-        (elimv ((nilv𝕢 σ) 𝕢 σ) P∶ P
+        (elimv ((nilv𝕢 σ) 𝕢 σ) ty∶ A P∶ P
                 nb∶ nb 
                 cb∶ cb) 
             ＝ 
             b →
-        (elimv (cs 𝕢 σ) P∶ P
+        (elimv (cs 𝕢 σ) ty∶ A P∶ P
                 nb∶ nb 
                 cb∶ cb) 
             ＝ 
@@ -366,19 +366,19 @@ data _~ᵣ_ where
     -- list
     ~ᵣlisteln :
         cs ~ᵣ nill →
-        (eliml cs P∶ P 
+        (eliml cs ty∶ A P∶ P 
                 nb∶ nb 
                 cb∶ cb )
             ~ᵣ 
             nb
     ~ᵣlistelc :     
         cs ~ᵣ (a ∷l as) →
-        (eliml as P∶ P 
+        (eliml as ty∶ A P∶ P 
                 nb∶ nb 
                 cb∶ cb )
             ~ᵣ 
             b →
-        (eliml cs P∶ P 
+        (eliml cs ty∶ A P∶ P 
                 nb∶ nb 
                 cb∶ cb )
             ~ᵣ 
@@ -388,19 +388,19 @@ data _~ᵣ_ where
     ~ᵣveceln :
         -- generic computation rules
         cs ~ᵣ (nilv𝕢 σ) →
-        (elimv (cs 𝕢 σ) P∶ P 
+        (elimv (cs 𝕢 σ) ty∶ A P∶ P 
                 nb∶ nb 
                 cb∶ cb )
             ~ᵣ 
             nb
     ~ᵣvecelc :
         cs ~ᵣ (a ∷v as 𝕟 n 𝕢 σ) → 
-        (elimv ((nilv𝕢 σ) 𝕢 σ) P∶ P
+        (elimv ((nilv𝕢 σ) 𝕢 σ) ty∶ A P∶ P
                 nb∶ nb 
                 cb∶ cb )
             ~ᵣ 
             b →
-        (elimv (cs 𝕢 σ) P∶ P
+        (elimv (cs 𝕢 σ) ty∶ A P∶ P
                 nb∶ nb 
                 cb∶ cb )
             ~ᵣ 
@@ -504,7 +504,7 @@ data _~ᵣ_ where
         nb ~ᵣ (a [ i / nill ]) →
         -- substitute into branch replacing tail with acc
         (cb [ 0 / var 1 ]) ~ᵣ (a [ i / var 2 ∷l var 1 ]) →
-        (eliml var i P∶ P 
+        (eliml var i ty∶ A P∶ P 
             nb∶ nb 
             cb∶ cb) 
             ~ᵣ 
@@ -515,7 +515,7 @@ data _~ᵣ_ where
         -- Make use of context rather than forall
         -- Also not well typed because ill be mixing potentially different constructors
         cb ~ᵣ (a [ i / var 2 ∷v var 1 𝕟 var 3 𝕢 σ ]) →
-        (elimv (var i 𝕢 σ) P∶ P
+        (elimv (var i 𝕢 σ) ty∶ A P∶ P
             nb∶ nb 
             cb∶ cb) 
             ~ᵣ 

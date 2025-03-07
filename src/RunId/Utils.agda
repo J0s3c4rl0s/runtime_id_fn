@@ -68,15 +68,14 @@ shiftindices (elimnat t P∶ t₁ zb∶ t₂ sb∶ t₃) i l =
     elimnat (shiftindices t i l) P∶ (shiftindices t₁ i l) 
             zb∶ (shiftindices t₂ i l) 
             sb∶ (shiftindices t₃ i (l + 2))
-shiftindices (eliml t P∶ t₁ nb∶ t₃ cb∶ t₄) i l = 
-    eliml (shiftindices t i l) P∶ (shiftindices t₁ i l) 
+shiftindices (eliml t ty∶ A P∶ t₁ nb∶ t₃ cb∶ t₄) i l = 
+    eliml (shiftindices t i l) ty∶ shiftindices A i l P∶ (shiftindices t₁ i l) 
             nb∶ (shiftindices t₃ i l) 
             cb∶ (shiftindices t₄ i (l + 3))
-shiftindices (elimv (t 𝕢 σ) P∶ t₁ nb∶ t₄ cb∶ t₅) i l = 
-    elimv_P∶_nb∶_cb∶_ 
-        ((shiftindices t i l) 𝕢 σ) (shiftindices t₁ i l) 
-            (shiftindices t₄ i l) 
-            (shiftindices t₅ i (l + 4))
+shiftindices (elimv (t 𝕢 σ) ty∶ A P∶ t₁ nb∶ t₄ cb∶ t₅) i l = 
+    elimv ((shiftindices t i l) 𝕢 σ) ty∶ shiftindices A i l P∶ (shiftindices t₁ i l) 
+            nb∶ (shiftindices t₄ i l) 
+            cb∶ (shiftindices t₅ i (l + 4))
 shiftindices Nat i l = Nat
 shiftindices (List t) i l = List (shiftindices t i l)
 shiftindices (Vec t₁ (A 𝕢 σ)) i l = Vec (shiftindices t₁ i l) (shiftindices A i l 𝕢 σ)
@@ -107,15 +106,15 @@ nilvω [ i / a ] = nilvω
     elimnat b [ i / a ] P∶ P [ i / a ] 
         zb∶ zb [ i / a ] 
         sb∶ (sb [ i + 2 / shiftindices a 2 0 ])
-(eliml b P∶ P nb∶ nb cb∶ cb) [ i / a ] = 
-    eliml b [ i / a ] P∶ P [ i / a ] 
+(eliml b ty∶ A P∶ P nb∶ nb cb∶ cb) [ i / a ] = 
+    eliml b [ i / a ] ty∶ A [ i / a ] P∶ P [ i / a ] 
         nb∶ nb [ i / a ] 
         cb∶ (cb [ i + 3 / shiftindices a 3 0 ])
-(elimv (b 𝕢 σ) P∶ P nb∶ nb cb∶ cb) [ i / a ] = 
-    elimv (b [ i / a ] 𝕢 σ) P∶ P [ i / a ] 
+(elimv (b 𝕢 σ) ty∶ A P∶ P nb∶ nb cb∶ cb) [ i / a ] = 
+    elimv (b [ i / a ] 𝕢 σ) ty∶ A [ i / a ] P∶ P [ i / a ] 
         nb∶ nb [ i / a ] 
         cb∶ (cb [ i + 4 / shiftindices a 4 0 ])
 Nat [ i / a ] = Nat
 List b [ i / a ] = List (b [ i / a ])
 Vec b (n 𝕢 σ) [ i / a ] = Vec (b [ i / a ]) (((n [ i / a ])) 𝕢 σ)
-Sett level [ i / a ] = Sett level
+Sett level [ i / a ] = Sett level 

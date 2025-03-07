@@ -153,40 +153,40 @@ compileTerm scon (S.elimnat sa P∶ sP zb∶ sz sb∶ ss) = do
             (sP S.· S.var 0 𝕢 𝟘) S.𝕢 ω) 
         ss 
     just (T.elimnat ta zb∶ tz sb∶ ts)
-compileTerm scon (S.eliml sa P∶ sP nb∶ sn cb∶ sc) = do 
+compileTerm scon (S.eliml sa ty∶ A P∶ sP nb∶ sn cb∶ sc) = do 
     ta ← compileTerm scon sa 
     tn ← compileTerm scon sc 
     -- How will compilation change the presence of the P entry? What should the usage of P be?
     -- What about e.g. f x = Int? I literally _have to_ reduce this application... 
     tc ← compileTerm 
-        (((scon S., {! A  !} S.𝕢 ω) S., 
-            S.List {!  A !} S.𝕢 ω) S., 
+        (((scon S., A S.𝕢 ω) S., 
+            S.List A S.𝕢 ω) S., 
             -- Does it have to be P : @0 A -> Type to make sense in STLC?
             -- Solves the reduction problem...
             (sP S.· S.var 0 𝕢 𝟘) S.𝕢 ω) 
         sn 
     just (T.eliml ta nb∶ tn cb∶ tc)
-compileTerm scon (S.elimv sa S.𝕢 S.𝟘 P∶ sP nb∶ sn cb∶ sc) = do 
+compileTerm scon (S.elimv sa 𝕢 𝟘 ty∶ A P∶ sP nb∶ sn cb∶ sc) = do 
     ta ← compileTerm scon sa 
     tn ← compileTerm scon sn 
     tc ← compileTerm 
         ((((scon S., 
             S.Nat 𝕢 𝟘) S., 
-            {!  A !} 𝕢 ω) S., 
-            S.Vec {!  A  !} (S.var 1 𝕢 𝟘) 𝕢 ω) S.,
+            A 𝕢 ω) S., 
+            S.Vec A (S.var 1 𝕢 𝟘) 𝕢 ω) S.,
             -- Does it have to be P : @0 A -> Type to make sense in STLC? 
             -- Solves the reduction problem...
             (sP S.· S.var 0 𝕢 𝟘) 𝕢 ω) 
         sc 
     just (T.eliml ta nb∶ tn cb∶ tc)
-compileTerm scon (S.elimv sa S.𝕢 S.ω P∶ sP nb∶ sn cb∶ sc) = do 
+compileTerm scon (S.elimv sa 𝕢 ω ty∶ A P∶ sP nb∶ sn cb∶ sc) = do 
     ta ← compileTerm scon sa 
     tn ← compileTerm scon sn 
     tc ← compileTerm  
         ((((scon S., 
             S.Nat 𝕢 ω) S., 
-            {!  A  !} 𝕢 ω) S., 
-            S.Vec {!  A  !} (S.var 1 𝕢 ω) 𝕢 ω) S., 
+            A 𝕢 ω) S., 
+            S.Vec A (S.var 1 𝕢 ω) 𝕢 ω) S., 
             -- Does it have to be P : @0 A -> Type to make sense in STLC?
             -- Solves the reduction problem...
             (sP S.· S.var 0 𝕢 𝟘) 𝕢 ω) 

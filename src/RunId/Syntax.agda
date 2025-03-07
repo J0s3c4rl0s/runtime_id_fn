@@ -77,10 +77,10 @@ data Term where
     -- Nat
     elimnat_P∶_zb∶_sb∶_ : Term → Term → Term → Term → Term
     -- List
-    eliml_P∶_nb∶_cb∶_ : (list : Term) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    eliml_ty∶_P∶_nb∶_cb∶_ : (list : Term) → (innerty : Type) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
     -- vec
     -- Annotation is for if vec has erased index or not
-    elimv_P∶_nb∶_cb∶_ : Annotation a σ → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    elimv_ty∶_P∶_nb∶_cb∶_ : Annotation a σ → (innerty : Type) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
     
     -- Types
     Nat : Type

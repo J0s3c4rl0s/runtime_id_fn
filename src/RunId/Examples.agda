@@ -81,41 +81,19 @@ listLengthDef : Term
 listLengthDef = 
     ƛ∶ Sett 0 𝕢 𝟘 ♭ 
         (ƛ∶ List (var 0) 𝕢 ω ♭ 
-            (eliml var 0 P∶ ƛ∶ List (var 1) 𝕢 ω ♭ Nat 
+            (eliml (var 0) ty∶ var 1 P∶ ƛ∶ List (var 1) 𝕢 ω ♭ Nat 
                 nb∶ z 
                 cb∶ s (var 0)))
 
 lemmaContConv : [] ⊢ a 𝕢 σ ∶ A → cΓ ⊢  a 𝕢 σ ∶ A
-lemmaContConv {var x} {A = A} {cΓ = cΓ} (⊢conv d x₁) = {!   !}
-lemmaContConv {var x} {A = A} {cΓ = cΓ} (⊢TM-𝟘 d) = {!   !}
-lemmaContConv {ƛ∶ x ♭ a} {A = A} {cΓ = cΓ} (⊢lam d d₁) = ⊢lam {!   !} {!   !}
-lemmaContConv {ƛ∶ x ♭ a} {A = A} {cΓ = cΓ} (⊢conv d x₁) = {!   !}
-lemmaContConv {ƛ∶ x ♭ a} {A = A} {cΓ = cΓ} (⊢TM-𝟘 d) = {!   !}
-lemmaContConv {ƛr∶ x ♭ a} {A = A} {cΓ = cΓ} d = {!   !}
-lemmaContConv {a · a₁ 𝕢 x} {A = A} {cΓ = cΓ} d = {!   !}
-lemmaContConv {a ·ᵣ a₁} {A = A} {cΓ = cΓ} d = {!   !}
-lemmaContConv {z} {A = A} {cΓ = cΓ} d = {!   !}
-lemmaContConv {s a} {A = A} {cΓ = cΓ} d = {!   !}
-lemmaContConv {nill} {A = A} {cΓ = cΓ} d = {!   !}
-lemmaContConv {a ∷l a₁} {A = A} {cΓ = cΓ} d = {!   !}
-lemmaContConv {nilv𝕢 x} {A = A} {cΓ = cΓ} d = {!   !}
-lemmaContConv {a ∷v a₁ 𝕟 a₂ 𝕢 x} {A = A} {cΓ = cΓ} d = {!   !}
-lemmaContConv {elimnat a P∶ a₁ zb∶ a₂ sb∶ a₃} {A = A} {cΓ = cΓ} d = {!   !}
-lemmaContConv {eliml a P∶ a₁ nb∶ a₂ cb∶ a₃} {A = A} {cΓ = cΓ} d = {!   !}
-lemmaContConv {elimv a P∶ a₁ nb∶ a₂ cb∶ a₃} {A = A} {cΓ = cΓ} d = {!   !}
-lemmaContConv {Nat} {A = A} {cΓ = cΓ} d = {!   !}
-lemmaContConv {List a} {A = A} {cΓ = cΓ} d = {!   !}
-lemmaContConv {Vec x a} {A = A} {cΓ = cΓ} d = {!   !}
-lemmaContConv {∶ x ⟶ a} {A = A} {cΓ = cΓ} d = {!   !}
-lemmaContConv {r∶ x ⟶ a} {A = A} {cΓ = cΓ} d = {!   !}
-lemmaContConv {Sett x} {A = A} {cΓ = cΓ} d = {!   !}
+lemmaContConv = {!   !}
 
 -- Should work in any arbitrary mode
 listLengthTyped : [] ⊢ listLengthDef 𝕢 σ ∶ listLengthTy
 listLengthTyped {σ = 𝟘} = 
     ⊢TM-𝟘
         (listLengthTyped {σ = ω})
-listLengthTyped {σ = ω} =
+listLengthTyped {σ = ω} = 
     ⊢lam
         (⊢lam
             (⊢conv
@@ -131,6 +109,7 @@ listLengthTyped {σ = ω} =
                 ＝beta)
             (⊢List (⊢var Z)))
         ⊢Sett
+        
 listLengthDefComp : ((listLengthDef ·𝟘 Nat) ·ω (z ∷l nill)) ＝ s z
 listLengthDefComp =
     ＝trans
@@ -154,13 +133,13 @@ listToVecTy = r∶ List Nat ⟶ Vec Nat (((listLengthDef ·𝟘 Nat) ·ω var 0)
 listToVecDef : Term
 listToVecDef = 
     ƛr∶ List Nat ♭ 
-        (eliml var 0 P∶ ƛ∶ List Nat 𝕢 𝟘 ♭ Vec Nat (((listLengthDef ·𝟘 Nat) ·ω var 0) 𝕢 𝟘) 
+        (eliml var 0 ty∶ Nat P∶ ƛ∶ List Nat 𝕢 𝟘 ♭ Vec Nat (((listLengthDef ·𝟘 Nat) ·ω var 0) 𝕢 𝟘) 
             nb∶ nilv𝟘 
             -- Too lazy to just fetch it directly from the vector 
             cb∶ (var 2 ∷v var 0 𝕟𝟘 ((listLengthDef ·𝟘 Nat) ·ω var 1)))  
 
 ~ᵣlemma : 
-    (eliml var 0 P∶
+    (eliml var 0 ty∶ Nat P∶
        ƛ∶ List Nat 𝕢 𝟘 ♭
        Vec Nat (((listLengthDef · Nat 𝕢 𝟘) · var 0 𝕢 ω) 𝕢 𝟘)
        nb∶ nilv𝕢 𝟘 
@@ -267,7 +246,7 @@ vecLType {A} {n} = ∶ Vec (n 𝕢 𝟘) A 𝕢 ω ⟶ Nat
 vecLTerm : {A n : Term} →  Term
 vecLTerm {A} {n}  = 
     ƛ∶ Vec (n 𝕢 𝟘) A 𝕢 ω ♭ 
-        (elimv var 0 P∶ ƛ∶ Nat 𝕢 𝟘 ♭ (ƛ∶ Vec (var 0 𝕢 𝟘) A 𝕢 ω ♭ Nat) 
+        (elimv var 0 ty∶ Nat P∶ ƛ∶ Nat 𝕢 𝟘 ♭ (ƛ∶ Vec (var 0 𝕢 𝟘) A 𝕢 ω ♭ Nat) 
             nb∶ z 
             -- fetch length from constructors in non-erased position
             cb∶ var 3)

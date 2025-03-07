@@ -3,7 +3,12 @@ module RunIdComp where
 import RunId as S 
 import STLC as T
 
-open S using (𝟘; ω)
+---- Directly import syntax only used in S 
+open S using (
+    -- Quantities 
+    𝟘; ω; 
+    -- Annotations
+    _𝕢_)
 
 open import Data.Unit using (⊤; tt)
 open import Data.List
@@ -124,6 +129,7 @@ compileTerm scon (sa S.∷v sas 𝕟 sn 𝕢 S.ω) = do
     tas ← compileTerm scon sas 
     tn ← compileTerm scon sn 
     just (ta T.∷v tas 𝕟 tn)
+{-
 ---- Attempt building basic reduction optimization into compiler
 -- Assume must be an unerased nat
 compileTerm scon (S.elimnat sa P∶ sP zb∶ sz sb∶ ss) = do 
@@ -134,29 +140,47 @@ compileTerm scon (S.elimnat sa P∶ sP zb∶ sz sb∶ ss) = do
         T.s ta → just ({! ts   !})
         ta → just (T.elimnat ta zb∶ tz sb∶ ts)  
     just {!   !}
-{-
+-}
 ---- dont optimize variant
 compileTerm scon (S.elimnat sa P∶ sP zb∶ sz sb∶ ss) = do 
     ta ← compileTerm scon sa 
     tz ← compileTerm scon sz 
-    ts ← compileTerm scon ss 
+    -- Assume nat is unerased?
+    -- Usage of P's arg? Usage of P?
+    ts ← compileTerm ((scon S., S.Nat S.𝕢 ω) S., (sP S.· S.var 0 𝕢 {!   !}) S.𝕢 {!   !}) ss 
     just (T.elimnat ta zb∶ tz sb∶ ts)
--}
 compileTerm scon (S.eliml sa P∶ sP nb∶ sn cb∶ sc) = do 
     ta ← compileTerm scon sa 
+    tn ← compileTerm scon sc 
     -- How will compilation change the presence of the P entry? What should the usage of P be?
-    tn ← compileTerm (((scon S., {!   !} S.𝕢 ω) S., S.List {!   !} S.𝕢 ω) S., {! ? · ?  !} S.𝕢 {!   !}) sn 
-    tc ← compileTerm {!   !} sc 
+    -- What about e.g. f x = Int? I literally _have to_ reduce this application... 
+    tc ← compileTerm 
+        (((scon S., {! A  !} S.𝕢 ω) S., 
+            S.List {!  A !} S.𝕢 ω) S., 
+            (sP S.· S.var 0 𝕢 {!   !}) S.𝕢 {!   !}) 
+        sn 
     just (T.eliml ta nb∶ tn cb∶ tc)
 compileTerm scon (S.elimv sa S.𝕢 S.𝟘 P∶ sP nb∶ sn cb∶ sc) = do 
     ta ← compileTerm scon sa 
-    tn ← compileTerm {!   !} sn 
-    tc ← compileTerm {!   !} sc 
+    tn ← compileTerm scon sn 
+    tc ← compileTerm 
+        ((((scon S., 
+            S.Nat 𝕢 𝟘) S., 
+            {!  A !} 𝕢 ω) S., 
+            S.Vec {!  A  !} (S.var 1 𝕢 𝟘) 𝕢 ω) S., 
+            (sP S.· S.var 0 𝕢 {!   !}) 𝕢 {!   !}) 
+        sc 
     just (T.eliml ta nb∶ tn cb∶ tc)
 compileTerm scon (S.elimv sa S.𝕢 S.ω P∶ sP nb∶ sn cb∶ sc) = do 
     ta ← compileTerm scon sa 
-    tn ← compileTerm {!   !} sn 
-    tc ← compileTerm {!   !} sc 
+    tn ← compileTerm scon sn 
+    tc ← compileTerm  
+        ((((scon S., 
+            S.Nat 𝕢 ω) S., 
+            {!  A  !} 𝕢 ω) S., 
+            S.Vec {!  A  !} (S.var 1 𝕢 ω) 𝕢 ω) S., 
+            (sP S.· S.var 0 𝕢 {!   !}) 𝕢 {!   !}) 
+        sc 
     just (T.elimv ta nb∶ tn cb∶ tc)
 -- Reject types in term position
 compileTerm scon stype = nothing

@@ -17,6 +17,7 @@ open import Data.Product using (_×_) renaming (_,_ to _,'_)
 open import Data.Nat using (ℕ; zero; suc; _+_; _≤ᵇ_)
 open import Data.Bool using (if_then_else_)
 open import Data.Maybe
+open import Data.Sum
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 private variable
@@ -508,7 +509,9 @@ data _~ᵣ_ where
     ~ᵣηlist :
         nb ~ᵣ (a [ i / nill ]) →
         -- substitute into branch replacing tail with acc
-        (cb [ 0 / var 1 ]) ~ᵣ (a [ i / var 2 ∷l var 1 ]) →
+        -- (cb [ 0 / var 1 ]) ~ᵣ (a [ i / var 2 ∷l var 1 ]) →
+        -- Add two options, either acc or tail, prev solution works bad with proof
+        cb ~ᵣ ((a [ i / var 2 ∷l var 0 ])) ⊎ cb ~ᵣ ((a [ i / var 2 ∷l var 1 ])) →
         (eliml var i ty∶ A P∶ P 
             nb∶ nb 
             cb∶ cb) 

@@ -151,6 +151,19 @@ listToVecDef =
         ~ᵣnilv𝟘        
         {!   !} 
 
+-- 
+~ᵣlemma2 : 
+    (eliml var 0 ty∶ Nat P∶
+       ƛ∶ List Nat 𝕢 𝟘 ♭ List Nat
+       nb∶ nilv𝕢 𝟘 
+       cb∶ (var 2 ∷v var 1 𝕟 (listLengthDef · Nat 𝕢 𝟘) · var 1 𝕢 ω 𝕢 𝟘))
+      ~ᵣ 
+    var 0
+~ᵣlemma2 = 
+    ~ᵣηlist
+        ~ᵣnilv𝟘
+        {!   !}
+
 listToVecTyped : [] ⊢ listToVecDef 𝕢 ω ∶ listToVecTy
 listToVecTyped = ⊢rlam
         ~ᵣlemma

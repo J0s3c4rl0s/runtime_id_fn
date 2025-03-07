@@ -344,6 +344,7 @@ data _~ᵣ_ where
     
     ---- eliminators 
     -- nats
+    {-
     ~ᵣnatelz :
         m ~ᵣ z →
         (elimnat m P∶ P 
@@ -363,7 +364,9 @@ data _~ᵣ_ where
                 sb∶ sb) 
             ~ᵣ 
             ((sb [ 1 / n ]) [ 0 / a ])
+    -}
     -- list
+    {-
     ~ᵣlisteln :
         cs ~ᵣ nill →
         (eliml cs ty∶ A P∶ P 
@@ -384,7 +387,9 @@ data _~ᵣ_ where
             ~ᵣ 
             (((cb [ 2 / a ]) [ 1 / as ]) [ 0 / b ])
             -- (((cb · a) · as) ·  b)
+    -}
     -- vec
+    {-
     ~ᵣveceln :
         -- generic computation rules
         cs ~ᵣ (nilv𝕢 σ) →
@@ -407,7 +412,7 @@ data _~ᵣ_ where
             -- Might be worthwhile to change n to fit the structure of ∷v
             ((((cb [ 3 / n ]) [ 2 / a ]) [ 1 / as ]) [ 0 / b ])
             -- ((((cb · n) · a) · as) · b)
-    
+    -}
     ---- Cong rules for datatypes 
     -- Nat
     ~ᵣs : 

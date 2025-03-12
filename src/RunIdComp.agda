@@ -32,11 +32,17 @@ data ContextRemap : S.Context sΓ  → Set where
     _,ᵣ_skip : ContextRemap scΓ → (sA : S.Term) → ContextRemap (scΓ S., sA S.𝕢 S.𝟘)  
     _,ᵣ_↦_ : ContextRemap scΓ → (sA : S.Term) → (tA : T.Type) → ContextRemap (scΓ S., sA S.𝕢 S.ω)
 
--- need to compile the type lol
-computeRemap : (scΓ : S.Context sΓ) → ContextRemap scΓ 
-computeRemap S.[] = []ᵣ 
-computeRemap (scΓ S., A S.𝕢 S.𝟘) = computeRemap scΓ ,ᵣ A skip 
-computeRemap (scΓ S., A S.𝕢 S.ω) = computeRemap scΓ ,ᵣ A ↦ {!   !} 
+compileType : S.Type → Maybe T.Type
+
+compileRemap : (scΓ : S.Context sΓ) → Maybe (ContextRemap scΓ) 
+compileRemap S.[] = just []ᵣ 
+compileRemap (scΓ S., sA S.𝕢 S.𝟘) = do 
+    rΓ ← compileRemap scΓ
+    just (rΓ ,ᵣ sA skip)
+compileRemap (scΓ S., sA S.𝕢 S.ω) = do 
+    rΓ ← compileRemap scΓ
+    tA ← compileType sA
+    just (rΓ ,ᵣ sA ↦ tA) 
 
 -- outside of FP this could be a collection of ints to skip over and do maths instead
 remapIndex : ℕ → ContextRemap scΓ → Maybe ℕ
@@ -55,7 +61,6 @@ lookupType (scon S., A S.𝕢 σ) zero = just (A , σ)
 lookupType (scon S., A S.𝕢 σ) (suc i) = lookupType scon i
 
 
-compileType : S.Type → Maybe T.Type
 compileType S.Nat = just T.Nat
 compileType (S.List sA) = do 
     tA ← compileType sA 
@@ -81,103 +86,10 @@ compileType (S.Sett l) = nothing
 -- Reject terms in type positon.
 compileType sA = nothing
 
-compileTermR : ContextRemap scΓ →  S.Term → Maybe T.Term
-compileTermR rΓ (S.var x) = do 
-    n ← remapIndex x rΓ
-    just (T.var n)
-compileTermR rΓ (S.ƛ∶ sA 𝕢 𝟘 ♭ sa) = compileTermR (rΓ ,ᵣ sA skip) sa
-compileTermR rΓ (S.ƛ∶ sA 𝕢 ω ♭ sa) = do
-    tA ← compileType sA
-    tbody ← compileTermR (rΓ ,ᵣ sA ↦ tA) sa
-    just (T.ƛ tbody)
-compileTermR rΓ (S.ƛr∶ sA ♭ sterm) =  
-    -- should I try compiling sA just in case?
-    just (T.ƛ (T.var 0)) 
-compileTermR rΓ (sf S.· sa 𝕢 S.𝟘) = compileTermR rΓ sf
-compileTermR rΓ (sf S.· sa 𝕢 S.ω) = do 
-    tf ← compileTermR rΓ sf 
-    ta ← compileTermR rΓ sa 
-    just (tf T.· ta) 
--- Replace by arg
-compileTermR rΓ (sf S.·ᵣ sa) = compileTermR rΓ sa
-compileTermR rΓ S.z = just T.z
-compileTermR rΓ (S.s sa) = do 
-    ta ← compileTermR rΓ sa 
-    just (T.s ta) 
-compileTermR rΓ S.nill = just T.nill
-compileTermR rΓ (sa S.∷l sas) = do 
-    ta ← compileTermR rΓ sa 
-    tas ← compileTermR rΓ sas 
-    just (ta T.∷l tas) 
-compileTermR rΓ (S.nilv𝕢 S.𝟘) = just T.nill
-compileTermR rΓ (S.nilv𝕢 S.ω) = just T.nilv
-compileTermR rΓ (sa S.∷v sas 𝕟 sn 𝕢 S.𝟘) = do 
-    ta ← compileTermR rΓ sa 
-    tas ← compileTermR rΓ sas 
-    just (ta T.∷l tas) 
-compileTermR rΓ (sa S.∷v sas 𝕟 sn 𝕢 S.ω) = do 
-    ta ← compileTermR rΓ sa 
-    tas ← compileTermR rΓ sas 
-    tn ← compileTermR rΓ sn 
-    just (ta T.∷v tas 𝕟 tn)
-compileTermR rΓ (S.elimnat sa P∶ sP zb∶ sz sb∶ ss) = do 
-    ta ← compileTermR rΓ sa 
-    tz ← compileTermR rΓ sz 
-    -- Need to evaluate sP to a T type...
-    tP ← {!   !}
-    ts ← compileTermR 
-        ((rΓ ,ᵣ 
-            S.Nat ↦ T.Nat) ,ᵣ
-            -- Need to evaluate sP to a T type... 
-            -- Assume no path sensitivity therefore P : @0 A -> B 
-            {!   !} ↦ tP) 
-        ss 
-    just (T.elimnat ta zb∶ tz sb∶ ts)
-compileTermR rΓ (S.eliml sa ty∶ sA P∶ sP nb∶ sn cb∶ sc) = do 
-    ta ← compileTermR rΓ sa 
-    tn ← compileTermR rΓ sn 
-    tA ← compileType sA
-    tP ← {!   !}
-    tc ← compileTermR 
-        (((rΓ ,ᵣ 
-            sA ↦ tA) ,ᵣ 
-            S.List sA ↦ T.List tA) ,ᵣ 
-            {!   !} ↦ tP) 
-        sc 
-    just (T.eliml ta nb∶ tn cb∶ tc)
-compileTermR rΓ (S.elimv sa 𝕢 𝟘 ty∶ sA P∶ sP nb∶ sn cb∶ sc) = do 
-    ta ← compileTermR rΓ sa 
-    tn ← compileTermR rΓ sn 
-    tA ← compileType sA
-    tP ← {!   !}
-    tc ← compileTermR 
-        ((((rΓ ,ᵣ
-            S.Nat skip) ,ᵣ 
-            sA ↦ tA) ,ᵣ 
-            S.Vec sA (S.var 1 𝕢 𝟘) ↦ T.List tA) ,ᵣ 
-            {!   !} ↦ tP)
-        sc 
-    just (T.eliml ta nb∶ tn cb∶ tc)
-compileTermR rΓ (S.elimv sa 𝕢 ω ty∶ sA P∶ sP nb∶ sn cb∶ sc) = do 
-    ta ← compileTermR rΓ sa 
-    tn ← compileTermR rΓ sn 
-    tA ← compileType sA
-    tP ← {!   !}
-    tc ← compileTermR  
-        ((((rΓ ,ᵣ 
-            S.Nat skip) ,ᵣ
-            sA ↦ tA) ,ᵣ 
-            S.Vec sA (S.var 1 𝕢 ω) ↦ T.Vec tA) ,ᵣ 
-            {!   !} ↦ tP) 
-        sc 
-    just (T.elimv ta nb∶ tn cb∶ tc)
--- Reject types in term position
-compileTermR rΓ stype = nothing
-
 compileTerm : (scΓ : S.Context sΓ) → S.Term → Maybe T.Term
 compileTerm scon (S.var x) = do 
     -- Compute remap
-    let remap = computeRemap scon
+    remap ← compileRemap scon
     -- Recompute index (how)?
     n ← remapIndex x remap
     just (T.var n)

@@ -2,6 +2,7 @@ module RunId.Examples where
 
 open import Data.Unit
 open import Data.Empty
+open import Data.Sum
 open import Relation.Nullary using (¬_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
@@ -15,6 +16,7 @@ private variable
     σ π : Quantity
     A B C : Term
     a b c d f g n m : Term
+
 -- common patterm
 betapp : (f · a 𝕢 σ) ＝  g → (g · c 𝕢 π) ＝ d → ((f · a 𝕢 σ) · c 𝕢 π) ＝ d
 betapp inApp outApp = 
@@ -35,7 +37,7 @@ jesper-l =
             (~ᵣlamω ~ᵣappr)
             ~ᵣrefl)
         ~ᵣbetaω
-
+{-
 jesper-r : jesper-ex ~ᵣ z
 jesper-r = 
     ~ᵣtrans
@@ -45,7 +47,6 @@ jesper-r =
             ~ᵣappr
             -- Stuck with s z ~ z which is not provable
             {!   !})
-
 
 jesper-ex0D : Term
 jesper-ex0D = ƛ∶ (r∶ Nat ⟶ Nat) 𝕢 𝟘 ♭ (var 0 ·ᵣ s z)
@@ -61,6 +62,7 @@ jesper-ex0Typed =
             (⊢var {!   !})
             (⊢s ⊢z))
         (⊢rpi ~ᵣrefl ⊢Nat ⊢Nat)
+-}
 
 -- Id example
 
@@ -81,13 +83,10 @@ listLengthDef : Term
 listLengthDef = 
     ƛ∶ Sett 0 𝕢 𝟘 ♭ 
         (ƛ∶ List (var 0) 𝕢 ω ♭ 
-            (eliml (var 0) ty∶ var 1 P∶ ƛ∶ List (var 1) 𝕢 ω ♭ Nat 
+            (eliml (var 0) ty∶ var 1 P∶ Nat 
                 nb∶ z 
                 cb∶ s (var 0)))
-
-lemmaContConv : [] ⊢ a 𝕢 σ ∶ A → cΓ ⊢  a 𝕢 σ ∶ A
-lemmaContConv = {!   !}
-
+                
 -- Should work in any arbitrary mode
 listLengthTyped : [] ⊢ listLengthDef 𝕢 σ ∶ listLengthTy
 listLengthTyped {σ = 𝟘} = 
@@ -96,18 +95,12 @@ listLengthTyped {σ = 𝟘} =
 listLengthTyped {σ = ω} = 
     ⊢lam
         (⊢lam
-            (⊢conv
-                (⊢listel {𝓁 = 0}
-                    (⊢var Z)
-                    (⊢lam ⊢Nat (⊢List (⊢var (S Z))))
-                    (⊢conv ⊢z (＝sym ＝beta))
-                    (⊢conv 
-                        (⊢s (⊢conv 
-                            (⊢var Z)
-                            ＝beta))
-                        (＝sym ＝beta)))
-                ＝beta)
-            (⊢List (⊢var Z)))
+            (⊢listel {𝓁 = 0}
+                (⊢var Z {eq = refl})
+                ⊢Nat
+                ⊢z
+                (⊢s (⊢var Z {eq = refl})))
+            (⊢List (⊢var Z {eq = refl})))
         ⊢Sett
         
 listLengthDefComp : ((listLengthDef ·𝟘 Nat) ·ω (z ∷l nill)) ＝ s z
@@ -117,15 +110,7 @@ listLengthDefComp =
             ＝beta
             ＝beta)
         (＝listelc ＝refl (＝listeln ＝refl))
-{-
--- fuck it
-vecLengthTy : Term
-vecLengthTy = ∶ Vec (_ 𝕢 _) _ 𝕢 _ ⟶ Nat
-vecLengthDef : {n : Term} → Term
-vecLengthDef {n} = 
-    ƛ∶ Vec (n 𝕢 _) _ 𝕢 𝟘 ♭ 
-        n
--}
+
 
 listToVecTy : Term 
 listToVecTy = r∶ List Nat ⟶ Vec Nat (((listLengthDef ·𝟘 Nat) ·ω var 0) 𝕢 𝟘 )
@@ -133,15 +118,13 @@ listToVecTy = r∶ List Nat ⟶ Vec Nat (((listLengthDef ·𝟘 Nat) ·ω var 0)
 listToVecDef : Term
 listToVecDef = 
     ƛr∶ List Nat ♭ 
-        (eliml var 0 ty∶ Nat P∶ ƛ∶ List Nat 𝕢 𝟘 ♭ Vec Nat (((listLengthDef ·𝟘 Nat) ·ω var 0) 𝕢 𝟘) 
+        (eliml var 0 ty∶ Nat P∶ Vec Nat (((listLengthDef ·𝟘 Nat) ·ω var 0) 𝕢 𝟘) 
             nb∶ nilv𝟘 
             -- Too lazy to just fetch it directly from the vector 
             cb∶ (var 2 ∷v var 0 𝕟𝟘 ((listLengthDef ·𝟘 Nat) ·ω var 1)))  
 
 ~ᵣlemma : 
-    (eliml var 0 ty∶ Nat P∶
-       ƛ∶ List Nat 𝕢 𝟘 ♭
-       Vec Nat (((listLengthDef · Nat 𝕢 𝟘) · var 0 𝕢 ω) 𝕢 𝟘)
+    (eliml var 0 ty∶ Nat P∶ Vec Nat (((listLengthDef · Nat 𝕢 𝟘) · var 0 𝕢 ω) 𝕢 𝟘) 
        nb∶ nilv𝕢 𝟘 
        cb∶ (var 2 ∷v var 0 𝕟 (listLengthDef · Nat 𝕢 𝟘) · var 1 𝕢 ω 𝕢 𝟘))
       ~ᵣ 
@@ -149,9 +132,8 @@ listToVecDef =
 ~ᵣlemma = 
     ~ᵣηlist
         ~ᵣnilv𝟘        
-        {!   !} 
+        (inj₁ (~ᵣ∷v𝟘 ~ᵣrefl ~ᵣrefl)) 
 
--- 
 ~ᵣlemma2 : 
     (eliml var 0 ty∶ Nat P∶
        ƛ∶ List Nat 𝕢 𝟘 ♭ List Nat
@@ -162,129 +144,72 @@ listToVecDef =
 ~ᵣlemma2 = 
     ~ᵣηlist
         ~ᵣnilv𝟘
-        {!   !}
+        (inj₂ (~ᵣ∷v𝟘 ~ᵣrefl ~ᵣrefl))
+
+lemmaListLengthApp : cΓ ⊢ ((listLengthDef · Nat 𝕢 𝟘) · var 0 𝕢 ω) 𝕢 𝟘 ∶ Nat
+lemmaListLengthApp = 
+    {!   !}
+
+lemmaVec＝base : Vec Nat (z 𝕢 𝟘) ＝
+      Vec Nat
+      ((((ƛ∶ Sett 0 𝕢 𝟘 ♭
+          (ƛ∶ List (var 0) 𝕢 ω ♭
+           (eliml var 0 ty∶ var 1 P∶ Nat nb∶ z cb∶ s (var 0))))
+         ·𝟘 Nat)
+        ·ω nill)
+       𝕢 𝟘)
+lemmaVec＝base = 
+    ＝sym (＝vec
+        (betapp
+            ＝beta
+            (＝trans
+                ＝beta
+                (＝listeln ＝refl)))
+        ＝refl)
+
+lemmaVec＝ind : Vec Nat (s ((listLengthDef · Nat 𝕢 𝟘) · var 1 𝕢 ω) 𝕢 𝟘) ＝
+      Vec Nat
+      ((((ƛ∶ Sett 0 𝕢 𝟘 ♭
+          (ƛ∶ List (var 0) 𝕢 ω ♭
+           (eliml var 0 ty∶ var 1 P∶ Nat nb∶ z cb∶ s (var 0))))
+         ·𝟘 Nat)
+        ·ω (var 2 ∷l var 1))
+       𝕢 𝟘)
+lemmaVec＝ind = 
+    ＝sym (＝vec
+        (betapp
+            ＝beta
+            (＝trans
+                ＝beta
+                (＝listelc
+                    ＝refl
+                    (＝sym (betapp
+                        ＝beta
+                        ＝beta)))))
+        ＝refl)
 
 listToVecTyped : [] ⊢ listToVecDef 𝕢 ω ∶ listToVecTy
-listToVecTyped = ⊢rlam
+listToVecTyped = 
+    ⊢rlam {𝓁 = 0}
         ~ᵣlemma
-        (⊢conv 
-            (⊢listel {𝓁 = 0} 
-                (⊢var Z {eq = refl}) 
-                (⊢lam
-                    (⊢Vec {!   !} ⊢Nat)                     
-                    (⊢List ⊢Nat)) 
-                {!   !}
-                {!   !}) 
-            {!   !}) 
-        (⊢List ⊢Nat)
-        
-listToVecTyped2 : [] ⊢ listToVecTy 𝕢 𝟘 ∶ Sett 0
-listToVecTyped2 = 
-    ⊢rpi 
-        (~ᵣsym (~ᵣvec𝟘 ~ᵣrefl))
-        (⊢List ⊢Nat)
-        {!   !}
-
-{-
-lconv0 : Vec (z 𝕢 𝟘) Nat ＝
-      ((ƛ∶ List Nat 𝕢 𝟘 ♭ Vec (((listLengthDef ·𝟘 Nat) ·ω var 0) 𝕢 𝟘) Nat)
-       ·𝟘 nill)
-lconv0 = 
-    ＝sym (＝trans
-        ＝beta
-        (＝vec 
-            (betapp
-                ＝beta
-                (＝trans
-                    ＝beta
-                    (＝listeln ＝refl)))
-            ＝refl))
-
-lconv1 : Vec (s ((listLengthDef ·𝟘 Nat) ·ω var 1) 𝕢 𝟘) Nat ＝
-      ((ƛ∶ List Nat 𝕢 𝟘 ♭ Vec (((listLengthDef ·𝟘 Nat) ·ω var 0) 𝕢 𝟘) Nat)
-       ·𝟘 (var 2 ∷l var 1))
-lconv1 = 
-    ＝sym (＝trans
-        ＝beta
-        (＝vec
-            (betapp 
-                ＝beta
-                (＝trans
-                    ＝beta
-                    (＝listelc
-                        ＝refl
-                        (＝sym (betapp
-                            ＝beta
-                            ＝beta)))))
-            ＝refl))
-
-listToVecTyped : [] ⊢ listToVecDef 𝕢 σ ∶ listToVecTy
-listToVecTyped {𝟘} = ⊢TM-𝟘 (listToVecTyped {σ = ω})
-listToVecTyped {ω} = 
-    ⊢lam {𝓁 = 0}
-        (⊢conv
-            (⊢listel {𝓁 = 0} 
-                (⊢var Z {eq = refl})
-                (⊢lam {𝓁 = 0} (⊢Vec (⊢app (⊢app 
-                        -- (lemmaContConv {cΓ = {!   !}} listLengthTyped) 
-                        {!   !}
-                    ⊢Nat) (⊢var Z {eq = refl})) ⊢Nat) (⊢List ⊢Nat))
-                (⊢conv
-                    (⊢nilv {𝓁 = 0} ⊢Nat)
-                    lconv0)
-                (⊢conv
-                    (⊢∷v
-                        (⊢var (S (S Z)) {eq = refl})
-                        (⊢app 
-                            (⊢app 
-                                {!   !} -- (lemmaContConv {cΓ = {!   !}} listLengthTyped)
-                                ⊢Nat) 
-                            (⊢var (S Z) {eq = refl}))
-                        (⊢conv
-                            (⊢var Z {eq = refl})
-                            ＝beta))
-                    lconv1))
-            ＝beta)
-        (⊢List ⊢Nat)
-
-    {- 
-        where
-            lemmaContext = (((([] , List Nat 𝕢 𝟘) , Nat 𝕢 ω) , List Nat 𝕢 ω) , ((ƛ∶ List Nat 𝕢 𝟘 ♭ Vec (((listLengthDef ·𝟘 Nat) ·ω var 0) 𝕢 𝟘) Nat) ·𝟘 var 0)  𝕢 ω)
-    -}
--}
-{-    
-vecLType : {A n : Term} → Term
-vecLType {A} {n} = ∶ Vec (n 𝕢 𝟘) A 𝕢 ω ⟶ Nat
-
-vecLTerm : {A n : Term} →  Term
-vecLTerm {A} {n}  = 
-    ƛ∶ Vec (n 𝕢 𝟘) A 𝕢 ω ♭ 
-        (elimv var 0 ty∶ Nat P∶ ƛ∶ Nat 𝕢 𝟘 ♭ (ƛ∶ Vec (var 0 𝕢 𝟘) A 𝕢 ω ♭ Nat) 
-            nb∶ z 
-            -- fetch length from constructors in non-erased position
-            cb∶ var 3)
-
-vecLTyped : {n : Term} {p : [] ⊢ n 𝕢 𝟘 ∶ Nat } → ([] ⊢ (vecLTerm {A = Nat} {n = n}) 𝕢 𝟘 ∶ vecLType {A = Nat} {n = n})
-vecLTyped {n} {p} = 
-    ⊢lam {𝓁 = 0}
-        (⊢conv
-            (⊢vecel {𝓁 = 0}
-                (⊢var Z)
-                (⊢lam {𝓁 = 0}
-                    (⊢lam {𝓁 = 0} ⊢Nat (⊢Vec ⊢Nat ⊢Nat))
-                    ⊢Nat)
-                (⊢conv 
-                    ⊢z 
-                    (＝sym (betapp ＝beta ＝beta)))
-                (⊢conv
-                    (⊢var (S (S (S Z))))
-                    (＝sym (betapp ＝beta ＝beta))))
-            (betapp ＝beta ＝beta))
-        (⊢Vec ⊢Nat ⊢Nat)
-
--- Perhaps make the type in question generic, to prove the term is generally invalid
--- Keep it simple with A for now
-¬vecLTyped : {n : Term} {p : [] ⊢ n 𝕢 𝟘 ∶ Nat } → ¬ ([] ⊢ (vecLTerm {A = Nat} {n = n}) 𝕢 ω ∶ vecLType {A = Nat} {n = n})
-¬vecLTyped {n} {p} (⊢lam (⊢conv d x) d₁) = {!   !}
-¬vecLTyped {n} {p} (⊢conv d x) = {!   !}
--}
+        (⊢listel {𝓁 = 0}
+            (⊢var Z {eq = refl})
+            (⊢Vec
+                (⊢app
+                    (⊢app 
+                        {!  listLengthTyped !}
+                        (⊢Nat {𝓁 = 0}))
+                    (⊢var Z {eq = refl}))
+                ⊢Nat)
+            (⊢conv 
+                (⊢nilv {𝓁 = 0} ⊢Nat)
+                lemmaVec＝base)
+            (⊢conv 
+                (⊢∷v 
+                    (⊢var (S (S Z)) {eq = refl})
+                    (⊢app 
+                        (⊢app {!  listLengthTyped !} ⊢Nat {eq = refl}) 
+                        (⊢var (S Z) {eq = refl})  {eq = refl})
+                    (⊢var Z {eq = refl})) 
+                lemmaVec＝ind))
+        (⊢List ⊢Nat) 

@@ -105,13 +105,18 @@ data _⊢_∶_ where
     ⊢natel : ∀ {zb sb} →
         cΓ ⊢ n 𝕢 σ ∶ Nat →
         -- Maybe P and n should match usage (check?) or comes naturally from rule
-        zeroC Γ ⊢ P 𝕢 𝟘 ∶ (∶ Nat 𝕢 π ⟶ Sett 𝓁 ) →
-        cΓ' ⊢ zb 𝕢 σ ∶ (P · z 𝕢 π) →
-        ((cΓ' , Nat 𝕢 ρ) , (P · var 0 𝕢 π) 𝕢 ρ' ) ⊢ sb 𝕢 σ ∶ (P · s (var 1) 𝕢 π) →
+        -- zeroC Γ ⊢ P 𝕢 𝟘 ∶ (∶ Nat 𝕢 π ⟶ Sett 𝓁 ) →
+        -- enforces that argument to forming this type are erased
+        zeroC (Γ , Nat) ⊢ P 𝕢 𝟘 ∶ Sett 𝓁 →
+        -- cΓ' ⊢ zb 𝕢 σ ∶ (P · z 𝕢 π) →
+        cΓ' ⊢ zb 𝕢 σ ∶ (P [ 0 / z ]) →
+        -- ((cΓ' , Nat 𝕢 ρ) , (P · var 0 𝕢 π) 𝕢 ρ' ) ⊢ sb 𝕢 σ ∶ (P · s (var 1) 𝕢 π) →
+        ((cΓ' , Nat 𝕢 ρ) , (P [ 0 / var 0 ]) 𝕢 ρ' ) ⊢ sb 𝕢 σ ∶ (P [ 0 / s (var 1) ]) →
         (cΓ +c cΓ') ⊢ elimnat n P∶ P 
                 zb∶ zb 
                 sb∶ sb 
-            𝕢 σ ∶ (P · n 𝕢 π)
+            -- 𝕢 σ ∶ (P · n 𝕢 π)
+            𝕢 σ ∶ (P [ 0 / n ])
     -- Lists
     ⊢List : 
         zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁  →
@@ -124,17 +129,16 @@ data _⊢_∶_ where
         cΓ ⊢ a ∷l b 𝕢 σ ∶ List A
     ⊢listel : {cΓ cΓ' : Context Γ} →
         cΓ ⊢ l 𝕢 σ ∶ List A →
-        -- is it really 0 usage mode?
-        zeroC Γ ⊢ P 𝕢 𝟘 ∶ (∶ List A 𝕢 ρ ⟶ Sett 𝓁 ) → 
-        cΓ' ⊢ nb 𝕢 σ ∶ (P · (nill) 𝕢 ρ) → 
+        zeroC (Γ , List A) ⊢ P 𝕢 𝟘 ∶ Sett 𝓁 → 
+        cΓ' ⊢ nb 𝕢 σ ∶ (P [ 0 / nill ]) → 
         -- I presume list elements must have same erasure as List
         (((cΓ' , A 𝕢 σ) , 
             List A 𝕢 σ) , 
-            (P · (var 0) 𝕢 ρ) 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P · (var 2 ∷l var 1) 𝕢 ρ) → 
+            (P [ 0 / var 0 ]) 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P [ 0 / (var 2 ∷l var 1) ]) → 
         (cΓ +c cΓ') ⊢ eliml l ty∶ A P∶ P 
                 nb∶ nb 
                 cb∶ cb 
-            𝕢 σ ∶ (P · l 𝕢 ρ)
+            𝕢 σ ∶ (P [ 0 / l ])
     -- Vecs
     ⊢Vec : {cΓ : Context Γ} →
         cΓ ⊢ n 𝕢 σ ∶ Nat  →
@@ -146,26 +150,23 @@ data _⊢_∶_ where
     ⊢∷v :
         cΓ ⊢ a 𝕢 σ ∶ A →
         cΓ ⊢ n 𝕢 π ∶ Nat →
-
-
         cΓ ⊢ b 𝕢 σ ∶ Vec A (n 𝕢 π) →
         cΓ ⊢ (a ∷v b 𝕟 n 𝕢 π) 𝕢 σ ∶ Vec A (s n 𝕢 π)
     ⊢vecel : {cΓ cΓ' : Context Γ} → 
         cΓ ⊢ b 𝕢 σ ∶ Vec A (n 𝕢 δ) →
-        -- should pi = delta?
-        -- is it really 0 usage mode?
-        zeroC Γ ⊢ P 𝕢 𝟘 ∶ (∶ Nat 𝕢 π ⟶ (∶ Vec A (var 0 𝕢 δ) 𝕢 ρ ⟶ Sett 𝓁 )) →
+        -- I enforce that P is only compile time? should I?
+        zeroC ((Γ , Nat) , Vec A (var 0 𝕢 δ)) ⊢ P 𝕢 𝟘 ∶ Sett 𝓁 →
         cΓ' ⊢ nb 𝕢 σ ∶ ((P · z 𝕢 π) · (nilv𝕢 δ) 𝕢 ρ) →
         -- assuming that the constructors are not heterogenous, I think they might need to be rho
         ((((cΓ' , 
             Nat 𝕢 π) , 
             A 𝕢 σ) , 
             Vec A (var 1 𝕢 δ) 𝕢  σ) , 
-            (P · var 0 𝕢 π)  𝕢 σ) ⊢ cb 𝕢 σ ∶ ((((((P · var 3 𝕢 π) · (var 2 ∷v var 1 𝕟 var 3 𝕢 δ) 𝕢 ρ))))) →
+            (P [ 0 / var 0 ]) 𝕢 σ) ⊢ cb 𝕢 σ ∶ ((((((P [ 0 / var 3 ]) [ 1 / (var 2 ∷v var 1 𝕟 var 3 𝕢 δ) ]))))) →
         (cΓ +c cΓ') ⊢ elimv (b 𝕢 δ) ty∶ A P∶ P 
                 nb∶ nb 
                 cb∶ cb 
-            𝕢 σ ∶ ((P · n 𝕢 π) · b 𝕢 ρ)
+            𝕢 σ ∶ ((P [ 0 / n ]) [ 1 / b ])
     
     ⊢Sett : 
         zeroC Γ ⊢ Sett 𝓁 𝕢 𝟘 ∶ Sett (suc 𝓁) 
@@ -273,7 +274,7 @@ data _＝_ where
                 cb∶ cb) 
             ＝ 
             (((cb [ 2 / a ]) [ 1 / as ]) [ 0 / b ])
-            -- (((cb · a) · as) ·  b)
+            
     -- vec
     ＝veceln :
         cs ＝ (nilv𝕢 σ) →
@@ -295,7 +296,6 @@ data _＝_ where
             ＝ 
             -- Might be worthwhile to change n to fit the structure of ∷v
             ((((cb [ 3 / n ]) [ 2 / a ]) [ 1 / as ]) [ 0 / b ])
-            -- ((((cb · n) · a) · as) · b)
     
     ---- Cong rules for datatypes 
     -- Nat
@@ -520,22 +520,10 @@ data _~ᵣ_ where
     ~ᵣηvec :
         -- do I gotta shift any indices?
         nb ~ᵣ (a [ i / nilv𝕢 σ ]) →
-        -- Make use of context rather than forall
-        -- Also not well typed because ill be mixing potentially different constructors
+        -- Missing choice of acc or tail?
         cb ~ᵣ (a [ i / var 2 ∷v var 1 𝕟 var 3 𝕢 σ ]) →
         (elimv (var i 𝕢 σ) ty∶ A P∶ P
             nb∶ nb 
             cb∶ cb) 
             ~ᵣ 
         a
-    
-
-    -- add rules for runid funs (maybe)
-
-    {-
-    -- Do I even need these still after copying them? 
-    -- Should I remove the repeats? Or just remove this rule?
-    ~ᵣconv :
-        A ＝ C  →
-        A ~ᵣ C 
-    -}

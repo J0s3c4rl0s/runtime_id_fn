@@ -53,17 +53,14 @@ shiftindices : Term → ℕ → ℕ → Term -- Only do this for free variables,
 shiftindices (var x) i l = if l ≤ᵇ x then var (x + i) else var x 
 shiftindices (ƛ∶ t 𝕢 σ ♭ t₁) i l = ƛ∶ shiftindices t i l 𝕢 σ ♭ shiftindices t₁ i (suc l)
 shiftindices (ƛr∶ t ♭ t₁) i l = (ƛr∶ shiftindices t i l ♭ shiftindices t₁ i (suc l))
-shiftindices (t ·𝟘 t₁) i l = shiftindices t i l ·𝟘 shiftindices t₁ i l
-shiftindices (t ·ω t₁) i l = shiftindices t i l ·ω shiftindices t₁ i l
+shiftindices (t · t₁ 𝕢 σ) i l = shiftindices t i l · shiftindices t₁ i l 𝕢 σ
 shiftindices (f ·ᵣ a) i l = shiftindices f i l ·ᵣ shiftindices a i l
 shiftindices z i l = z
 shiftindices (s t) i l = s (shiftindices t i l) 
 shiftindices nill i l = nill
 shiftindices (t ∷l t₁) i l = shiftindices t i l ∷l shiftindices t₁ i l
-shiftindices nilv𝟘 i l = nilv𝟘
-shiftindices nilvω i l = nilvω
-shiftindices (t ∷v t₁ 𝕟𝟘 n) i l = shiftindices t i l ∷v shiftindices t₁ i l 𝕟𝟘 shiftindices n i l
-shiftindices (t ∷v t₁ 𝕟ω n) i l = shiftindices t i l ∷v shiftindices t₁ i l 𝕟ω shiftindices n i l
+shiftindices (nilv𝕢 σ) i l = nilv𝕢 σ
+shiftindices (t ∷v t₁ 𝕟 n 𝕢 σ) i l = shiftindices t i l ∷v shiftindices t₁ i l 𝕟 shiftindices n i l 𝕢 σ
 shiftindices (elimnat t P∶ t₁ zb∶ t₂ sb∶ t₃) i l = 
     elimnat (shiftindices t i l) P∶ (shiftindices t₁ i l) 
             zb∶ (shiftindices t₂ i l) 

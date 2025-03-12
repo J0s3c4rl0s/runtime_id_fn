@@ -41,6 +41,16 @@ data Context where
 infix 10 _,_
 infix 12 _𝕢_
 infix 8 _∋_
+infix 8 _∋Pre_
+
+data _∋Pre_ : PreContext → Type → Set where
+  Z : ∀ {Γ : PreContext}
+    →  (Γ , A) ∋Pre A
+
+  S : ∀ {A} {B} {Γ : PreContext}
+    -- Ensure there is a lookup judgement in submodule
+    → Γ ∋Pre A
+    →  (Γ , B) ∋Pre A
 
 data _∋_ : Context Γ → Annotation A σ → Set where
   Z : ∀ {cΓ : Context Γ}
@@ -61,7 +71,7 @@ data Term where
     ƛr∶_♭_ : Type → Term → Term
     _·_𝕢_ : Term → Term → Quantity → Term
     _·ᵣ_ : Term → Term → Term
-
+ 
     -- data cons
     ---- Nats
     z : Term

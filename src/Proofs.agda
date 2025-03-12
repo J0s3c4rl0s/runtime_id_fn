@@ -14,6 +14,7 @@ open import Data.List
 open import Data.Product using (_×_; _,_; proj₁; proj₂)
 open import Data.Sum
 open import Data.Maybe using (Maybe; just; nothing; _>>=_)
+open import Relation.Nullary.Decidable
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; trans; sym)
 open import Data.Bool using (if_then_else_; Bool)
 open import Data.Unit
@@ -28,7 +29,7 @@ private variable
     sa sb sc sas sbs sf sg : S.Term
     σ π ρ : S.Quantity
 
-    i l : ℕ
+    i l k : ℕ
 
     rΓ : ContextRemap scΓ
 
@@ -78,102 +79,93 @@ insertType : S.Context sΓ → (i : ℕ) → (p : i ≤ conLen sΓ)  → (sA : S
 insertType scΓ zero z≤n sA σ = scΓ S., sA 𝕢 σ
 insertType (scΓ S., sB 𝕢 ρ) (suc i) (s≤s p) sA σ = insertType scΓ i p sA σ S., S.shiftindices sB 1 i 𝕢 ρ
 
-
+insertSkip : {scΓ : S.Context sΓ} → ContextRemap scΓ → (i : ℕ) → (p : i ≤ conLen sΓ)  → (sA : S.Type) → ContextRemap (insertType scΓ i p sA 𝟘)
+insertSkip rΓ zero z≤n sA = rΓ ,ᵣ sA skip
+insertSkip (rΓ ,ᵣ sB skip) (suc i) (s≤s p) sA = insertSkip rΓ i p sA ,ᵣ S.shiftindices sB 1 i skip
+insertSkip (rΓ ,ᵣ sB ↦ tB) (suc i) (s≤s p) sA = insertSkip rΓ i p sA ,ᵣ S.shiftindices sB 1 i ↦ tB
 
 compTyIgnShift : ∀ {i l} → (sA : _) → compileType sA ≡ compileType (S.shiftindices sA i l)
 
-compTeIgnSh : {scΓ : S.Context sΓ} → 
+lemmaRemap : {p : _} {rΓ : ContextRemap scΓ} →
+    compileRemap scΓ ≡ just rΓ →
+    compileRemap (insertType scΓ i p sA 𝟘) ≡ just (insertSkip rΓ i p sA) 
+lemmaRemap {scΓ = scΓ} {i = zero} {p = z≤n} eqrΓ rewrite eqrΓ = refl
+lemmaRemap {scΓ = scΓ S., A 𝕢 𝟘} {i = suc i} {p = s≤s p} {rΓ ,ᵣ .A skip} eqrΓ = {!   !}
+lemmaRemap {scΓ = scΓ S., A 𝕢 ω} {i = suc i} {p = s≤s p} {rΓ} eqrΓ = {!   !}
+
+tmp : 
+    (scΓ : S.Context sΓ) →
+    (i : ℕ) → 
+    (p : i ≤ conLen sΓ) →
+    (i≤k : Dec (i ≤ k)) →
+    compileTerm (insertType scΓ i p sB 𝟘)
+      (if ⌊ i≤k ⌋  then S.var (k + 1) else S.var k)
+      ≡
+      (compileTerm scΓ (S.var k) ) 
+tmp scΓ i p (Bool.false because proof₁) = {!   !}
+tmp scΓ i p (Bool.true because proof₁) = {!   !}
+
+compTeIgnSh :  
     (sa : S.Term) → 
+    (scΓ : S.Context sΓ) →
     (i : ℕ) → 
     (p : i ≤ conLen sΓ) → 
-    compileTerm (insertType scΓ i p sA {!   !}) (S.shiftindices sa 1 i) ≡ compileTerm {!   !} sa
+    compileTerm (insertType scΓ i p sB 𝟘) (S.shiftindices sa 1 i) ≡ compileTerm scΓ sa
+compTeIgnSh (S.var x) scΓ i p = {!   !}
+compTeIgnSh (S.ƛ∶ A 𝕢 𝟘 ♭ sa) scΓ i p = compTeIgnSh sa (scΓ S., A 𝕢 𝟘) (suc i) (s≤s p)
+compTeIgnSh {sB = sB} (S.ƛ∶ A 𝕢 ω ♭ sa) scΓ i p rewrite compTeIgnSh {sB = sB} sa (scΓ S., A 𝕢 ω) (suc i) (s≤s p) = refl
+compTeIgnSh (S.ƛr∶ x ♭ sa) scΓ i p = refl
+compTeIgnSh (sa S.· sa₁ 𝕢 𝟘) scΓ i p = compTeIgnSh sa scΓ i p
+compTeIgnSh (sa S.· sa₁ 𝕢 ω) scΓ i p = {!   !}
+compTeIgnSh (sa S.·ᵣ sa₁) scΓ i p = compTeIgnSh sa₁ scΓ i p
+compTeIgnSh S.z scΓ i p = refl
+compTeIgnSh {sB = sB} (S.s sa) scΓ i p rewrite compTeIgnSh {sB = sB} sa scΓ i p = refl
+compTeIgnSh S.nill scΓ i p = refl
+compTeIgnSh (sa S.∷l sas) scΓ i p = {!   !}
+compTeIgnSh (S.nilv𝕢 x) scΓ i p = {!   !}
+compTeIgnSh (sa S.∷v sas 𝕟 sa₂ 𝕢 x) scΓ i p = {!   !}
+compTeIgnSh (S.elimnat sa P∶ sa₁ zb∶ sa₂ sb∶ sa₃) scΓ i p = {!   !}
+compTeIgnSh (S.eliml sa ty∶ innerty P∶ sa₁ nb∶ sa₂ cb∶ sa₃) scΓ i p = {!   !}
+compTeIgnSh (S.elimv x ty∶ innerty P∶ sa nb∶ sa₁ cb∶ sa₂) scΓ i p = {!   !}
+compTeIgnSh S.Nat scΓ i p = refl
+compTeIgnSh (S.List x) scΓ i p = refl
+compTeIgnSh (S.Vec sa (A 𝕢 σ)) scΓ i p = refl
+compTeIgnSh (S.∶ A 𝕢 σ ⟶ x₁) scΓ i p = refl
+compTeIgnSh (S.r∶ x ⟶ x₁) scΓ i p = refl
+compTeIgnSh (S.Sett x) scΓ i p = refl
 
 ~ᵣtermproof :
+    (scΓ : S.Context sΓ) →
     sa ~ᵣ sc → 
     compileTerm scΓ sa ≡ compileTerm scΓ sc
-~ᵣtermproof sa = {!   !}
-{-
-~ᵣtermproof :
-    (rΓ : ContextRemap scΓ) →
-    sa ~ᵣ sc → 
-    compileTerm rΓ sa ≡ compileTerm rΓ sc
-~ᵣtermproof rΓ S.~ᵣrefl = refl
-~ᵣtermproof rΓ (S.~ᵣsym a~c) = sym (~ᵣtermproof rΓ a~c)
-~ᵣtermproof rΓ (S.~ᵣtrans a~c a~c₁) = trans (~ᵣtermproof rΓ a~c) (~ᵣtermproof rΓ a~c₁)
-~ᵣtermproof rΓ (S.~ᵣs a~c) rewrite ~ᵣtermproof rΓ a~c = refl
-~ᵣtermproof rΓ (S.~ᵣ∷l a~c as~cs)
-    rewrite ~ᵣtermproof rΓ a~c | ~ᵣtermproof rΓ as~cs = refl
--- Cant give sA and dont have tA either...
--- bc bound locally?
--- need lemmabind?
-~ᵣtermproof rΓ (S.~ᵣlamω {A = sA} b~c) rewrite ~ᵣtermproof (rΓ ,ᵣ sA ↦ {!   !}) b~c = {!   !}
-~ᵣtermproof rΓ (S.~ᵣlam𝟘 {A = A} b~c) rewrite ~ᵣtermproof (rΓ ,ᵣ A skip)  b~c = {!   !}
-~ᵣtermproof rΓ S.~ᵣlamr = {!   !}
-~ᵣtermproof rΓ (S.~ᵣappω a~c a~c₁) = {!   !}
-~ᵣtermproof rΓ (S.~ᵣapp𝟘 a~c) = {!   !}
-~ᵣtermproof rΓ S.~ᵣappr = {!   !}
-~ᵣtermproof rΓ S.~ᵣbetaω = {!   !}
-~ᵣtermproof rΓ S.~ᵣnilvω = {!   !}
-~ᵣtermproof rΓ S.~ᵣnilv𝟘 = {!   !}
-~ᵣtermproof rΓ (S.~ᵣ∷vω a~c a~c₁ a~c₂) = {!   !}
-~ᵣtermproof rΓ (S.~ᵣ∷v𝟘 a~c a~c₁) = {!   !}
-~ᵣtermproof rΓ (S.~ᵣηlist a~c x) = {!   !}
-~ᵣtermproof rΓ (S.~ᵣηvec a~c a~c₁) = {!   !}
--- types 
-~ᵣtermproof rΓ (S.~ᵣlist a~c) = refl
-~ᵣtermproof rΓ (S.~ᵣpiω a~c a~c₁) = refl 
-~ᵣtermproof rΓ (S.~ᵣvecω a~c a~c₁) = refl 
-~ᵣtermproof rΓ (S.~ᵣvec𝟘 a~c) = refl 
--- may need weakening lemma, but generally dont know that subterms are types 
-~ᵣtermproof rΓ (S.~ᵣpi𝟘 a~c) = {!   !}
-~ᵣtermproof rΓ (S.~ᵣpir a~c) = refl 
--}
-{-
-~ᵣtermproof {scΓ = scΓ} S.~ᵣrefl = refl
-~ᵣtermproof {scΓ = scΓ} (S.~ᵣsym a~b) rewrite ~ᵣtermproof {scΓ = scΓ} a~b = refl
-~ᵣtermproof {scΓ = scΓ} (S.~ᵣtrans a~B B~b) = trans (~ᵣtermproof a~B) (~ᵣtermproof B~b)
--- These rules engage in some reduction, either 
----- 1. Optimize in the compiler 
----- 2. Remove reduction rules 
----- 3. Instead create observational equivalence between terms
--- Tried moving m ~ z style inversions into rule and also add a cong rule
-~ᵣtermproof {scΓ = scΓ} (S.~ᵣs n~m) rewrite ~ᵣtermproof {scΓ = scΓ} n~m  = refl
-~ᵣtermproof {scΓ = scΓ} (S.~ᵣ∷l a~c as~cs) 
-    rewrite ~ᵣtermproof {scΓ = scΓ} a~c | ~ᵣtermproof {scΓ = scΓ} as~cs = refl
-~ᵣtermproof {scΓ = scΓ} (S.~ᵣlamω {A = A} b~c) 
-    rewrite ~ᵣtermproof {scΓ = scΓ S., A S.𝕢 S.ω} b~c = refl
-~ᵣtermproof {sc = sc} {scΓ = scΓ} (S.~ᵣlam𝟘 {A = A} b~sc) rewrite ~ᵣtermproof {scΓ = (scΓ S., A 𝕢 𝟘)} b~sc = sym ({!   !}) 
-~ᵣtermproof {scΓ = scΓ} S.~ᵣlamr = refl
-~ᵣtermproof {scΓ = scΓ} (S.~ᵣappω b~d a~c)
-    rewrite ~ᵣtermproof {scΓ = scΓ} b~d | ~ᵣtermproof {scΓ = scΓ} a~c = refl
-~ᵣtermproof {scΓ = scΓ} (S.~ᵣapp𝟘 b~sb) rewrite ~ᵣtermproof {scΓ = scΓ} b~sb = refl
-~ᵣtermproof {scΓ = scΓ} S.~ᵣappr = refl
-~ᵣtermproof {scΓ = scΓ} S.~ᵣbetaω = {!   !}
-~ᵣtermproof {scΓ = scΓ} S.~ᵣnilvω = refl
-~ᵣtermproof {scΓ = scΓ} S.~ᵣnilv𝟘 = refl
-~ᵣtermproof {scΓ = scΓ} (S.~ᵣ∷vω a~c as~cs n~m) 
-    rewrite ~ᵣtermproof {scΓ = scΓ} a~c | ~ᵣtermproof {scΓ = scΓ} as~cs | ~ᵣtermproof {scΓ = scΓ} n~m = refl
-~ᵣtermproof {scΓ = scΓ} (S.~ᵣ∷v𝟘 a~c as~cs)
-    rewrite ~ᵣtermproof {scΓ = scΓ} a~c | ~ᵣtermproof {scΓ = scΓ} as~cs = refl
--- probably need lemma here, not sure if rewrite does any work
--- I think the eta rules are unprovable because theyre still "extensional"
-~ᵣtermproof {scΓ = scΓ} (S.~ᵣηlist {A = A} {P} nb~ (inj₁ cb~acc))
-    rewrite ~ᵣtermproof {scΓ = scΓ} nb~ | ~ᵣtermproof {scΓ = ((scΓ S., A 𝕢 ω) S., S.List A 𝕢 ω) S., (P S.· S.var 0 𝕢 𝟘) 𝕢 ω} cb~acc = {!   !}
-~ᵣtermproof {scΓ = scΓ} (S.~ᵣηlist nb~ (inj₂ cb~tail)) = {!   !}
-~ᵣtermproof {scΓ = scΓ} (S.~ᵣηvec nb~ cb~)
-    rewrite ~ᵣtermproof {scΓ = scΓ} nb~ = {!   !}
+~ᵣtermproof scΓ S.~ᵣrefl = {!   !}
+~ᵣtermproof scΓ (S.~ᵣsym ~) = {!   !}
+~ᵣtermproof scΓ (S.~ᵣtrans ~ ~₁) = {!   !}
+~ᵣtermproof scΓ (S.~ᵣs ~) = {!   !}
+~ᵣtermproof scΓ (S.~ᵣ∷l ~ ~₁) = {!   !}
+~ᵣtermproof scΓ (S.~ᵣlamω ~) = {!   !}
+~ᵣtermproof {sc = sc} scΓ (S.~ᵣlam𝟘 {A = sA} ~) rewrite ~ᵣtermproof (scΓ S., sA 𝕢 𝟘) ~  = compTeIgnSh sc scΓ 0 z≤n
+~ᵣtermproof scΓ S.~ᵣlamr = refl 
+~ᵣtermproof scΓ (S.~ᵣappω ~ ~₁) = {!   !}
+~ᵣtermproof scΓ (S.~ᵣapp𝟘 ~) = {!   !}
+~ᵣtermproof scΓ S.~ᵣappr = {!   !}
+~ᵣtermproof scΓ S.~ᵣbetaω = {!   !}
+~ᵣtermproof scΓ S.~ᵣnilvω = {!   !}
+~ᵣtermproof scΓ S.~ᵣnilv𝟘 = {!   !}
+~ᵣtermproof scΓ (S.~ᵣ∷vω ~ ~₁ ~₂) = {!   !}
+~ᵣtermproof scΓ (S.~ᵣ∷v𝟘 ~ ~₁) = {!   !}
+~ᵣtermproof scΓ (S.~ᵣηlist ~ (inj₁ x)) = {!   !}
+~ᵣtermproof scΓ (S.~ᵣηlist ~ (inj₂ y)) = {!   !}
+~ᵣtermproof scΓ (S.~ᵣηvec ~ ~₁) = {!   !}
 ---- Types
-~ᵣtermproof {scΓ = scΓ} (S.~ᵣpiω a~b a~b₁) = refl
--- stuck why? Cant tell B is a type...
--- LHS and RHS contets do not necessarily align here
-~ᵣtermproof {scΓ = scΓ} (S.~ᵣpi𝟘 {B} a~b) = {!   !}
-~ᵣtermproof {scΓ = scΓ} (S.~ᵣpir _) = refl
-~ᵣtermproof {scΓ = scΓ} (S.~ᵣlist _) = refl
-~ᵣtermproof {scΓ = scΓ} (S.~ᵣvecω _ _) = refl
-~ᵣtermproof {scΓ = scΓ} (S.~ᵣvec𝟘 _) = refl
--}
+~ᵣtermproof scΓ (S.~ᵣlist ~) = refl 
+~ᵣtermproof scΓ (S.~ᵣvecω ~ ~₁) = refl 
+~ᵣtermproof scΓ (S.~ᵣvec𝟘 ~) = refl 
+~ᵣtermproof scΓ (S.~ᵣpiω ~ ~₁) = refl
+-- Cant state anything about B or sc from this info 
+~ᵣtermproof scΓ (S.~ᵣpi𝟘 {A = sA} ~) = {!   !}
+~ᵣtermproof scΓ (S.~ᵣpir ~) = refl
 
--- nothing ≡ compileType (if l ≤ᵇ x then S.var (x + i) else S.var x)
 compTyIgnShift {i} {l} (S.var x) = sym (lemmaIgnorePaths (l ≤ᵇ x) (S.var (x + i)) (S.var x) {refl} {refl}) 
 compTyIgnShift S.Nat = refl
 compTyIgnShift (S.List x) rewrite compTyIgnShift x = refl
@@ -228,5 +220,5 @@ compTyIgnShift (S.elimv A 𝕢 σ ty∶ innerty P∶ sA nb∶ sA₁ cb∶ sA₂)
 ~ᵣtypeproof (S.~ᵣ∷v𝟘 A~B A~B₁) = refl 
 ~ᵣtypeproof (S.~ᵣηlist A~B A~B₁) = {!   !}
 ~ᵣtypeproof (S.~ᵣηvec A~B A~B₁) = {!   !}  
-                                             
--- Add proof for type preservation           
+                                               
+-- Add proof for type preservation             

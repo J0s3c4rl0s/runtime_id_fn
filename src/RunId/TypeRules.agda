@@ -506,9 +506,10 @@ data _~ᵣ_ where
     ~ᵣηlist :
         nb ~ᵣ (a [ i / nill ]) →
         -- substitute into branch replacing tail with acc
-        -- (cb [ 0 / var 1 ]) ~ᵣ (a [ i / var 2 ∷l var 1 ]) →
+        (cb [ 0 / var 1 ]) ~ᵣ (a [ i / var 2 ∷l var 1 ]) →
+        -- May not be necessary, subst acc for tail should suffice
         -- Add two options, either acc or tail, prev solution works bad with proof
-        cb ~ᵣ ((a [ i / var 2 ∷l var 0 ])) ⊎ cb ~ᵣ ((a [ i / var 2 ∷l var 1 ])) →
+        -- cb ~ᵣ ((a [ i / var 2 ∷l var 0 ])) ⊎ cb ~ᵣ ((a [ i / var 2 ∷l var 1 ])) →
         (eliml var i ty∶ A P∶ P 
             nb∶ nb 
             cb∶ cb) 

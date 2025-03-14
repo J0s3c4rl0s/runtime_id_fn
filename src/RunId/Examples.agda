@@ -131,9 +131,13 @@ listToVecDef =
     var 0
 ~ᵣlemma = 
     ~ᵣηlist
+        ~ᵣnilv𝟘  
+        (~ᵣ∷v𝟘 {!   !} {!   !}) 
+    {-
+    ~ᵣηlist
         ~ᵣnilv𝟘        
         (inj₁ (~ᵣ∷v𝟘 ~ᵣrefl ~ᵣrefl)) 
-
+    -}
 ~ᵣlemma2 : 
     (eliml var 0 ty∶ Nat P∶
        ƛ∶ List Nat 𝕢 𝟘 ♭ List Nat
@@ -144,7 +148,7 @@ listToVecDef =
 ~ᵣlemma2 = 
     ~ᵣηlist
         ~ᵣnilv𝟘
-        (inj₂ (~ᵣ∷v𝟘 ~ᵣrefl ~ᵣrefl))
+        (~ᵣ∷v𝟘 {!   !} {!   !})
 
 lemmaListLengthApp : cΓ ⊢ ((listLengthDef · Nat 𝕢 𝟘) · var 0 𝕢 ω) 𝕢 𝟘 ∶ Nat
 lemmaListLengthApp = 

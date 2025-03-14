@@ -108,14 +108,11 @@ data _⊢_∶_ where
         -- zeroC Γ ⊢ P 𝕢 𝟘 ∶ (∶ Nat 𝕢 π ⟶ Sett 𝓁 ) →
         -- enforces that argument to forming this type are erased
         zeroC (Γ , Nat) ⊢ P 𝕢 𝟘 ∶ Sett 𝓁 →
-        -- cΓ' ⊢ zb 𝕢 σ ∶ (P · z 𝕢 π) →
         cΓ' ⊢ zb 𝕢 σ ∶ (P [ 0 / z ]) →
-        -- ((cΓ' , Nat 𝕢 ρ) , (P · var 0 𝕢 π) 𝕢 ρ' ) ⊢ sb 𝕢 σ ∶ (P · s (var 1) 𝕢 π) →
         ((cΓ' , Nat 𝕢 ρ) , (P [ 0 / var 0 ]) 𝕢 ρ' ) ⊢ sb 𝕢 σ ∶ (P [ 0 / s (var 1) ]) →
         (cΓ +c cΓ') ⊢ elimnat n P∶ P 
                 zb∶ zb 
                 sb∶ sb 
-            -- 𝕢 σ ∶ (P · n 𝕢 π)
             𝕢 σ ∶ (P [ 0 / n ])
     -- Lists
     ⊢List : 
@@ -156,7 +153,7 @@ data _⊢_∶_ where
         cΓ ⊢ b 𝕢 σ ∶ Vec A (n 𝕢 δ) →
         -- I enforce that P is only compile time? should I?
         zeroC ((Γ , Nat) , Vec A (var 0 𝕢 δ)) ⊢ P 𝕢 𝟘 ∶ Sett 𝓁 →
-        cΓ' ⊢ nb 𝕢 σ ∶ ((P · z 𝕢 π) · (nilv𝕢 δ) 𝕢 ρ) →
+        cΓ' ⊢ nb 𝕢 σ ∶ (P [ 0 / z ] [ 1 / (nilv𝕢 δ) ]) →
         -- assuming that the constructors are not heterogenous, I think they might need to be rho
         ((((cΓ' , 
             Nat 𝕢 π) , 

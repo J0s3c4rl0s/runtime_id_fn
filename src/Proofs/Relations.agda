@@ -9,96 +9,117 @@ open import Data.Product using (_×_; _,_; proj₁; proj₂)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong; subst)
 open import Data.Unit
 open import Data.Empty
-
-private variable
-    A : Set
-    a b c d : A
-    ma mb mc : Maybe A
-
-    tA tB : T.Type
-    ta tb tc : T.Term    
-
-
+   
+ 
 -- For only talking about succesful compilation 
-abstract 
+module Compiles {A : Set} (_↔_ : A → A → Set) where
     _compilesTo_ : Maybe A → A → Set
-    _compilesTo_ (just t1) t2 = t1 ≡ t2
+    _compilesTo_ (just t1) t2 = t1 ↔ t2
     _compilesTo_ nothing t2 = ⊥
 
-    compIsDeterministic : 
-        ma compilesTo a  →
-        ma compilesTo b →
-        a ≡ b
-    compIsDeterministic {ma = just x} refl refl = refl
-
-    compAbsurd : nothing compilesTo a → A
+    compAbsurd : ∀ {B : Set} {a} → nothing compilesTo a → B
     compAbsurd ()
-
-    
-    postulate
-        funext : {A : Set} {B : A → Set} {f g : (x : A) → B x}
-            → ((x : A) →  f x ≡ g x) → f ≡ g
-
-    
-    {- 
-    tmp2 : ∀ {scΓ sa ta} →  (compileTerm scΓ sa >>= (λ ta₁ → just (T.s ta₁))) compilesTo ta →
-        compileTerm scΓ sa compilesTo ta 
-    -}
 
 -- should I even differ between term and type?
 module Ty where
     abstract
+        private variable
+            A B C : T.Type
 
         -- equivalence of types
         -- Do I even need a relation or should this _always_ be syntactic?
         _↔ty_ : T.Type → T.Type → Set
         _↔ty_ = _≡_
 
-        lemmaRefl : tA ↔ty tA 
+        open Compiles _↔ty_ public
+
+        lemmaRefl : A ↔ty A 
         lemmaRefl = refl
 
-open Ty using (_↔ty_) public
+open Ty 
+    using (_↔ty_)
+    renaming (_compilesTo_ to _compilesTypeTo_) public
 
 module Te where
     abstract
+        private variable
+            ma mb mc : Maybe T.Term
+            a b c : T.Term
+        
         -- obs equivalence of term
         _↔te_ : T.Term → T.Term → Set
         _↔te_ = _≡_
 
-        lemmaRefl : ta ↔te ta
+        open Compiles _↔te_ public
+        
+        lemmaRefl : a ↔te a
         lemmaRefl = refl
 
-        lemmaSym : ta ↔te tb → tb ↔te ta 
+        lemmaSym : a ↔te b → b ↔te a 
         lemmaSym refl = refl
 
-        lemmaTrans : ta ↔te tb → tb ↔te tc → ta ↔te tc  
+        lemmaTrans : a ↔te b → b ↔te c → a ↔te c  
         lemmaTrans refl refl = refl
 
+        compIsDeterministic : 
+            (ma : Maybe T.Term) →
+            ma compilesTo a  →
+            ma compilesTo b →
+            a ↔te b
+        compIsDeterministic (just x) lComps rComps = lemmaTrans (lemmaSym lComps) rComps
+
+        lemmaBindSubst : 
+            (ma : Maybe T.Term) →
+            (mb : Maybe T.Term) →
+            (body : T.Term → Maybe T.Term) →
+            (ma >>= body) compilesTo b →
+            (∀ {a} → 
+                ma compilesTo a →
+                mb compilesTo a) → 
+            (mb >>= body) compilesTo b
+        lemmaBindSubst (just resa) mb body maBComps ind 
+            with ind {a = resa} refl 
+        lemmaBindSubst (just resa) (just .resa) body maBComps ind | refl = maBComps
+
         -- need funext for body?
-        lemmaBind : ∀ {body1 body2} →
+        lemmaBind :
+            (ma : Maybe T.Term) →  
+            (mb : Maybe T.Term) →  
+            (body1 : T.Term → Maybe T.Term) →
+            (body2 : T.Term → Maybe T.Term) →
             (ma >>= body1) compilesTo a → 
             (mb >>= body2) compilesTo b → 
             (inpsEqv : ∀ {c d} → ma compilesTo c → 
                 mb compilesTo d → 
                 c ↔te d) → 
-            (outsEqv : ∀ {c d res} → ma compilesTo res →
+            (outsEqv : ∀ {c d} → (res : T.Term) → {_ : ma compilesTo res} →
                 body1 res compilesTo c → 
                 body2 res compilesTo d → 
                 c ↔te d) →
             a ↔te b
-        lemmaBind {just resa} {mb = just resb} maComps mbComps indL indR
-            rewrite indL {c = resa} {d = resb} refl refl = indR refl maComps mbComps
+        lemmaBind (just resa) (just resb) body1 body2 maComps mbComps indL indR
+            rewrite indL {c = resa} {d = resb} refl refl = indR resb {refl} maComps mbComps
 
 
-        lemmaBindL : ∀ {body} →
+        lemmaBindL :
+            (ma : Maybe T.Term) →  
+            (mb : Maybe T.Term) →  
+            (body : T.Term → Maybe T.Term) →  
             (ma >>= body) compilesTo a → 
             (mb >>= body) compilesTo b → 
             (∀ {c d} → ma compilesTo c 
                 → mb compilesTo d 
                 → c ↔te d) →
             a ↔te b 
-        lemmaBindL maComps mbComps indL = 
-            lemmaBind maComps mbComps indL λ _ resCompsL resCompsR → compIsDeterministic resCompsL resCompsR
+        lemmaBindL ma mb body maComps mbComps indL = 
+            lemmaBind 
+                ma mb 
+                body body 
+                maComps mbComps 
+                indL 
+                λ res resCompsL resCompsR → compIsDeterministic (body res) resCompsL resCompsR
 
-open Te using (_↔te_) public
 
+open Te 
+    using (_↔te_) 
+    renaming (_compilesTo_ to _compilesTermTo_) public

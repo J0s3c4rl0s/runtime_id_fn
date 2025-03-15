@@ -112,27 +112,55 @@ tmp :
 tmp scΓ i p (Bool.false because proof₁) = {!   !}
 tmp scΓ i p (Bool.true because proof₁) = {!   !}
 
-compTeIgnSh :  
+
+lemmaWeaken : 
     (sa : S.Term) → 
     (scΓ : S.Context sΓ) →
     (i : ℕ) → 
-    (p : i ≤ conLen sΓ) → 
-    {!   !}
-    -- compileTerm (insertType scΓ i p sB 𝟘) (S.shiftindices sa 1 i) ↔te compileTerm scΓ sa
-compTeIgnSh = {!   !}
-
-private variable  
-    ma mb mc : Maybe A
-
+    (p : i ≤ conLen sΓ) →
+    compileTerm scΓ sa compilesTermTo ta →
+    compileTerm (insertType scΓ i p sB 𝟘) (S.shiftindices sa 1 i) compilesTermTo ta
+lemmaWeaken (S.var x) scΓ i p saComps = {!   !}
+lemmaWeaken (S.ƛ∶ sA 𝕢 𝟘 ♭ sa) scΓ i p saComps = 
+    lemmaWeaken sa (scΓ S., sA 𝕢 𝟘) (suc i) (s≤s p) saComps
+lemmaWeaken {sB = sB} (S.ƛ∶ sA 𝕢 ω ♭ sa) scΓ i p saBComps = 
+    Te.lemmaBindSubst
+        (compileTerm (scΓ S., sA 𝕢 ω) sa) (compileTerm (insertType (scΓ S., sA 𝕢 ω) (suc i) (s≤s p) sB 𝟘) (S.shiftindices sa 1 (suc i)))
+        (λ tbody → just (T.ƛ tbody)) 
+        saBComps 
+        λ saComps → lemmaWeaken sa (scΓ S., sA 𝕢 ω) (suc i) (s≤s p) saComps 
+lemmaWeaken (S.ƛr∶ x ♭ sa) scΓ i p saComps = saComps
+lemmaWeaken (sa S.· sa₁ 𝕢 x) scΓ i p saComps = {!   !}
+lemmaWeaken (sa S.·ᵣ sa₁) scΓ i p saComps = lemmaWeaken sa₁ scΓ i p saComps
+lemmaWeaken S.z scΓ i p saComps = saComps
+lemmaWeaken (S.s sa) scΓ i p saComps = {!   !}
+lemmaWeaken S.nill scΓ i p saComps = saComps
+lemmaWeaken (sa S.∷l sa₁) scΓ i p saComps = {!   !}
+lemmaWeaken (S.nilv𝕢 𝟘) scΓ i p saComps = saComps
+lemmaWeaken (S.nilv𝕢 ω) scΓ i p saComps = saComps
+lemmaWeaken (sa S.∷v sa₁ 𝕟 sa₂ 𝕢 𝟘) scΓ i p saComps = {!   !}
+lemmaWeaken (sa S.∷v sa₁ 𝕟 sa₂ 𝕢 ω) scΓ i p saComps = {!   !}
+lemmaWeaken (S.elimnat sa P∶ sa₁ zb∶ sa₂ sb∶ sa₃) scΓ i p saComps = {!   !}
+lemmaWeaken (S.eliml sa ty∶ innerty P∶ sa₁ nb∶ sa₂ cb∶ sa₃) scΓ i p saComps = {!   !}
+lemmaWeaken (S.elimv x ty∶ innerty P∶ sa nb∶ sa₁ cb∶ sa₂) scΓ i p saComps = {!   !}
+-- Types
+lemmaWeaken S.Nat scΓ i p saComps = saComps 
+lemmaWeaken (S.List x) scΓ i p saComps = saComps 
+lemmaWeaken (S.Vec sa (A 𝕢 σ)) scΓ i p saComps = saComps 
+lemmaWeaken (S.∶ A 𝕢 σ ⟶ x₁) scΓ i p saComps = saComps
+lemmaWeaken (S.r∶ x ⟶ x₁) scΓ i p saComps = saComps 
+lemmaWeaken (S.Sett x) scΓ i p saComps = saComps 
 
 ~ᵣtermproof :
     (scΓ : S.Context sΓ) →
     sa ~ᵣ sc → 
-    (compileTerm scΓ sa) compilesTo ta →
-    (compileTerm scΓ sc) compilesTo tc → 
+    (compileTerm scΓ sa) compilesTermTo ta →
+    (compileTerm scΓ sc) compilesTermTo tc → 
     ta ↔te tc
-~ᵣtermproof {sa = sa} {ta = ta} {tc} scΓ S.~ᵣrefl aComps cComps 
-    rewrite compIsDeterministic aComps cComps = Te.lemmaRefl
+~ᵣtermproof {sa = sa} {ta = ta} {tc} scΓ S.~ᵣrefl aComps cComps = 
+    Te.compIsDeterministic 
+        (compileTerm scΓ sa) 
+        aComps cComps
 ~ᵣtermproof scΓ (S.~ᵣsym ~) aComps cComps = Te.lemmaSym (~ᵣtermproof scΓ ~ cComps aComps)
 -- Kind of a workaround no? Need general lemma to introduce new intermediate terms to compile (or not)? 
 -- Except if B fails to compile it dont really matter here :/
@@ -145,45 +173,108 @@ private variable
         (~ᵣtermproof scΓ ~₁ {!   !} cComps)
 -}
 ~ᵣtermproof {ta = ta} scΓ (S.~ᵣs {n} {m} ~) aComps cComps = 
-    Te.lemmaBindL aComps cComps λ nComps mComps → ~ᵣtermproof scΓ ~ nComps mComps
-~ᵣtermproof scΓ (S.~ᵣ∷l ~h ~t) aComps cComps = 
-    Te.lemmaBind aComps cComps 
+    Te.lemmaBindL (compileTerm scΓ n) (compileTerm scΓ m) (λ ta₁ → just (T.s ta₁)) aComps cComps 
+        λ nComps mComps → ~ᵣtermproof scΓ ~ nComps mComps
+~ᵣtermproof scΓ (S.~ᵣ∷l {a} {c} {as} {cs} ~h ~t) aComps cComps = 
+    Te.lemmaBind 
+        -- ma mb
+        (compileTerm scΓ a) (compileTerm scΓ c) 
+        -- bodies
+        (λ ta₁ → compileTerm scΓ as >>= (λ tas → just (ta₁ T.∷l tas))) (λ ta₁ → compileTerm scΓ cs >>= (λ tas → just (ta₁ T.∷l tas))) 
+        -- bindComps
+        aComps cComps 
         (λ hlComps hrComps → ~ᵣtermproof scΓ ~h hlComps hrComps) 
-        λ hComps tlCompsB trCompsB → 
-            Te.lemmaBindL tlCompsB trCompsB (λ tlComps trComps → ~ᵣtermproof scΓ ~t tlComps trComps) 
-~ᵣtermproof scΓ (S.~ᵣlamω {A = A} ~) aComps cComps = 
-    Te.lemmaBindL aComps cComps 
+        λ res tlCompsB trCompsB → 
+            Te.lemmaBindL 
+                (compileTerm scΓ as) (compileTerm scΓ cs) 
+                (λ tas → just (res T.∷l tas)) 
+                tlCompsB trCompsB 
+                (λ tlComps trComps → ~ᵣtermproof scΓ ~t tlComps trComps) 
+~ᵣtermproof scΓ (S.~ᵣlamω {b} {c} {A = A} ~) aComps cComps =   
+    Te.lemmaBindL 
+        (compileTerm (scΓ S., A 𝕢 ω) b) (compileTerm (scΓ S., A 𝕢 ω) c) 
+        (λ tbody → just (T.ƛ tbody)) 
+        aComps cComps 
         λ bodyCompL bodyCompR → ~ᵣtermproof (scΓ S., A 𝕢 ω) ~ bodyCompL bodyCompR 
-~ᵣtermproof scΓ (S.~ᵣlam𝟘 ~) aComps cComps = {!   !}
-~ᵣtermproof scΓ S.~ᵣlamr aComps cComps = {!   !}
-~ᵣtermproof scΓ (S.~ᵣappω ~ ~₁) aComps cComps = {!   !}
-~ᵣtermproof scΓ (S.~ᵣapp𝟘 ~) aComps cComps = {!   !}
-~ᵣtermproof scΓ S.~ᵣappr aComps cComps = {!   !}
+-- Either convert compilesTo or make lemma that takes it into account
+-- some rewrite lemma based on target?
+~ᵣtermproof {sc = sc} scΓ (S.~ᵣlam𝟘 {A = A} ~) bComps cComps = 
+    ~ᵣtermproof (scΓ S., A 𝕢 𝟘) ~ bComps (lemmaWeaken sc scΓ zero z≤n cComps) 
+~ᵣtermproof scΓ S.~ᵣlamr aComps cComp = 
+    Te.compIsDeterministic 
+        (just (T.ƛ (T.var 0))) 
+        aComps cComp
+~ᵣtermproof scΓ (S.~ᵣappω {b} {d} {a} {c} ~ ~₁) bBindComps dBindComps = 
+    Te.lemmaBind 
+        (compileTerm scΓ b) (compileTerm scΓ d)
+        (λ tf → compileTerm scΓ a >>= (λ ta₁ → just (tf T.· ta₁))) (λ tf → compileTerm scΓ c >>= (λ ta₁ → just (tf T.· ta₁))) 
+        bBindComps dBindComps 
+        (λ bComps dComps → ~ᵣtermproof scΓ ~ bComps dComps)
+        λ res aBindComps cBindComps → 
+            Te.lemmaBindL 
+                (compileTerm scΓ a) (compileTerm scΓ c)
+                (λ ta₁ → just (res T.· ta₁)) 
+                aBindComps cBindComps 
+                λ {c = c₁} {d = d₁} → ~ᵣtermproof scΓ ~₁
+~ᵣtermproof scΓ (S.~ᵣapp𝟘 ~) aComps cComps = ~ᵣtermproof scΓ ~ aComps cComps 
+~ᵣtermproof {sc = sc} scΓ S.~ᵣappr aComps cComps = 
+    Te.compIsDeterministic 
+        (compileTerm scΓ sc)
+        aComps cComps  
 ~ᵣtermproof scΓ S.~ᵣbetaω aComps cComps = {!   !}
-~ᵣtermproof scΓ S.~ᵣnilvω aComps cComps = {!   !}
-~ᵣtermproof scΓ S.~ᵣnilv𝟘 aComps cComps = {!   !}
-~ᵣtermproof scΓ (S.~ᵣ∷vω ~ ~₁ ~₂) aComps cComps = {!   !}
+~ᵣtermproof scΓ S.~ᵣnilvω aComps cComps = 
+    Te.compIsDeterministic 
+        (just T.nilv) 
+        aComps cComps  
+~ᵣtermproof scΓ S.~ᵣnilv𝟘 aComps cComps = 
+    Te.compIsDeterministic 
+        (just T.nill)         
+        aComps cComps
+~ᵣtermproof scΓ (S.~ᵣ∷vω {a} {c} {as} {cs} {n} {m} ~a ~as ~n) aBindComps cBindComps = 
+    Te.lemmaBind 
+        (compileTerm scΓ a) (compileTerm scΓ c) 
+        body-a body-c  
+        aBindComps cBindComps 
+        (λ aComps cComps → ~ᵣtermproof scΓ ~a aComps cComps)  
+        (λ resH asBindComps csBindComps → 
+            Te.lemmaBind 
+                (compileTerm scΓ as) (compileTerm scΓ cs) 
+                (body-as resH) (body-cs resH)
+                asBindComps csBindComps 
+                (λ asComps csComps → ~ᵣtermproof scΓ ~as asComps csComps)  
+                λ resT nBindComps mBindComps → 
+                    Te.lemmaBindL 
+                        (compileTerm scΓ n) (compileTerm scΓ m) 
+                        (body-base resH resT) 
+                        nBindComps mBindComps 
+                        λ nComps mComps → ~ᵣtermproof scΓ ~n nComps mComps)          
+        where 
+            body-base = λ ta tas tn → just (ta T.∷v tas 𝕟 tn)
+            body-as = λ ta → (λ tas → compileTerm scΓ n >>= body-base ta tas)
+            body-cs = λ ta → (λ tas → compileTerm scΓ m >>= body-base ta tas)
+            body-a = (λ ta → compileTerm scΓ as >>= body-as ta)
+            body-c = (λ ta → compileTerm scΓ cs >>= body-cs ta)
 ~ᵣtermproof scΓ (S.~ᵣ∷v𝟘 ~ ~₁) aComps cComps = {!   !}
 ~ᵣtermproof scΓ (S.~ᵣηlist ~ ~₁) aComps cComps = {!   !}
 ~ᵣtermproof scΓ (S.~ᵣηvec ~ ~₁) aComps cComps = {!   !}
 ---- Types
-~ᵣtermproof scΓ (S.~ᵣlist ~) aComps cComps = compAbsurd aComps
-~ᵣtermproof scΓ (S.~ᵣpiω ~ ~₁) aComps cComps = compAbsurd aComps
-~ᵣtermproof scΓ (S.~ᵣpi𝟘 ~) aComps cComps = compAbsurd  aComps
-~ᵣtermproof scΓ (S.~ᵣpir ~) aComps cComps = compAbsurd  aComps
-~ᵣtermproof scΓ (S.~ᵣvecω ~ ~₁) aComps cComps = compAbsurd  aComps
-~ᵣtermproof scΓ (S.~ᵣvec𝟘 ~) aComps cComps = compAbsurd  aComps
+~ᵣtermproof {ta = ta} scΓ (S.~ᵣlist ~) aComps cComps = Te.compAbsurd {a = ta} aComps 
+~ᵣtermproof {ta = ta} scΓ (S.~ᵣpiω ~ ~₁) aComps cComps = Te.compAbsurd {a = ta} aComps
+~ᵣtermproof {ta = ta} scΓ (S.~ᵣpi𝟘 ~) aComps cComps = Te.compAbsurd {a = ta} aComps
+~ᵣtermproof {ta = ta} scΓ (S.~ᵣpir ~) aComps cComps = Te.compAbsurd {a = ta} aComps
+~ᵣtermproof {ta = ta} scΓ (S.~ᵣvecω ~ ~₁) aComps cComps = Te.compAbsurd {a = ta} aComps
+~ᵣtermproof {ta = ta} scΓ (S.~ᵣvec𝟘 ~) aComps cComps = Te.compAbsurd {a = ta} aComps
 
 compTyIgnShift : ∀ {i l tA↑} → (sA : _) → 
-    compileType sA compilesTo tA →
-    compileType (S.shiftindices sA i l) compilesTo tA↑ →
+    compileType sA compilesTypeTo tA →
+    compileType (S.shiftindices sA i l) compilesTypeTo tA↑ →
     tA ↔ty tA↑
 compTyIgnShift = {!   !}
 
 ~ᵣtypeproof :
     sA ~ᵣ sB → 
-    (compileType sA) compilesTo tA →
-    (compileType sB) compilesTo tB →
+    (compileType sA) compilesTypeTo tA →
+    (compileType sB) compilesTypeTo tB →
     tA ↔ty tB
 ~ᵣtypeproof S.~ᵣrefl = {!   !}
 ~ᵣtypeproof (S.~ᵣsym A~B) = {!   !}

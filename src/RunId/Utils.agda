@@ -62,17 +62,17 @@ shiftindices (t ∷l t₁) i l = shiftindices t i l ∷l shiftindices t₁ i l
 shiftindices (nilv𝕢 σ) i l = nilv𝕢 σ
 shiftindices (t ∷v t₁ 𝕟 n 𝕢 σ) i l = shiftindices t i l ∷v shiftindices t₁ i l 𝕟 shiftindices n i l 𝕢 σ
 shiftindices (elimnat t P∶ t₁ zb∶ t₂ sb∶ t₃) i l = 
-    elimnat (shiftindices t i l) P∶ (shiftindices t₁ i l) 
+    elimnat (shiftindices t i l) P∶ (shiftindices t₁ i (suc l)) 
             zb∶ (shiftindices t₂ i l) 
-            sb∶ (shiftindices t₃ i (l + 2))
+            sb∶ (shiftindices t₃ i (2 + l))
 shiftindices (eliml t ty∶ A P∶ t₁ nb∶ t₃ cb∶ t₄) i l = 
-    eliml (shiftindices t i l) ty∶ shiftindices A i l P∶ (shiftindices t₁ i l) 
+    eliml (shiftindices t i l) ty∶ shiftindices A i l P∶ (shiftindices t₁ i (suc l)) 
             nb∶ (shiftindices t₃ i l) 
-            cb∶ (shiftindices t₄ i (l + 3))
+            cb∶ (shiftindices t₄ i (3 + l))
 shiftindices (elimv (t 𝕢 σ) ty∶ A P∶ t₁ nb∶ t₄ cb∶ t₅) i l = 
-    elimv ((shiftindices t i l) 𝕢 σ) ty∶ shiftindices A i l P∶ (shiftindices t₁ i l) 
+    elimv ((shiftindices t i l) 𝕢 σ) ty∶ shiftindices A i l P∶ (shiftindices t₁ i (suc l)) 
             nb∶ (shiftindices t₄ i l) 
-            cb∶ (shiftindices t₅ i (l + 4))
+            cb∶ (shiftindices t₅ i (4 + l))
 shiftindices Nat i l = Nat
 shiftindices (List t) i l = List (shiftindices t i l)
 shiftindices (Vec t₁ (A 𝕢 σ)) i l = Vec (shiftindices t₁ i l) (shiftindices A i l 𝕢 σ)

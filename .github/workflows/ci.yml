@@ -15,7 +15,8 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        agda-version: ['2.7.0.1']
+        # Cant find this agda version although it should know it
+        agda-version: [latest]
 
     runs-on: ${{ matrix.os }}
     steps:

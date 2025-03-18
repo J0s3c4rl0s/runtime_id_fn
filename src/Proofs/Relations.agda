@@ -1,8 +1,14 @@
 {-# OPTIONS --allow-unsolved-metas #-}
 module Proofs.Relations where
 
+import RunId as S
 import STLC as T
 open import RunIdComp
+
+open S using (
+    𝟘; ω;
+    _𝕢_;
+    _~ᵣ_)
 
 open import Data.Maybe using (Maybe; just; nothing; _>>=_)
 open import Data.Product using (_×_; _,_; proj₁; proj₂)
@@ -68,7 +74,26 @@ module Te where
             a ↔te b
         compIsDeterministic (just x) lComps rComps = lemmaTrans (lemmaSym lComps) rComps
 
-        lemmaBindSubst : 
+
+        lemmaBindSubstInd : 
+            (ma : Maybe T.Term) →
+            (mb : Maybe T.Term) →
+            (body1 : T.Term → Maybe T.Term) →
+            (body2 : T.Term → Maybe T.Term) →
+            (ma >>= body1) compilesTo b →
+            (∀ {a} → 
+                ma compilesTo a →
+                mb compilesTo a) → 
+            (outsEqv : ∀ {c } → (res : T.Term) → {maComps : ma compilesTo res} →
+                body1 res compilesTo c → 
+                body2 res compilesTo c) → 
+            (mb >>= body2) compilesTo b
+        lemmaBindSubstInd (just resa) mb body1 body2 maBindComps base ind
+            with base refl
+        lemmaBindSubstInd (just resa) (just .resa) body1 body2 maBindComps base ind | refl = 
+            ind resa {maComps = refl} maBindComps
+
+        lemmaBindSubstBase : 
             (ma : Maybe T.Term) →
             (mb : Maybe T.Term) →
             (body : T.Term → Maybe T.Term) →
@@ -77,12 +102,16 @@ module Te where
                 ma compilesTo a →
                 mb compilesTo a) → 
             (mb >>= body) compilesTo b
-        lemmaBindSubst (just resa) mb body maBComps ind 
-            with ind {a = resa} refl 
-        lemmaBindSubst (just resa) (just .resa) body maBComps ind | refl = maBComps
+        lemmaBindSubstBase ma mb body maBComps base = 
+            lemmaBindSubstInd 
+                ma mb 
+                body body 
+                maBComps 
+                base 
+                λ res resComps → resComps
 
         -- need funext for body?
-        lemmaBind :
+        lemmaBindInd :
             (ma : Maybe T.Term) →  
             (mb : Maybe T.Term) →  
             (body1 : T.Term → Maybe T.Term) →
@@ -97,11 +126,11 @@ module Te where
                 body2 res compilesTo d → 
                 c ↔te d) →
             a ↔te b
-        lemmaBind (just resa) (just resb) body1 body2 maComps mbComps indL indR
+        lemmaBindInd (just resa) (just resb) body1 body2 maComps mbComps indL indR
             rewrite indL {c = resa} {d = resb} refl refl = indR resb {refl} maComps mbComps
 
 
-        lemmaBindL :
+        lemmaBindBase :
             (ma : Maybe T.Term) →  
             (mb : Maybe T.Term) →  
             (body : T.Term → Maybe T.Term) →  
@@ -111,14 +140,13 @@ module Te where
                 → mb compilesTo d 
                 → c ↔te d) →
             a ↔te b 
-        lemmaBindL ma mb body maComps mbComps indL = 
-            lemmaBind 
+        lemmaBindBase ma mb body maComps mbComps indL = 
+            lemmaBindInd 
                 ma mb 
                 body body 
                 maComps mbComps 
                 indL 
                 λ res resCompsL resCompsR → compIsDeterministic (body res) resCompsL resCompsR
-
 
 open Te 
     using (_↔te_) 

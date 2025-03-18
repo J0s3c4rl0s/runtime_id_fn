@@ -153,9 +153,7 @@ compileTerm scon (S.elimnat sa P∶ sP zb∶ sz sb∶ ss) = do
     ts ← compileTerm 
         ((scon S., 
             S.Nat S.𝕢 ω) S., 
-            -- Does it have to be P : @0 A -> Type to make sense in STLC?
-            -- Solves the reduction problem...
-            (sP S.· S.var 0 𝕢 𝟘) S.𝕢 ω) 
+            sP S.𝕢 ω) 
         ss 
     just (T.elimnat ta zb∶ tz sb∶ ts)
 compileTerm scon (S.eliml sa ty∶ A P∶ sP nb∶ sn cb∶ sc) = do 
@@ -167,9 +165,7 @@ compileTerm scon (S.eliml sa ty∶ A P∶ sP nb∶ sn cb∶ sc) = do
         (((scon S., 
             A S.𝕢 ω) S., 
             S.List A S.𝕢 ω) S., 
-            -- Does it have to be P : @0 A -> Type to make sense in STLC?
-            -- Solves the reduction problem...
-            (sP S.· S.var 0 𝕢 𝟘) S.𝕢 ω) 
+            sP S.𝕢 ω) 
         sc 
     just (T.eliml ta nb∶ tn cb∶ tc)
 compileTerm scon (S.elimv sa 𝕢 𝟘 ty∶ A P∶ sP nb∶ sn cb∶ sc) = do 
@@ -180,9 +176,7 @@ compileTerm scon (S.elimv sa 𝕢 𝟘 ty∶ A P∶ sP nb∶ sn cb∶ sc) = do
             S.Nat 𝕢 𝟘) S., 
             A 𝕢 ω) S., 
             S.Vec A (S.var 1 𝕢 𝟘) 𝕢 ω) S.,
-            -- Does it have to be P : @0 A -> Type to make sense in STLC? 
-            -- Solves the reduction problem...
-            (sP S.· S.var 0 𝕢 𝟘) 𝕢 ω) 
+            sP 𝕢 ω) 
         sc 
     just (T.eliml ta nb∶ tn cb∶ tc)
 compileTerm scon (S.elimv sa 𝕢 ω ty∶ A P∶ sP nb∶ sn cb∶ sc) = do 
@@ -193,9 +187,7 @@ compileTerm scon (S.elimv sa 𝕢 ω ty∶ A P∶ sP nb∶ sn cb∶ sc) = do
             S.Nat 𝕢 ω) S., 
             A 𝕢 ω) S., 
             S.Vec A (S.var 1 𝕢 ω) 𝕢 ω) S., 
-            -- Does it have to be P : @0 A -> Type to make sense in STLC?
-            -- Solves the reduction problem...
-            (sP S.· S.var 0 𝕢 𝟘) 𝕢 ω) 
+            sP 𝕢 ω) 
         sc 
     just (T.elimv ta nb∶ tn cb∶ tc)
 -- Reject types in term position

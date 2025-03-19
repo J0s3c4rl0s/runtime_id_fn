@@ -107,8 +107,7 @@ insertType (cΓ , B 𝕢 ρ) (suc i) (s≤s p) A σ = insertType cΓ i p A σ , 
 
 -- There are some hijinks around when substitution is admissible, dont think quants change
 _[_/_]  : Term → ℕ → Term → Term
-var 0 [  0 / a ] = a
-var b [ i / a  ] = var b 
+var j [  i / a ] = if i ≡ᵇ j then a else var j 
 (ƛ∶ bₜ 𝕢 σ ♭ b) [ i / a ] = ƛ∶ bₜ [ i / a ]  𝕢 σ ♭ (b [ suc i / shiftindices a 1 0 ])
 (ƛr∶ b ♭ b₁) [ i / a ] = (ƛr∶ b [ i / a ] ♭ (b₁ [ suc i / shiftindices a 1 0 ]))
 (b ·𝟘 c) [ i / a ] = (b [ i / a ]) ·𝟘 (c [ i / a ])

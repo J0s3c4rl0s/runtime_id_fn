@@ -1,9 +1,11 @@
 module RunId.Utils where
-
 open import RunId.Syntax
 
-open import Data.Nat using (ℕ; suc; _+_; _≤ᵇ_; _≤_; s≤s; z≤n)
-open import Data.Bool using (if_then_else_)
+open import Data.Nat using (ℕ; suc; _+_; _≡ᵇ_; _≟_; _≤ᵇ_; _≤_; s≤s; z≤n)
+open import Data.Bool using (Bool; true; false; if_then_else_)
+open import Relation.Nullary.Decidable using (Dec; yes; no)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym)
+open import Agda.Builtin.Equality.Rewrite
 
 private variable
     Γ Δ Θ : PreContext
@@ -19,6 +21,16 @@ private variable
 _+q_ : Quantity → Quantity → Quantity
 𝟘 +q q2 = q2
 ω +q q2 = ω
+
++q-right-idω : σ +q ω ≡ ω 
++q-right-idω {𝟘} = refl
++q-right-idω {ω} = refl
+
++q-right-id𝟘 : σ +q 𝟘 ≡ σ 
++q-right-id𝟘 {𝟘} = refl
++q-right-id𝟘 {ω} = refl
+
+{-# REWRITE +q-right-idω +q-right-id𝟘 #-}
 
 _*q_ : Quantity → Quantity → Quantity
 𝟘 *q q2 = 𝟘

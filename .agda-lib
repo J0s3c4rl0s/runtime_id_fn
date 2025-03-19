@@ -1,6 +1,6 @@
 name: run-time-id-functions
 depend: 
     standard-library
-flags: --erasure
+flags: --erasure --rewriting --confluence-check
 include:
   ./src/

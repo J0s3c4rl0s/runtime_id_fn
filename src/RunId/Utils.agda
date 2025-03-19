@@ -2,7 +2,7 @@ module RunId.Utils where
 
 open import RunId.Syntax
 
-open import Data.Nat using (ℕ; suc; _+_; _≤ᵇ_)
+open import Data.Nat using (ℕ; suc; _+_; _≤ᵇ_; _≤_; s≤s; z≤n)
 open import Data.Bool using (if_then_else_)
 
 private variable
@@ -79,6 +79,19 @@ shiftindices (Vec t₁ (A 𝕢 σ)) i l = Vec (shiftindices t₁ i l) (shiftindi
 shiftindices (∶ t 𝕢 σ ⟶ t₁) i l = ∶ shiftindices t i l 𝕢 σ ⟶ shiftindices t₁ i (suc l)
 shiftindices (r∶ t ⟶ t₁) i l = r∶ shiftindices t i l ⟶ shiftindices t₁ i (suc l)
 shiftindices (Sett level) i l = Sett level
+
+conLen : PreContext → ℕ
+conLen [] = 0
+conLen (Γ , x) = suc (conLen Γ) 
+
+insertTypePre : (Γ : PreContext) → (i : ℕ) → (p : i ≤ conLen Γ) → Type → PreContext 
+insertTypePre Γ 0 p A = Γ , A
+insertTypePre (Γ , B) (suc i) (s≤s p) A = insertTypePre Γ i p A , shiftindices B 1 i
+
+-- use Annotation instead?
+insertType : Context Γ → (i : ℕ) → (p : i ≤ conLen Γ)  → (A : Type) → Quantity → Context (insertTypePre Γ i p A)
+insertType cΓ 0 z≤n A σ = cΓ , A 𝕢 σ
+insertType (cΓ , B 𝕢 ρ) (suc i) (s≤s p) A σ = insertType cΓ i p A σ , shiftindices B 1 i 𝕢 ρ 
 
 -- There are some hijinks around when substitution is admissible, dont think quants change
 _[_/_]  : Term → ℕ → Term → Term

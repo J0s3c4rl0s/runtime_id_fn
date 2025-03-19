@@ -5,7 +5,6 @@ on:
   push:
     paths:
       - 'src/**'
-      - 'test/**'
       - '.github/workflows/**.yml'
     branches: [master]
 
@@ -30,9 +29,4 @@ jobs:
           agda-stdlib-version: 'recommended'
 
       - name: Check all files
-        run: |
-          # Loop through all .agda files in the repository and typecheck them
-          for file in $(find . -name "*.agda"); do
-            echo "Typechecking $file..."
-            agda "$file" || { echo "Error: Typechecking failed for $file"; exit 1; }
-          done
+        run: bash src/check-files.sh

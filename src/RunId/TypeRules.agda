@@ -39,7 +39,7 @@ private variable
 
 
 data _＝_ : Term → Term → Set
-data _⊢_∶_ : Context Γ → Annotation A σ → Type → Set
+data _⊢_∶_ : Context Γ → Annotation a σ → Type → Set
 data _~ᵣ_ : Term → Term → Set
 
 -- For now it can be an annotation bc quants are only 0 or 1
@@ -110,7 +110,8 @@ data _⊢_∶_ where
         zeroC (Γ , Nat) ⊢ P 𝕢 𝟘 ∶ Sett 𝓁 →
         cΓ' ⊢ zb 𝕢 σ ∶ (P [ 0 / z ]) →
         ((cΓ' , Nat 𝕢 ρ) , (P [ 0 / var 0 ]) 𝕢 ρ' ) ⊢ sb 𝕢 σ ∶ (P [ 0 / s (var 1) ]) →
-        (cΓ +c cΓ') ⊢ elimnat n P∶ P 
+        {eq : cΓ'' ≡ (cΓ +c cΓ')} →
+        cΓ'' ⊢ elimnat n P∶ P 
                 zb∶ zb 
                 sb∶ sb 
             𝕢 σ ∶ (P [ 0 / n ])
@@ -124,15 +125,16 @@ data _⊢_∶_ where
         cΓ ⊢ a 𝕢 σ ∶ A →
         cΓ ⊢ b 𝕢 σ ∶ List A →
         cΓ ⊢ a ∷l b 𝕢 σ ∶ List A
-    ⊢listel : {cΓ cΓ' : Context Γ} →
+    ⊢listel : {cΓ cΓ' cΓ'' : Context Γ} →
         cΓ ⊢ l 𝕢 σ ∶ List A →
         zeroC (Γ , List A) ⊢ P 𝕢 𝟘 ∶ Sett 𝓁 → 
         cΓ' ⊢ nb 𝕢 σ ∶ (P [ 0 / nill ]) → 
+        {eq : cΓ'' ≡ (cΓ +c cΓ')} →
         -- I presume list elements must have same erasure as List
         (((cΓ' , A 𝕢 σ) , 
             List A 𝕢 σ) , 
             (P [ 0 / var 0 ]) 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P [ 0 / (var 2 ∷l var 1) ]) → 
-        (cΓ +c cΓ') ⊢ eliml l ty∶ A P∶ P 
+        cΓ'' ⊢ eliml l ty∶ A P∶ P 
                 nb∶ nb 
                 cb∶ cb 
             𝕢 σ ∶ (P [ 0 / l ])
@@ -149,18 +151,19 @@ data _⊢_∶_ where
         cΓ ⊢ n 𝕢 π ∶ Nat →
         cΓ ⊢ b 𝕢 σ ∶ Vec A (n 𝕢 π) →
         cΓ ⊢ (a ∷v b 𝕟 n 𝕢 π) 𝕢 σ ∶ Vec A (s n 𝕢 π)
-    ⊢vecel : {cΓ cΓ' : Context Γ} → 
+    ⊢vecel : {cΓ cΓ' cΓ'' : Context Γ} → 
         cΓ ⊢ b 𝕢 σ ∶ Vec A (n 𝕢 δ) →
         -- I enforce that P is only compile time? should I?
         zeroC ((Γ , Nat) , Vec A (var 0 𝕢 δ)) ⊢ P 𝕢 𝟘 ∶ Sett 𝓁 →
-        cΓ' ⊢ nb 𝕢 σ ∶ (P [ 0 / z ] [ 1 / (nilv𝕢 δ) ]) →
+        cΓ' ⊢ nb 𝕢 σ ∶ (P [ 0 / z ] [ 1 / (nilv𝕢 δ) ]) → 
+        {eq : cΓ'' ≡ (cΓ +c cΓ')} →
         -- assuming that the constructors are not heterogenous, I think they might need to be rho
         ((((cΓ' , 
             Nat 𝕢 π) , 
             A 𝕢 σ) , 
             Vec A (var 1 𝕢 δ) 𝕢  σ) , 
             (P [ 0 / var 0 ] [ 1 / var 2 ]) 𝕢 σ) ⊢ cb 𝕢 σ ∶ ((((((P [ 0 / var 3 ]) [ 1 / (var 2 ∷v var 1 𝕟 var 3 𝕢 δ) ]))))) →
-        (cΓ +c cΓ') ⊢ elimv (b 𝕢 δ) ty∶ A P∶ P 
+        cΓ'' ⊢ elimv (b 𝕢 δ) ty∶ A P∶ P 
                 nb∶ nb 
                 cb∶ cb 
             𝕢 σ ∶ ((P [ 0 / n ]) [ 1 / b ])
@@ -525,3 +528,4 @@ data _~ᵣ_ where
             cb∶ cb) 
             ~ᵣ 
         a
+ 

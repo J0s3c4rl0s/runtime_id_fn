@@ -1,0 +1,32 @@
+name: CI
+# Trigger the workflow on push or pull request, but only for the master branch
+on:
+  pull_request:
+  push:
+    paths:
+      - 'src/**'
+      - '.github/workflows/**.yml'
+    branches: [master]
+
+jobs:
+  test:
+    name: Testing with ${{ matrix.agda-version }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        # Cant find this agda version although it should know it
+        agda-version: [latest]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Setup the versions of Agda specified in the matrix,
+      # together with their recommended versions of agda-stdlib:
+      - uses: wenkokke/setup-agda@v2
+        with:
+          agda-version: ${{ matrix.agda-version }}
+          agda-stdlib-version: 'recommended'
+
+      - name: Check all files
+        run: bash src/check-files.sh

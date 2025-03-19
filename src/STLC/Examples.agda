@@ -7,7 +7,7 @@ idNatTy : Type
 idNatTy = Nat ⟶ Nat
 
 idNatDef : Term
-idNatDef = ƛ var 0
+idNatDef = ƛ (var 0)
 
 idNatTyped : [] ⊢ idNatDef ∶ idNatTy
 idNatTyped = ⊢lam (⊢var Z)

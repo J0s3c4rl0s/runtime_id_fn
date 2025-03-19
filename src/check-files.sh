@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Set the root directory (change this to where your files are located)
-ROOT_DIR="./"
+# Set the root directory 
+ROOT_DIR="src/"
 
 # Path to the exclude configuration file
-CONFIG_FILE="exclude.conf"
+CONFIG_FILE=$ROOT_DIR"exclude.conf"
 
 # Excluded files
 excluded_files=()

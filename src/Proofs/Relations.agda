@@ -38,9 +38,58 @@ module Ty where
         _↔ty_ = _≡_
 
         open Compiles _↔ty_ public
-
-        lemmaRefl : A ↔ty A 
+  
+        lemmaRefl : A ↔ty A
         lemmaRefl = refl
+
+        lemmaSym : A ↔ty B → B ↔ty A 
+        lemmaSym refl = refl
+
+        lemmaTrans : A ↔ty B → B ↔ty C → A ↔ty C  
+        lemmaTrans refl refl = refl
+
+        compIsDeterministic : 
+            (mA : Maybe T.Type) →
+            mA compilesTo A  →
+            mA compilesTo B →
+            A ↔ty B
+        compIsDeterministic (just x) lComps rComps = lemmaTrans (lemmaSym lComps) rComps
+
+
+        lemmaBindSubstInd : 
+            (mA : Maybe T.Type) →
+            (mB : Maybe T.Type) →
+            (body1 : T.Type → Maybe T.Type) →
+            (body2 : T.Type → Maybe T.Type) →
+            (mA >>= body1) compilesTo B →
+            (∀ {A} → 
+                mA compilesTo A →
+                mB compilesTo A) → 
+            (outsEqv : ∀ {C} → (res : T.Type) → {mAComps : mA compilesTo res} →
+                body1 res compilesTo C → 
+                body2 res compilesTo C) → 
+            (mB >>= body2) compilesTo B
+        lemmaBindSubstInd (just resa) mB body1 body2 mABindComps base ind
+            with base refl
+        lemmaBindSubstInd (just resa) (just .resa) body1 body2 mABindComps base ind | refl = 
+            ind resa {mAComps = refl} mABindComps
+
+        lemmaBindSubstBase : 
+            (mA : Maybe T.Type) →
+            (mB : Maybe T.Type) →
+            (body : T.Type → Maybe T.Type) →
+            (mA >>= body) compilesTo B →
+            (∀ {A} → 
+                mA compilesTo A →
+                mB compilesTo A) → 
+            (mB >>= body) compilesTo B
+        lemmaBindSubstBase mA mB body mABindComps base = 
+            lemmaBindSubstInd 
+                mA mB 
+                body body 
+                mABindComps 
+                base 
+                λ res resComps → resComps
 
 open Ty 
     using (_↔ty_)
@@ -74,6 +123,11 @@ module Te where
             a ↔te b
         compIsDeterministic (just x) lComps rComps = lemmaTrans (lemmaSym lComps) rComps
 
+        lemmaRewriteComp : 
+            a ↔te b →
+            ma compilesTo a →
+            ma compilesTo b
+        lemmaRewriteComp {ma = just resa} eq refl = eq
 
         lemmaBindSubstInd : 
             (ma : Maybe T.Term) →

@@ -91,6 +91,46 @@ module Ty where
                 base 
                 λ res resComps → resComps
 
+        
+
+        -- need funext for body?
+        lemmaBindInd :
+            (mA : Maybe T.Type) →
+            (mB : Maybe T.Type) →
+            (body1 : T.Type → Maybe T.Type) →
+            (body2 : T.Type → Maybe T.Type) →
+            (mA >>= body1) compilesTo A → 
+            (mB >>= body2) compilesTo B → 
+            (inpsEqv : ∀ {C D} → mA compilesTo C → 
+                mB compilesTo D → 
+                C ↔ty D) → 
+            (outsEqv : ∀ {C D} → (res : T.Type) → {_ : mA compilesTo res} →
+                body1 res compilesTo C → 
+                body2 res compilesTo D → 
+                C ↔ty D) →
+            A ↔ty B
+        lemmaBindInd (just resa) (just resb) body1 body2 maComps mbComps indL indR
+            rewrite indL {C = resa} {D = resb} refl refl = indR resb {refl} maComps mbComps
+
+
+        lemmaBindBase :
+            (mA : Maybe T.Type) →
+            (mB : Maybe T.Type) →
+            (body : T.Type → Maybe T.Type) →
+            (mA >>= body) compilesTo A → 
+            (mB >>= body) compilesTo B → 
+            (inpsEqv : ∀ {C D} → mA compilesTo C → 
+                mB compilesTo D → 
+                C ↔ty D) → 
+            A ↔ty B
+        lemmaBindBase ma mb body maComps mbComps indL = 
+            lemmaBindInd 
+                ma mb 
+                body body 
+                maComps mbComps 
+                indL 
+                λ res resCompsL resCompsR → compIsDeterministic (body res) resCompsL resCompsR
+
 open Ty 
     using (_↔ty_)
     renaming (_compilesTo_ to _compilesTypeTo_) public

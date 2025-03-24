@@ -22,6 +22,7 @@ _+q_ : Quantity → Quantity → Quantity
 𝟘 +q q2 = q2
 ω +q q2 = ω
 
+
 +q-right-idω : σ +q ω ≡ ω 
 +q-right-idω {𝟘} = refl
 +q-right-idω {ω} = refl

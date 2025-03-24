@@ -11,595 +11,624 @@ open S using (
     _~ᵣ_)
 
 open import Data.Nat
-open import Data.List
 open import Data.Bool using (if_then_else_; Bool)
 open import Data.Sum
-open import Data.Maybe -- using (Maybe; just; nothing; _>>=_)
-open import Relation.Nullary.Decidable
-open import Relation.Binary.PropositionalEquality
+open import Data.Maybe 
+-- open import Relation.Nullary.Decidable
 open import Agda.Builtin.Equality.Rewrite
 
 private variable
     A B : Set
 
-    sΓ sΔ : S.PreContext
-    scΓ : S.Context sΓ
-    scΔ : S.Context sΔ
-    sA sB : S.Type
-    sa sb sc sas sbs sf sg : S.Term
+    Γₛ : S.PreContext
+    cΓₛ : S.Context Γₛ
+    Aₛ Bₛ : S.Type
+    aₛ bₛ cₛ asₛ bsₛ fₛ : S.Term
     σ π ρ : S.Quantity
 
     i l j k x : ℕ
 
-    rΓ rΓ' : ContextRemap scΓ
+    rΓ rΓ' : ContextRemap cΓₛ
 
-    tA tB tC : T.Type
-    ta tb tc : T.Term
-
-{-
-lemmaIgnorePaths : ∀ {res} →
-    (cond : Bool) → 
-    (thenB : _ ) →
-    (elseB : _)
-    {teq : compileType thenB ↔ty res} → 
-    {eeq : compileType elseB ↔ty res} →  
-    compileType (if cond then thenB else elseB) ↔ty res
-lemmaIgnorePaths Bool.false thenB elseB {eeq = eeq} = eeq
-lemmaIgnorePaths Bool.true thenB elseB {teq} = teq
--}
-
-{-
-conver∋→Pre : {scΓ : S.Context sΓ} → scΓ S.∋ sA 𝕢 σ → sΓ S.∋Pre sA
-conver∋→Pre S.Z = S.Z
-conver∋→Pre (S.S p) = S.S (conver∋→Pre p)
-
-dropTypePre : (sΓ : S.PreContext) → sΓ S.∋Pre sA → S.PreContext
-dropTypePre (sΓ S., sA) S.Z = sΓ
-dropTypePre (sΓ S., sA) (S.S p) = dropTypePre sΓ p S., {!   !}
-
-dropType : (scΓ : S.Context sΓ) → (p : scΓ S.∋ sA 𝕢 σ) → S.Context (dropTypePre sΓ (conver∋→Pre p))
-dropType (scΓ S., _) S.Z = scΓ
-dropType (scΓ S., sA 𝕢 σ) (S.S p) = dropType scΓ p S., {!   !} 𝕢 σ
-
--- do I need arbitrary drops and not just skips?
-dropSkip :  ContextRemap scΓ → (p : scΓ S.∋ sA 𝕢 𝟘) → ContextRemap (dropType scΓ p)
-dropSkip (rΓ ,ᵣ sA skip) S.Z = rΓ
-dropSkip (rΓ ,ᵣ sA skip) (S.S p) = {!   !} ,ᵣ {!  S.shiftindices ? ? ?  !} skip
-dropSkip (rΓ ,ᵣ sA ↦ tA) (S.S p) = {!   !}
--}
-
--- Uncertain how to reframe this now
-{-
-
-lemmaRemap : {p : _} {rΓ : ContextRemap scΓ} →
-    compileRemap scΓ ≡ just rΓ →
-    compileRemap (S.insertType scΓ i p sA 𝟘) ≡ just (insertSkip rΓ i p sA) 
-lemmaRemap {scΓ = scΓ} {i = zero} {p = z≤n} eqrΓ = {!   !}
-lemmaRemap {scΓ = scΓ S., A 𝕢 𝟘} {i = suc i} {p = s≤s p} {rΓ ,ᵣ .A skip} eqrΓ = {!   !}
-lemmaRemap {scΓ = scΓ S., A 𝕢 ω} {i = suc i} {p = s≤s p} {rΓ} eqrΓ = {!   !}
--}
-
-insertSkip : {scΓ : S.Context sΓ} → ContextRemap scΓ → (i : ℕ) → (p : i ≤ S.conLen sΓ)  → (sA : S.Type) → ContextRemap (S.insertType scΓ i p sA 𝟘)
-insertSkip rΓ zero z≤n sA = rΓ ,ᵣ sA skip
-insertSkip (rΓ ,ᵣ sB skip) (suc i) (s≤s p) sA = insertSkip rΓ i p sA ,ᵣ S.shiftindices sB 1 i skip
-insertSkip (rΓ ,ᵣ sB ↦ tB) (suc i) (s≤s p) sA = insertSkip rΓ i p sA ,ᵣ S.shiftindices sB 1 i ↦ tB
-
-open import Data.Nat.Properties
-
-,ᵣskip-injective₁ : ∀ {scΓ : S.Context sΓ} {rΓ rΓ↑ : ContextRemap scΓ} →
-    just (rΓ ,ᵣ sA skip) ≡ just (rΓ↑ ,ᵣ sA skip) →
-    rΓ ≡ rΓ↑
-,ᵣskip-injective₁ refl = refl
-
-,ᵣass-injective₁ : ∀ {scΓ : S.Context sΓ} {rΓ rΓ↑ : ContextRemap scΓ} →
-    just (rΓ ,ᵣ sA ↦ tA) ≡ just (rΓ↑ ,ᵣ sA  ↦ tB) →
-    rΓ ≡ rΓ↑
-,ᵣass-injective₁ refl = refl
-
--- ,ᵣass-injective₂ : ∀ {scΓ : S.Context sΓ} {rΓ rΓ↑ : ContextRemap scΓ} →
---     just (rΓ ,ᵣ sA ↦ tA) ≡ just (rΓ↑ ,ᵣ sA  ↦ tB) →
---     tA ≡ tB
-
-invertRemapSkip : 
-    (compileRemap scΓ >>= (λ rΓ₁ → just (rΓ₁ ,ᵣ sA skip))) ≡ just (rΓ ,ᵣ sA skip) →
-    compileRemap scΓ ≡ just rΓ
-invertRemapSkip {scΓ = S.[]} refl = refl
-invertRemapSkip {scΓ = scΓ S., A 𝕢 𝟘} {rΓ = rΓ ,ᵣ .A skip} bindComps with compileRemap scΓ
-... | just rΓ' 
-        rewrite ,ᵣskip-injective₁ bindComps = refl
-invertRemapSkip {scΓ = scΓ S., A 𝕢 ω} {rΓ = rΓ ,ᵣ .A ↦ tA} bindComps with compileRemap scΓ | compileType A
-... | just rΓ' | just tA'
-        rewrite ,ᵣskip-injective₁ bindComps = refl
-
-invertRemapAss₁ :     
-    (compileRemap scΓ >>= (λ rΓ₁ → compileType sA >>= (λ tA → just (rΓ₁ ,ᵣ sA ↦ tA)))) ≡ just (rΓ ,ᵣ sA ↦ tA) →
-    compileRemap scΓ ≡ just rΓ
-invertRemapAss₁ {scΓ = S.[]} {rΓ = []ᵣ} bindComps = refl
-invertRemapAss₁ {scΓ = scΓ S., A 𝕢 𝟘} {sA} {rΓ = rΓ ,ᵣ .A skip} bindComps with compileRemap scΓ | compileType sA
-... | just rΓ' | just tA'
-        rewrite ,ᵣass-injective₁ bindComps = refl
-invertRemapAss₁ {scΓ = scΓ S., A 𝕢 ω} {sA} {rΓ = rΓ ,ᵣ .A ↦ tA} bindComps with compileRemap scΓ | compileType A | compileType sA
-... | just rΓ' | just tA' | just _ 
-        rewrite ,ᵣass-injective₁ bindComps = refl
-
-invertCompTy : 
-    (compileType sA >>= (λ tA → just (rΓ ,ᵣ sA ↦ tA))) ≡ just (rΓ ,ᵣ sA ↦ tA) →
-    compileType sA ≡ just tA
-invertCompTy {sA = sA} bindComps with compileType sA
-invertCompTy {sA = sA} refl | just x = refl
-
--- invertRemapAss₂ : 
---     (compileRemap scΓ >>= (λ rΓ₁ → compileType sA >>= (λ tA → just (rΓ₁ ,ᵣ sA ↦ tA)))) ≡ just (rΓ ,ᵣ sA ↦ tA) →
---     compileType sA ≡ just tA
--- invertRemapAss₂ {scΓ = S.[]} {rΓ = []ᵣ} bindComps = invertCompTy bindComps
--- invertRemapAss₂ {scΓ = scΓ S., A 𝕢 𝟘} {rΓ = rΓ ,ᵣ .A skip} bindComps with invertRemapAss₁ bindComps
--- ... | eq rewrite eq = invertCompTy bindComps
--- invertRemapAss₂ {scΓ = scΓ S., A 𝕢 ω} {rΓ = rΓ ,ᵣ .A ↦ tA} bindComps with invertRemapAss₁ bindComps
--- ... | eq rewrite eq = invertCompTy bindComps
-
--- rewrite rule?
-lemmaPushIf : ∀ {cond : Bool} {cons : A → B} {x₁ x₂ : A} →
-    (if cond then cons x₁ else cons x₂) 
-    ≡ 
-    cons (if cond then x₁ else x₂)
-lemmaPushIf {cond = Bool.false} = refl
-lemmaPushIf {cond = Bool.true} = refl
-
-≤b-injective : (suc i ≤ᵇ suc j) ≡ (i ≤ᵇ j)
-≤b-injective {zero} {j} = refl
-≤b-injective {suc i} {j} = refl
-
--- Need to find abstract version, maybe
-lemmaRemap : ∀ {p} {rΓ : ContextRemap scΓ} {rΓ↑ : ContextRemap (S.insertType scΓ i p sB 𝟘)} →
-    compileRemap scΓ ≡ just rΓ →
-    compileRemap (S.insertType scΓ i p sB 𝟘) ≡ just rΓ↑ →
-    remapIndex x rΓ ≡ remapIndex (if i ≤ᵇ x then (x + 1) else x) rΓ↑
-lemmaRemap {scΓ = _} {zero} {x = x} {z≤n} {rΓ↑ = rΓ↑ ,ᵣ sA skip} scΓComps scΓ↑Comps
-    rewrite scΓComps | ,ᵣskip-injective₁ scΓ↑Comps | +-comm x 1 = refl 
-lemmaRemap {scΓ = scΓ S., A 𝕢 𝟘} {i = suc i} {x = zero} {p = s≤s p} {rΓ ,ᵣ .A skip} {rΓ↑ ,ᵣ .(S.shiftindices A 1 i) skip} scΓComps scΓ↑Comps = refl
-lemmaRemap {scΓ = scΓ S., A 𝕢 ω} {i = suc i} {x = zero} {p = s≤s p} {rΓ ,ᵣ .A ↦ tA} {rΓ↑ ,ᵣ .(S.shiftindices A 1 i) ↦ tA₁} scΓComps scΓ↑Comps = refl
-lemmaRemap {scΓ = scΓ S., A 𝕢 𝟘} {i = suc i} {x = suc x} {p = s≤s p} {rΓ ,ᵣ .A skip} {rΓ↑ ,ᵣ .(S.shiftindices A 1 i) skip} scΓComps scΓ↑Comps 
-    rewrite ≤b-injective {i = i} {j = x} | lemmaPushIf {cond = i ≤ᵇ x} {cons = suc} {x₁ = x + 1} {x₂ = x} = 
-        lemmaRemap (invertRemapSkip scΓComps) (invertRemapSkip scΓ↑Comps)
-lemmaRemap {scΓ = scΓ S., A 𝕢 ω} {i = suc i} {x = suc x} {p = s≤s p} {rΓ ,ᵣ .A ↦ tA} {rΓ↑ ,ᵣ .(S.shiftindices A 1 i) ↦ tA₁} scΓComps scΓ↑Comps
-    rewrite ≤b-injective {i = i} {j = x} | lemmaPushIf {cond = i ≤ᵇ x} {cons = suc} {x₁ = x + 1} {x₂ = x}
-        rewrite lemmaRemap {x = x} (invertRemapAss₁ scΓComps) (invertRemapAss₁ scΓ↑Comps) = refl
-
--- change this to some module?
-compTyShiftIgn : 
-    compileType sA ≡ compileType (S.shiftindices sA i l)
-compTyShiftIgn {S.List A} = {!   !}
-compTyShiftIgn {S.Vec sA x} = {!   !}
-compTyShiftIgn {S.∶ x ⟶ x₁} = {!   !}
-compTyShiftIgn {S.r∶ x ⟶ x₁} = {!   !}
-compTyShiftIgn {S.Sett x} = {!   !}
----- Terms 
-compTyShiftIgn {S.var x} = {!   !}
-compTyShiftIgn {S.ƛ∶ A 𝕢 σ ♭ sA} = refl
-compTyShiftIgn {S.ƛr∶ x ♭ sA} = refl
-compTyShiftIgn {sA S.· sA₁ 𝕢 x} = refl
-compTyShiftIgn {sA S.·ᵣ sA₁} = refl
-compTyShiftIgn {S.z} = refl
-compTyShiftIgn {S.s sA} = refl
-compTyShiftIgn {S.nill} = refl
-compTyShiftIgn {sA S.∷l sA₁} = refl
-compTyShiftIgn {S.nilv𝕢 x} = refl
-compTyShiftIgn {sA S.∷v sA₁ 𝕟 sA₂ 𝕢 x} = refl
-compTyShiftIgn {S.elimnat sA P∶ sA₁ zb∶ sA₂ sb∶ sA₃} = refl
-compTyShiftIgn {S.eliml sA ty∶ innerty P∶ sA₁ nb∶ sA₂ cb∶ sA₃} = refl
-compTyShiftIgn {S.elimv A 𝕢 σ ty∶ innerty P∶ sA nb∶ sA₁ cb∶ sA₂} = refl
-compTyShiftIgn {S.Nat} = refl
+    Aₜ Bₜ Cₜ : T.Type
+    aₜ bₜ cₜ : T.Term
 
 
-rΓ⇒rΓ↑ : ∀ {p} {rΓ : ContextRemap scΓ} →
-    compileRemap scΓ ≡ just rΓ →
-    compileRemap (S.insertType scΓ i p sB 𝟘) ≡ just (insertSkip rΓ i p sB)
-rΓ⇒rΓ↑ {i = zero} {p = z≤n} {rΓ} scΓComps rewrite scΓComps = refl
-rΓ⇒rΓ↑ {scΓ = scΓ S., A 𝕢 𝟘} {i = suc i} {sB} {p = s≤s p} {rΓ ,ᵣ .A skip} scΓComps  
-    rewrite rΓ⇒rΓ↑ {i = i} {sB = sB} {p = p} {rΓ = rΓ} (invertRemapSkip scΓComps) = refl
-rΓ⇒rΓ↑ {scΓ = scΓ S., A 𝕢 ω} {i = suc i} {sB} {p = s≤s p} {rΓ ,ᵣ .A ↦ tA} bindComps 
-    with invertRemapAss₁ bindComps | rΓ⇒rΓ↑ {i = i} {sB = sB} {p = p} {rΓ = rΓ} (invertRemapAss₁ bindComps)
-... | eq | eqRec rewrite eq | eqRec | sym (compTyShiftIgn {sA = A} {i = 1} {l = i}) | invertCompTy {sA = A} bindComps = refl
+module Weakening where
+    open import Relation.Binary.PropositionalEquality
+    open import Data.Nat.Properties using (+-comm)
 
-    
-remap↑Comps : 
-    (scΓ : S.Context sΓ) →
-    (i : ℕ) → 
-    (p : i ≤ S.conLen sΓ) →
-    compileTerm scΓ (S.var x) compilesTermTo ta →
-    compileTerm (S.insertType scΓ i p sB 𝟘) (if i ≤ᵇ x then S.var (x + 1) else S.var x) compilesTermTo ta
-remap↑Comps {x = x} {sB = sB} scΓ i p varComps 
-    rewrite lemmaPushIf {cond = i ≤ᵇ x} {cons = S.var} {x₁ = x + 1} {x₂ = x} with compileRemap scΓ in scΓComps 
-... | just rΓ 
-        rewrite lemmaRemap {sB = sB} {x = x} {p = p} {rΓ = rΓ} scΓComps (rΓ⇒rΓ↑ {i = i} {sB = sB} {p = p} scΓComps) | rΓ⇒rΓ↑ {i = i} {sB = sB} {p = p} scΓComps = varComps
+    insertSkip : {cΓₛ : S.Context Γₛ} → ContextRemap cΓₛ → (i : ℕ) → (p : i ≤ S.conLen Γₛ)  → (Aₛ : S.Type) → ContextRemap (S.insertType cΓₛ i p Aₛ 𝟘)
+    insertSkip rΓ zero z≤n Aₛ = rΓ ,ᵣ Aₛ skip
+    insertSkip (rΓ ,ᵣ Bₛ skip) (suc i) (s≤s p) Aₛ = insertSkip rΓ i p Aₛ ,ᵣ S.shiftindices Bₛ 1 i skip
+    insertSkip (rΓ ,ᵣ Bₛ ↦ Bₜ) (suc i) (s≤s p) Aₛ = insertSkip rΓ i p Aₛ ,ᵣ S.shiftindices Bₛ 1 i ↦ Bₜ
 
 
----- Either: 
--- How to link this to previous results, mismatch between abstract and concrete, maybe need abstract interface for compiling remap too (or move lemma to abstract realm)
-lemmaWeakenTermVar : 
-    (scΓ : S.Context sΓ) →
-    (i : ℕ) → 
-    (p : i ≤ S.conLen sΓ) →
-    compileTerm scΓ (S.var x) compilesTermTo ta →
-    compileTerm (S.insertType scΓ i p sB 𝟘) (if i ≤ᵇ x then S.var (x + 1) else S.var x) compilesTermTo tb →
-    ta ↔te tb
-lemmaWeakenTermVar {x = x} {sB = sB} scΓ i p varComps var↑Comps 
-    rewrite lemmaPushIf {cond = i ≤ᵇ x} {cons = S.var} {x₁ = x + 1} {x₂ = x} 
-        with compileRemap scΓ in scΓComps  | compileRemap (S.insertType scΓ i p sB 𝟘) in scΓ↑Comps
-... | just rΓ | just rΓ↑ 
-        rewrite sym (lemmaRemap {x = x} scΓComps scΓ↑Comps) = 
-            Te.compIsDeterministic mrΓ varComps var↑Comps
-            where 
-                mrΓ = remapIndex x rΓ >>= (λ n → just (T.var n))
+    ,ᵣskip-injective₁ : ∀ {cΓₛ : S.Context Γₛ} {rΓ rΓ↑ : ContextRemap cΓₛ} →
+        just (rΓ ,ᵣ Aₛ skip) ≡ just (rΓ↑ ,ᵣ Aₛ skip) →
+        rΓ ≡ rΓ↑
+    ,ᵣskip-injective₁ refl = refl
 
-lemmaWeakenTermVar2 : 
-    (scΓ : S.Context sΓ) →
-    (i : ℕ) → 
-    (p : i ≤ S.conLen sΓ) →
-    compileTerm scΓ (S.var x) compilesTermTo ta →
-    compileTerm (S.insertType scΓ i p sB 𝟘) (if i ≤ᵇ x then S.var (x + 1) else S.var x) compilesTermTo ta
-lemmaWeakenTermVar2 = {!   !}
+    ,ᵣass-injective₁ : ∀ {cΓₛ : S.Context Γₛ} {rΓ rΓ↑ : ContextRemap cΓₛ} →
+        just (rΓ ,ᵣ Aₛ ↦ Aₜ) ≡ just (rΓ↑ ,ᵣ Aₛ  ↦ Bₜ) →
+        rΓ ≡ rΓ↑
+    ,ᵣass-injective₁ refl = refl
 
--- make scΓ↑ and sa↑ actual args? Need to turn them into relations
-lemmaWeakenTerm : 
-    (sa : S.Term) → 
-    -- maybe make it a record type? cont, i, p, sB
-    (scΓ : S.Context sΓ) →
-    (i : ℕ) → 
-    (p : i ≤ S.conLen sΓ) →
-    (sB : S.Type) →
-    compileTerm scΓ sa compilesTermTo ta →
-    compileTerm (S.insertType scΓ i p sB 𝟘) (S.shiftindices sa 1 i) compilesTermTo ta
--- this seems... roundabout
-lemmaWeakenTerm (S.var x) scΓ i p sB saComps rewrite lemmaPushIf {cond = i ≤ᵇ x} {cons = S.var} {x₁ = (x + 1)} {x₂ = x} = 
-    {!   !} -- Te.lemmaRewriteComp {ma = compileTerm scΓ {! S.var x  !}} (lemmaWeakenTermVar {sB = sB} scΓ i p saComps (remap↑Comps scΓ i p saComps)) saComps -- Te.lemmaRewriteComp {ma = compileTerm scΓ {! compileRemap scΓ  !}} (lemmaWeakenTermVar {sB = sB} scΓ i p saComps (remap↑Comps scΓ i p saComps)) saComps
-lemmaWeakenTerm (S.ƛ∶ sA 𝕢 𝟘 ♭ sa) scΓ i p sB saComps = 
-    lemmaWeakenTerm sa (scΓ S., sA 𝕢 𝟘) (suc i) (s≤s p) sB saComps
-lemmaWeakenTerm (S.ƛ∶ sA 𝕢 ω ♭ sa) scΓ i p sB saBComps = 
-    Te.lemmaBindSubstBase
-        (compileTerm (scΓ S., sA 𝕢 ω) sa) (compileTerm (S.insertType (scΓ S., sA 𝕢 ω) (suc i) (s≤s p) sB 𝟘) (S.shiftindices sa 1 (suc i)))
-        (λ tbody → just (T.ƛ tbody)) 
-        saBComps 
-        λ saComps → lemmaWeakenTerm sa (scΓ S., sA 𝕢 ω) (suc i) (s≤s p) sB saComps 
-lemmaWeakenTerm (S.ƛr∶ x ♭ sa) scΓ i p sB saComps = saComps
-lemmaWeakenTerm (sa S.· sa₁ 𝕢 𝟘) scΓ i p sB saComps = lemmaWeakenTerm sa scΓ i p sB saComps
-lemmaWeakenTerm (sf S.· sarg 𝕢 ω) scΓ i p sB bindComps = 
-    Te.lemmaBindSubstInd 
-        (compileTerm scΓ sf) (compileTerm scΓ↑ sf↑) 
-        body-arg body-arg↑ 
-        bindComps 
-        (λ sfComps → lemmaWeakenTerm sf scΓ i p sB sfComps) 
-        λ res sargBindComps → 
-            Te.lemmaBindSubstBase 
-                (compileTerm scΓ sarg) (compileTerm scΓ↑ sarg↑) 
-                (body-base res) 
-                sargBindComps 
-                λ sargComps → lemmaWeakenTerm sarg scΓ i p sB sargComps
-        where
-            scΓ↑ = S.insertType scΓ i p sB 𝟘
-            sf↑ = S.shiftindices sf 1 i 
-            sarg↑ = S.shiftindices sarg 1 i
-            body-base = λ tf ta → just (tf T.· ta)
-            body-arg = λ tf → compileTerm scΓ sarg >>= body-base tf
-            body-arg↑ = λ tf → compileTerm scΓ↑ sarg↑ >>= body-base tf
-lemmaWeakenTerm (sa S.·ᵣ sa₁) scΓ i p sB saComps = lemmaWeakenTerm sa₁ scΓ i p sB saComps
-lemmaWeakenTerm S.z scΓ i p sB saComps = saComps
-lemmaWeakenTerm (S.s sa) scΓ i p sB saBindComps = 
-    Te.lemmaBindSubstBase 
-        (compileTerm scΓ sa) (compileTerm (S.insertType scΓ i p sB 𝟘) (S.shiftindices sa 1 i)) 
-        (λ ta → just (T.s ta)) 
-        saBindComps 
-        λ saComps → lemmaWeakenTerm sa scΓ i p sB saComps
-lemmaWeakenTerm S.nill scΓ i p sB saComps = saComps
-lemmaWeakenTerm (sa S.∷l sas) scΓ i p sB saBindComps = 
-    Te.lemmaBindSubstInd 
-        (compileTerm scΓ sa) (compileTerm scΓ↑ sa↑) 
-        body-as body-as↑ 
-        saBindComps 
-        (λ saComps → lemmaWeakenTerm sa scΓ i p sB saComps) 
-        λ res sasBindComps → 
-            Te.lemmaBindSubstBase 
-                (compileTerm scΓ sas) (compileTerm scΓ↑ sas↑) 
-                (body-base res) 
-                sasBindComps 
-                λ sasComps → lemmaWeakenTerm sas scΓ i p sB sasComps
-        where
-            scΓ↑ = S.insertType scΓ i p sB 𝟘
-            sa↑ = S.shiftindices sa 1 i 
-            sas↑ = S.shiftindices sas 1 i
-            body-base = (λ ta  tas → just (ta T.∷l tas))
-            body-as = (λ ta → compileTerm scΓ sas >>= body-base ta)
-            body-as↑ = (λ ta → compileTerm scΓ↑ sas↑ >>= body-base ta)
-lemmaWeakenTerm (S.nilv𝕢 𝟘) scΓ i p sB saComps = saComps
-lemmaWeakenTerm (S.nilv𝕢 ω) scΓ i p sB saComps = saComps
-lemmaWeakenTerm (sa S.∷v sas 𝕟 sn 𝕢 𝟘) scΓ i p sB saBindComps = 
-    Te.lemmaBindSubstInd 
-        (compileTerm scΓ sa) (compileTerm scΓ↑ sa↑) 
-        body-as body-as↑ 
-        saBindComps 
-        (λ saComps → lemmaWeakenTerm sa scΓ i p sB saComps) 
-        λ res sasBindComps → 
-            Te.lemmaBindSubstBase 
-                (compileTerm scΓ sas) (compileTerm scΓ↑ sas↑) 
-                (body-base res) 
-                sasBindComps 
-                λ sasComps → lemmaWeakenTerm sas scΓ i p sB sasComps
-        where
-            scΓ↑ = S.insertType scΓ i p sB 𝟘
-            sa↑ = S.shiftindices sa 1 i 
-            sas↑ = S.shiftindices sas 1 i
-            body-base = (λ ta  tas → just (ta T.∷l tas))
-            body-as = (λ ta → compileTerm scΓ sas >>= body-base ta)
-            body-as↑ = (λ ta → compileTerm scΓ↑ sas↑ >>= body-base ta)
-lemmaWeakenTerm (sa S.∷v sas 𝕟 sn 𝕢 ω) scΓ i p sB saBindComps = 
-    Te.lemmaBindSubstInd 
-        (compileTerm scΓ sa) (compileTerm scΓ↑ sa↑) 
-        body-as body-as↑ 
-        saBindComps 
-        (λ saComps → lemmaWeakenTerm sa scΓ i p sB saComps)  
-        λ res-a sasBindComps → 
-            Te.lemmaBindSubstInd 
-                (compileTerm scΓ sas) (compileTerm scΓ↑ sas↑) 
-                (body-n res-a) (body-n↑ res-a) 
-                sasBindComps 
-                (λ sasComps → lemmaWeakenTerm sas scΓ i p sB sasComps) 
-                λ res-as nBindComps → 
-                    Te.lemmaBindSubstBase 
-                        (compileTerm scΓ sn) (compileTerm scΓ↑ sn↑) 
-                        (body-base res-a res-as) 
-                        nBindComps 
-                        λ snComps → lemmaWeakenTerm sn scΓ i p sB snComps
-        where
-            scΓ↑ = S.insertType scΓ i p sB 𝟘
-            sa↑ = S.shiftindices sa 1 i 
-            sas↑ = S.shiftindices sas 1 i
-            sn↑ = S.shiftindices sn 1 i
-            body-base = (λ ta tas tn → just (ta T.∷v tas 𝕟 tn))
-            body-n = λ ta tas → compileTerm scΓ sn >>= body-base ta tas
-            body-n↑ = λ ta tas → compileTerm scΓ↑ sn↑ >>= body-base ta tas
-            body-as = (λ ta → compileTerm scΓ sas >>= body-n ta)
-            body-as↑ = (λ ta → compileTerm scΓ↑ sas↑ >>= body-n↑ ta)
-lemmaWeakenTerm (S.elimnat sn P∶ sP zb∶ sz sb∶ ss) scΓ i p sB snBindComps = 
-    Te.lemmaBindSubstInd 
-        (compileTerm scΓ sn) (compileTerm scΓ↑ sn↑) 
-        body-sz body-sz↑ 
-        snBindComps 
-        (λ snComps → lemmaWeakenTerm sn scΓ i p sB snComps) 
-        λ res-n szBindComps → 
-            Te.lemmaBindSubstInd 
-                (compileTerm scΓ sz) (compileTerm scΓ↑ sz↑) 
-                (body-ss res-n) (body-ss↑ res-n) 
-                szBindComps 
-                (λ szComps → lemmaWeakenTerm sz scΓ i p sB szComps) 
-                λ res-sz ssBindComps → 
-                    Te.lemmaBindSubstBase 
-                        (compileTerm scΓs ss) (compileTerm scΓs↑ ss↑) 
-                        (body-base res-n res-sz) 
-                        ssBindComps 
-                        λ ssComps → lemmaWeakenTerm ss scΓs (2+ i) (s≤s (s≤s p)) sB ssComps
-        -- Annoying wrt scΓs and S.insertTypes cant resolve it
-        where
-            scΓ↑ = S.insertType scΓ i p sB 𝟘
-            scΓs = (scΓ S., S.Nat 𝕢 ω) S., sP 𝕢 ω
-            scΓs↑ = S.insertType scΓs (2+ i) (s≤s (s≤s p)) sB 𝟘
-            sn↑ = S.shiftindices sn 1 i
-            sz↑ = S.shiftindices sz 1 i
-            ss↑ = S.shiftindices ss 1 (2+ i)
-            body-base = λ tn tz ts → just (T.elimnat tn zb∶ tz sb∶ ts)
-            body-ss↑ = λ ta tz → compileTerm scΓs↑ ss↑ >>= body-base ta tz
-            body-ss = λ ta tz → compileTerm scΓs ss >>= body-base ta tz
-            body-sz↑ = λ ta → compileTerm scΓ↑ sz↑ >>= body-ss↑ ta 
-            body-sz = λ ta → compileTerm scΓ sz >>= body-ss ta 
-lemmaWeakenTerm (S.eliml sl ty∶ innerty P∶ sa₁ nb∶ sa₂ cb∶ sa₃) scΓ i p sB saComps = {!   !}
-lemmaWeakenTerm (S.elimv sv 𝕢 σ ty∶ innerty P∶ sa nb∶ sa₁ cb∶ sa₂) scΓ i p sB saComps = {!   !}
--- Types
-lemmaWeakenTerm S.Nat scΓ i p sB saComps = saComps 
-lemmaWeakenTerm (S.List x) scΓ i p sB saComps = saComps 
-lemmaWeakenTerm (S.Vec sa (A 𝕢 σ)) scΓ i p sB saComps = saComps 
-lemmaWeakenTerm (S.∶ A 𝕢 σ ⟶ x₁) scΓ i p sB saComps = saComps
-lemmaWeakenTerm (S.r∶ x ⟶ x₁) scΓ i p sB saComps = saComps 
-lemmaWeakenTerm (S.Sett x) scΓ i p sB saComps = saComps 
+    -- ,ᵣass-injective₂ : ∀ {cΓₛ : S.Context Γₛ} {rΓ rΓ↑ : ContextRemap cΓₛ} →
+    --     just (rΓ ,ᵣ Aₛ ↦ Aₜ) ≡ just (rΓ↑ ,ᵣ Aₛ  ↦ Bₜ) →
+    --     Aₜ ≡ Bₜ
+
+    invertRemapSkip : 
+        (compileRemap cΓₛ >>= (λ rΓ₁ → just (rΓ₁ ,ᵣ Aₛ skip))) ≡ just (rΓ ,ᵣ Aₛ skip) →
+        compileRemap cΓₛ ≡ just rΓ
+    invertRemapSkip {cΓₛ = S.[]} refl = refl
+    invertRemapSkip {cΓₛ = cΓₛ S., A 𝕢 𝟘} {rΓ = rΓ ,ᵣ .A skip} bindComps with compileRemap cΓₛ
+    ... | just rΓ' 
+            rewrite ,ᵣskip-injective₁ bindComps = refl
+    invertRemapSkip {cΓₛ = cΓₛ S., A 𝕢 ω} {rΓ = rΓ ,ᵣ .A ↦ Aₜ} bindComps with compileRemap cΓₛ | compileType A
+    ... | just rΓ' | just Aₜ'
+            rewrite ,ᵣskip-injective₁ bindComps = refl
+
+    invertRemapAss₁ :     
+        (compileRemap cΓₛ >>= (λ rΓ₁ → compileType Aₛ >>= (λ Aₜ → just (rΓ₁ ,ᵣ Aₛ ↦ Aₜ)))) ≡ just (rΓ ,ᵣ Aₛ ↦ Aₜ) →
+        compileRemap cΓₛ ≡ just rΓ
+    invertRemapAss₁ {cΓₛ = S.[]} {rΓ = []ᵣ} bindComps = refl
+    invertRemapAss₁ {cΓₛ = cΓₛ S., A 𝕢 𝟘} {Aₛ} {rΓ = rΓ ,ᵣ .A skip} bindComps with compileRemap cΓₛ | compileType Aₛ
+    ... | just rΓ' | just Aₜ'
+            rewrite ,ᵣass-injective₁ bindComps = refl
+    invertRemapAss₁ {cΓₛ = cΓₛ S., A 𝕢 ω} {Aₛ} {rΓ = rΓ ,ᵣ .A ↦ Aₜ} bindComps with compileRemap cΓₛ | compileType A | compileType Aₛ
+    ... | just rΓ' | just Aₜ' | just _ 
+            rewrite ,ᵣass-injective₁ bindComps = refl
+
+    invertCompTy : 
+        (compileType Aₛ >>= (λ Aₜ → just (rΓ ,ᵣ Aₛ ↦ Aₜ))) ≡ just (rΓ ,ᵣ Aₛ ↦ Aₜ) →
+        compileType Aₛ ≡ just Aₜ
+    invertCompTy {Aₛ = Aₛ} bindComps with compileType Aₛ
+    invertCompTy {Aₛ = Aₛ} refl | just x = refl
+
+    -- invertRemapAss₂ : 
+    --     (compileRemap cΓₛ >>= (λ rΓ₁ → compileType Aₛ >>= (λ Aₜ → just (rΓ₁ ,ᵣ Aₛ ↦ Aₜ)))) ≡ just (rΓ ,ᵣ Aₛ ↦ Aₜ) →
+    --     compileType Aₛ ≡ just Aₜ
+    -- invertRemapAss₂ {cΓₛ = S.[]} {rΓ = []ᵣ} bindComps = invertCompTy bindComps
+    -- invertRemapAss₂ {cΓₛ = cΓₛ S., A 𝕢 𝟘} {rΓ = rΓ ,ᵣ .A skip} bindComps with invertRemapAss₁ bindComps
+    -- ... | eq rewrite eq = invertCompTy bindComps
+    -- invertRemapAss₂ {cΓₛ = cΓₛ S., A 𝕢 ω} {rΓ = rΓ ,ᵣ .A ↦ Aₜ} bindComps with invertRemapAss₁ bindComps
+    -- ... | eq rewrite eq = invertCompTy bindComps
+
+    -- rewrite rule?
+    if-injective : ∀ {cond : Bool} {cons : A → B} {x₁ x₂ : A} →
+        (if cond then cons x₁ else cons x₂) 
+        ≡ 
+        cons (if cond then x₁ else x₂)
+    if-injective {cond = Bool.false} = refl
+    if-injective {cond = Bool.true} = refl
+
+    ≤b-injective : (suc i ≤ᵇ suc j) ≡ (i ≤ᵇ j)
+    ≤b-injective {zero} {j} = refl
+    ≤b-injective {suc i} {j} = refl
+
+    -- Need to find abstract version, maybe
+    lemmaRemap : ∀ {p} {rΓ : ContextRemap cΓₛ} {rΓ↑ : ContextRemap (S.insertType cΓₛ i p Bₛ 𝟘)} →
+        compileRemap cΓₛ ≡ just rΓ →
+        compileRemap (S.insertType cΓₛ i p Bₛ 𝟘) ≡ just rΓ↑ →
+        remapIndex x rΓ ≡ remapIndex (if i ≤ᵇ x then (x + 1) else x) rΓ↑
+    lemmaRemap {cΓₛ = _} {zero} {x = x} {z≤n} {rΓ↑ = rΓ↑ ,ᵣ Aₛ skip} cΓₛComps cΓₛ↑Comps
+        rewrite cΓₛComps | ,ᵣskip-injective₁ cΓₛ↑Comps | +-comm x 1 = refl 
+    lemmaRemap {cΓₛ = cΓₛ S., A 𝕢 𝟘} {i = suc i} {x = zero} {p = s≤s p} {rΓ ,ᵣ .A skip} {rΓ↑ ,ᵣ .(S.shiftindices A 1 i) skip} cΓₛComps cΓₛ↑Comps = refl
+    lemmaRemap {cΓₛ = cΓₛ S., A 𝕢 ω} {i = suc i} {x = zero} {p = s≤s p} {rΓ ,ᵣ .A ↦ Aₜ} {rΓ↑ ,ᵣ .(S.shiftindices A 1 i) ↦ Aₜ₁} cΓₛComps cΓₛ↑Comps = refl
+    lemmaRemap {cΓₛ = cΓₛ S., A 𝕢 𝟘} {i = suc i} {x = suc x} {p = s≤s p} {rΓ ,ᵣ .A skip} {rΓ↑ ,ᵣ .(S.shiftindices A 1 i) skip} cΓₛComps cΓₛ↑Comps 
+        rewrite ≤b-injective {i = i} {j = x} | if-injective {cond = i ≤ᵇ x} {cons = suc} {x₁ = x + 1} {x₂ = x} = 
+            lemmaRemap (invertRemapSkip cΓₛComps) (invertRemapSkip cΓₛ↑Comps)
+    lemmaRemap {cΓₛ = cΓₛ S., A 𝕢 ω} {i = suc i} {x = suc x} {p = s≤s p} {rΓ ,ᵣ .A ↦ Aₜ} {rΓ↑ ,ᵣ .(S.shiftindices A 1 i) ↦ Aₜ₁} cΓₛComps cΓₛ↑Comps
+        rewrite ≤b-injective {i = i} {j = x} | if-injective {cond = i ≤ᵇ x} {cons = suc} {x₁ = x + 1} {x₂ = x}
+            rewrite lemmaRemap {x = x} (invertRemapAss₁ cΓₛComps) (invertRemapAss₁ cΓₛ↑Comps) = refl
+
+    -- change this to some module?
+    compTyShiftIgn : 
+        compileType Aₛ ≡ compileType (S.shiftindices Aₛ i l)
+    -- compTyShiftIgn {S.List A} = {!   !}
+    -- compTyShiftIgn {S.Vec Aₛ x} = {!   !}
+    -- compTyShiftIgn {S.∶ x ⟶ x₁} = {!   !}
+    -- compTyShiftIgn {S.r∶ x ⟶ x₁} = {!   !}
+    -- compTyShiftIgn {S.Sett x} = {!   !}
+    -- ---- Terms 
+    -- compTyShiftIgn {S.var x} = {!   !}
+    -- compTyShiftIgn {S.ƛ∶ A 𝕢 σ ♭ Aₛ} = refl
+    -- compTyShiftIgn {S.ƛr∶ x ♭ Aₛ} = refl
+    -- compTyShiftIgn {Aₛ S.· Aₛ₁ 𝕢 x} = refl
+    -- compTyShiftIgn {Aₛ S.·ᵣ Aₛ₁} = refl
+    -- compTyShiftIgn {S.z} = refl
+    -- compTyShiftIgn {S.s Aₛ} = refl
+    -- compTyShiftIgn {S.nill} = refl
+    -- compTyShiftIgn {Aₛ S.∷l Aₛ₁} = refl
+    -- compTyShiftIgn {S.nilv𝕢 x} = refl
+    -- compTyShiftIgn {Aₛ S.∷v Aₛ₁ 𝕟 Aₛ₂ 𝕢 x} = refl
+    -- compTyShiftIgn {S.elimnat Aₛ P∶ Aₛ₁ zb∶ Aₛ₂ sb∶ Aₛ₃} = refl
+    -- compTyShiftIgn {S.eliml Aₛ ty∶ innerty P∶ Aₛ₁ nb∶ Aₛ₂ cb∶ Aₛ₃} = refl
+    -- compTyShiftIgn {S.elimv A 𝕢 σ ty∶ innerty P∶ Aₛ nb∶ Aₛ₁ cb∶ Aₛ₂} = refl
+    -- compTyShiftIgn {S.Nat} = refl
 
 
-private variable
-    snb scb sP : S.Term
+    rΓ⇒rΓ↑ : ∀ {p} {rΓ : ContextRemap cΓₛ} →
+        compileRemap cΓₛ ≡ just rΓ →
+        compileRemap (S.insertType cΓₛ i p Bₛ 𝟘) ≡ just (insertSkip rΓ i p Bₛ)
+    rΓ⇒rΓ↑ {i = zero} {p = z≤n} {rΓ} cΓₛComps rewrite cΓₛComps = refl
+    rΓ⇒rΓ↑ {cΓₛ = cΓₛ S., A 𝕢 𝟘} {i = suc i} {Bₛ} {p = s≤s p} {rΓ ,ᵣ .A skip} cΓₛComps  
+        rewrite rΓ⇒rΓ↑ {i = i} {Bₛ = Bₛ} {p = p} {rΓ = rΓ} (invertRemapSkip cΓₛComps) = refl
+    rΓ⇒rΓ↑ {cΓₛ = cΓₛ S., A 𝕢 ω} {i = suc i} {Bₛ} {p = s≤s p} {rΓ ,ᵣ .A ↦ Aₜ} bindComps 
+        with invertRemapAss₁ bindComps | rΓ⇒rΓ↑ {i = i} {Bₛ = Bₛ} {p = p} {rΓ = rΓ} (invertRemapAss₁ bindComps)
+    ... | eq | eqRec rewrite eq | eqRec | sym (compTyShiftIgn {Aₛ = A} {i = 1} {l = i}) | invertCompTy {Aₛ = A} bindComps = refl
+
+        
+    remap↑Comps : 
+        (cΓₛ : S.Context Γₛ) →
+        (i : ℕ) → 
+        (p : i ≤ S.conLen Γₛ) →
+        compileTerm cΓₛ (S.var x) compilesTermTo aₜ →
+        compileTerm (S.insertType cΓₛ i p Bₛ 𝟘) (if i ≤ᵇ x then S.var (x + 1) else S.var x) compilesTermTo aₜ
+    remap↑Comps {x = x} {Bₛ = Bₛ} cΓₛ i p varComps 
+        rewrite if-injective {cond = i ≤ᵇ x} {cons = S.var} {x₁ = x + 1} {x₂ = x} with compileRemap cΓₛ in cΓₛComps 
+    ... | just rΓ 
+            rewrite lemmaRemap {Bₛ = Bₛ} {x = x} {p = p} {rΓ = rΓ} cΓₛComps (rΓ⇒rΓ↑ {i = i} {Bₛ = Bₛ} {p = p} cΓₛComps) | rΓ⇒rΓ↑ {i = i} {Bₛ = Bₛ} {p = p} cΓₛComps = varComps
 
 
--- Is there a more general lemma here? i.e. general observational equivalence
--- Make this say that elim compiles to elim and then do extensionality on what var i is 
-lemmaElimLExt : 
-    compileTerm scΓ 
-        (S.eliml S.var i ty∶ sA P∶ sP 
-            nb∶ snb 
-            cb∶ scb) 
-        compilesTermTo ta →
-    compileTerm scΓ sb compilesTermTo tb →
-    -- if lookup var i = [] then sc = nb, or sc comps to same as nb 
-    (∀ {tc td} →
-        compileTerm scΓ snb compilesTermTo tc → 
-        compileTerm scΓ (sb S.[ i / S.nill ]) compilesTermTo td → 
-        tc ↔te td ) →
-    -- if lookup var i = x :: xs then sc = cb, or sc comps to same as cb 
-    (∀ {tc td} →
-        -- should I subst into cb here? mirroring the current rule?
-        compileTerm ((((scΓ S., sA 𝕢 ω) S., S.List sA 𝕢 ω) S., sP 𝕢 ω)) (scb S.[ 0 / S.var 1 ]) compilesTermTo tc → 
-        compileTerm scΓ (sb S.[ i / S.var 2 S.∷l S.var 1 ]) compilesTermTo td → 
-        tc ↔te td ) →
-    -- Both held so elimL = sc
-    ta ↔te tb
-lemmaElimLExt elimComps sbComps ind[] ind:: = {!  ind[]  !}
+    ---- Either: 
+    -- How to link this to previous results, mismacₜh between abstract and concrete, maybe need abstract interface for compiling remap too (or move lemma to abstract realm)
+    lemmaWeakenTermVar : 
+        (cΓₛ : S.Context Γₛ) →
+        (i : ℕ) → 
+        (p : i ≤ S.conLen Γₛ) →
+        compileTerm cΓₛ (S.var x) compilesTermTo aₜ →
+        compileTerm (S.insertType cΓₛ i p Bₛ 𝟘) (if i ≤ᵇ x then S.var (x + 1) else S.var x) compilesTermTo bₜ →
+        aₜ ↔te bₜ
+    lemmaWeakenTermVar {x = x} {Bₛ = Bₛ} cΓₛ i p varComps var↑Comps 
+        rewrite if-injective {cond = i ≤ᵇ x} {cons = S.var} {x₁ = x + 1} {x₂ = x} 
+            with compileRemap cΓₛ in cΓₛComps  | compileRemap (S.insertType cΓₛ i p Bₛ 𝟘) in cΓₛ↑Comps
+    ... | just rΓ | just rΓ↑ 
+            rewrite sym (lemmaRemap {x = x} cΓₛComps cΓₛ↑Comps) = 
+                Te.compIsDeterministic mrΓ varComps var↑Comps
+                where 
+                    mrΓ = remapIndex x rΓ >>= (λ n → just (T.var n))
 
-invertElimListVar : 
-    (compileTerm scΓ 
-        (S.eliml S.var x ty∶ sA P∶ sP 
-            nb∶ snb 
-            cb∶ scb)) 
-        compilesTermTo ta →
-    (compileTerm scΓ (S.var x) compilesTermTo {! T.[]  !}) ⊎ (compileTerm scΓ (S.var x) compilesTermTo {!   !})
+    lemmaWeakenTermVar2 : 
+        (cΓₛ : S.Context Γₛ) →
+        (i : ℕ) → 
+        (p : i ≤ S.conLen Γₛ) →
+        compileTerm cΓₛ (S.var x) compilesTermTo aₜ →
+        compileTerm (S.insertType cΓₛ i p Bₛ 𝟘) (if i ≤ᵇ x then S.var (x + 1) else S.var x) compilesTermTo aₜ
+    lemmaWeakenTermVar2 = {!   !}
+
+    lemmaWeakenTerm : 
+        (aₛ : S.Term) → 
+        -- maybe make it a record type? cont, i, p, Bₛ
+        (cΓₛ : S.Context Γₛ) →
+        (i : ℕ) → 
+        (p : i ≤ S.conLen Γₛ) →
+        (Bₛ : S.Type) →
+        compileTerm cΓₛ aₛ compilesTermTo aₜ →
+        compileTerm (S.insertType cΓₛ i p Bₛ 𝟘) (S.shiftindices aₛ 1 i) compilesTermTo aₜ
+    -- this seems... roundabout
+    lemmaWeakenTerm (S.var x) cΓₛ i p Bₛ aₛComps rewrite if-injective {cond = i ≤ᵇ x} {cons = S.var} {x₁ = (x + 1)} {x₂ = x} = 
+        {!   !}
+        -- Te.lemmaRewriteComp {ma = compileTerm cΓₛ {! compileRemap cΓₛ  !}} (lemmaWeakenTermVar {Bₛ = Bₛ} cΓₛ i p aₛComps (remap↑Comps cΓₛ i p aₛComps)) aₛComps
+    lemmaWeakenTerm (S.ƛ∶ Aₛ 𝕢 𝟘 ♭ aₛ) cΓₛ i p Bₛ aₛComps = 
+        lemmaWeakenTerm aₛ (cΓₛ S., Aₛ 𝕢 𝟘) (suc i) (s≤s p) Bₛ aₛComps
+    lemmaWeakenTerm (S.ƛ∶ Aₛ 𝕢 ω ♭ aₛ) cΓₛ i p Bₛ aₛBComps = 
+        Te.lemmaBindSubstBase
+            (compileTerm (cΓₛ S., Aₛ 𝕢 ω) aₛ) (compileTerm (S.insertType (cΓₛ S., Aₛ 𝕢 ω) (suc i) (s≤s p) Bₛ 𝟘) (S.shiftindices aₛ 1 (suc i)))
+            (λ bₜody → just (T.ƛ bₜody)) 
+            aₛBComps 
+            λ aₛComps → lemmaWeakenTerm aₛ (cΓₛ S., Aₛ 𝕢 ω) (suc i) (s≤s p) Bₛ aₛComps 
+    lemmaWeakenTerm (S.ƛr∶ x ♭ aₛ) cΓₛ i p Bₛ aₛComps = aₛComps
+    lemmaWeakenTerm (aₛ S.· aₛ₁ 𝕢 𝟘) cΓₛ i p Bₛ aₛComps = lemmaWeakenTerm aₛ cΓₛ i p Bₛ aₛComps
+    lemmaWeakenTerm (fₛ S.· aₛrg 𝕢 ω) cΓₛ i p Bₛ bindComps = 
+        Te.lemmaBindSubstInd 
+            (compileTerm cΓₛ fₛ) (compileTerm cΓₛ↑ fₛ↑) 
+            body-arg body-arg↑ 
+            bindComps 
+            (λ fₛComps → lemmaWeakenTerm fₛ cΓₛ i p Bₛ fₛComps) 
+            λ res aₛrgBindComps → 
+                Te.lemmaBindSubstBase 
+                    (compileTerm cΓₛ aₛrg) (compileTerm cΓₛ↑ aₛrg↑) 
+                    (body-base res) 
+                    aₛrgBindComps 
+                    λ aₛrgComps → lemmaWeakenTerm aₛrg cΓₛ i p Bₛ aₛrgComps
+            where
+                cΓₛ↑ = S.insertType cΓₛ i p Bₛ 𝟘
+                fₛ↑ = S.shiftindices fₛ 1 i 
+                aₛrg↑ = S.shiftindices aₛrg 1 i
+                body-base = λ tf aₜ → just (tf T.· aₜ)
+                body-arg = λ tf → compileTerm cΓₛ aₛrg >>= body-base tf
+                body-arg↑ = λ tf → compileTerm cΓₛ↑ aₛrg↑ >>= body-base tf
+    lemmaWeakenTerm (aₛ S.·ᵣ aₛ₁) cΓₛ i p Bₛ aₛComps = lemmaWeakenTerm aₛ₁ cΓₛ i p Bₛ aₛComps
+    lemmaWeakenTerm S.z cΓₛ i p Bₛ aₛComps = aₛComps
+    lemmaWeakenTerm (S.s aₛ) cΓₛ i p Bₛ aₛBindComps = 
+        Te.lemmaBindSubstBase 
+            (compileTerm cΓₛ aₛ) (compileTerm (S.insertType cΓₛ i p Bₛ 𝟘) (S.shiftindices aₛ 1 i)) 
+            (λ aₜ → just (T.s aₜ)) 
+            aₛBindComps 
+            λ aₛComps → lemmaWeakenTerm aₛ cΓₛ i p Bₛ aₛComps
+    lemmaWeakenTerm S.nill cΓₛ i p Bₛ aₛComps = aₛComps
+    lemmaWeakenTerm (aₛ S.∷l asₛ) cΓₛ i p Bₛ aₛBindComps = 
+        Te.lemmaBindSubstInd 
+            (compileTerm cΓₛ aₛ) (compileTerm cΓₛ↑ aₛ↑) 
+            body-as body-as↑ 
+            aₛBindComps 
+            (λ aₛComps → lemmaWeakenTerm aₛ cΓₛ i p Bₛ aₛComps) 
+            λ res aₛBₛindComps → 
+                Te.lemmaBindSubstBase 
+                    (compileTerm cΓₛ asₛ) (compileTerm cΓₛ↑ asₛ↑) 
+                    (body-base res) 
+                    aₛBₛindComps 
+                    λ asₛComps → lemmaWeakenTerm asₛ cΓₛ i p Bₛ asₛComps
+            where
+                cΓₛ↑ = S.insertType cΓₛ i p Bₛ 𝟘
+                aₛ↑ = S.shiftindices aₛ 1 i 
+                asₛ↑ = S.shiftindices asₛ 1 i
+                body-base = (λ aₜ  aₜs → just (aₜ T.∷l aₜs))
+                body-as = (λ aₜ → compileTerm cΓₛ asₛ >>= body-base aₜ)
+                body-as↑ = (λ aₜ → compileTerm cΓₛ↑ asₛ↑ >>= body-base aₜ)
+    lemmaWeakenTerm (S.nilv𝕢 𝟘) cΓₛ i p Bₛ aₛComps = aₛComps
+    lemmaWeakenTerm (S.nilv𝕢 ω) cΓₛ i p Bₛ aₛComps = aₛComps
+    lemmaWeakenTerm (aₛ S.∷v asₛ 𝕟 sn 𝕢 𝟘) cΓₛ i p Bₛ aₛBindComps = 
+        Te.lemmaBindSubstInd 
+            (compileTerm cΓₛ aₛ) (compileTerm cΓₛ↑ aₛ↑) 
+            body-as body-as↑ 
+            aₛBindComps 
+            (λ aₛComps → lemmaWeakenTerm aₛ cΓₛ i p Bₛ aₛComps) 
+            λ res aₛBₛindComps → 
+                Te.lemmaBindSubstBase 
+                    (compileTerm cΓₛ asₛ) (compileTerm cΓₛ↑ asₛ↑) 
+                    (body-base res) 
+                    aₛBₛindComps 
+                    λ asₛComps → lemmaWeakenTerm asₛ cΓₛ i p Bₛ asₛComps
+            where
+                cΓₛ↑ = S.insertType cΓₛ i p Bₛ 𝟘
+                aₛ↑ = S.shiftindices aₛ 1 i 
+                asₛ↑ = S.shiftindices asₛ 1 i
+                body-base = (λ aₜ  aₜs → just (aₜ T.∷l aₜs))
+                body-as = (λ aₜ → compileTerm cΓₛ asₛ >>= body-base aₜ)
+                body-as↑ = (λ aₜ → compileTerm cΓₛ↑ asₛ↑ >>= body-base aₜ)
+    lemmaWeakenTerm (aₛ S.∷v asₛ 𝕟 sn 𝕢 ω) cΓₛ i p Bₛ aₛBindComps = 
+        Te.lemmaBindSubstInd 
+            (compileTerm cΓₛ aₛ) (compileTerm cΓₛ↑ aₛ↑) 
+            body-as body-as↑ 
+            aₛBindComps 
+            (λ aₛComps → lemmaWeakenTerm aₛ cΓₛ i p Bₛ aₛComps)  
+            λ res-a aₛBₛindComps → 
+                Te.lemmaBindSubstInd 
+                    (compileTerm cΓₛ asₛ) (compileTerm cΓₛ↑ asₛ↑) 
+                    (body-n res-a) (body-n↑ res-a) 
+                    aₛBₛindComps 
+                    (λ asₛComps → lemmaWeakenTerm asₛ cΓₛ i p Bₛ asₛComps) 
+                    λ res-as nBindComps → 
+                        Te.lemmaBindSubstBase 
+                            (compileTerm cΓₛ sn) (compileTerm cΓₛ↑ sn↑) 
+                            (body-base res-a res-as) 
+                            nBindComps 
+                            λ snComps → lemmaWeakenTerm sn cΓₛ i p Bₛ snComps
+            where
+                cΓₛ↑ = S.insertType cΓₛ i p Bₛ 𝟘
+                aₛ↑ = S.shiftindices aₛ 1 i 
+                asₛ↑ = S.shiftindices asₛ 1 i
+                sn↑ = S.shiftindices sn 1 i
+                body-base = (λ aₜ aₜs tn → just (aₜ T.∷v aₜs 𝕟 tn))
+                body-n = λ aₜ aₜs → compileTerm cΓₛ sn >>= body-base aₜ aₜs
+                body-n↑ = λ aₜ aₜs → compileTerm cΓₛ↑ sn↑ >>= body-base aₜ aₜs
+                body-as = (λ aₜ → compileTerm cΓₛ asₛ >>= body-n aₜ)
+                body-as↑ = (λ aₜ → compileTerm cΓₛ↑ asₛ↑ >>= body-n↑ aₜ)
+    lemmaWeakenTerm (S.elimnat sn P∶ sP zb∶ sz sb∶ ss) cΓₛ i p Bₛ snBindComps = 
+        Te.lemmaBindSubstInd 
+            (compileTerm cΓₛ sn) (compileTerm cΓₛ↑ sn↑) 
+            body-sz body-sz↑ 
+            snBindComps 
+            (λ snComps → lemmaWeakenTerm sn cΓₛ i p Bₛ snComps) 
+            λ res-n szBindComps → 
+                Te.lemmaBindSubstInd 
+                    (compileTerm cΓₛ sz) (compileTerm cΓₛ↑ sz↑) 
+                    (body-ss res-n) (body-ss↑ res-n) 
+                    szBindComps 
+                    (λ szComps → lemmaWeakenTerm sz cΓₛ i p Bₛ szComps) 
+                    λ res-sz sBₛindComps → 
+                        Te.lemmaBindSubstBase 
+                            (compileTerm cΓₛs ss) (compileTerm cΓₛs↑ ss↑) 
+                            (body-base res-n res-sz) 
+                            sBₛindComps 
+                            λ ssComps → lemmaWeakenTerm ss cΓₛs (2+ i) (s≤s (s≤s p)) Bₛ ssComps
+            -- Annoying wrt cΓₛs and S.insertTypes cant resolve it
+            where
+                cΓₛ↑ = S.insertType cΓₛ i p Bₛ 𝟘
+                cΓₛs = (cΓₛ S., S.Nat 𝕢 ω) S., sP 𝕢 ω
+                cΓₛs↑ = S.insertType cΓₛs (2+ i) (s≤s (s≤s p)) Bₛ 𝟘
+                sn↑ = S.shiftindices sn 1 i
+                sz↑ = S.shiftindices sz 1 i
+                ss↑ = S.shiftindices ss 1 (2+ i)
+                body-base = λ tn tz ts → just (T.elimnat tn zb∶ tz sb∶ ts)
+                body-ss↑ = λ aₜ tz → compileTerm cΓₛs↑ ss↑ >>= body-base aₜ tz
+                body-ss = λ aₜ tz → compileTerm cΓₛs ss >>= body-base aₜ tz
+                body-sz↑ = λ aₜ → compileTerm cΓₛ↑ sz↑ >>= body-ss↑ aₜ 
+                body-sz = λ aₜ → compileTerm cΓₛ sz >>= body-ss aₜ 
+    lemmaWeakenTerm (S.eliml sl ty∶ innerty P∶ aₛ₁ nb∶ aₛ₂ cb∶ aₛ₃) cΓₛ i p Bₛ aₛComps = {!   !}
+    lemmaWeakenTerm (S.elimv sv 𝕢 σ ty∶ innerty P∶ aₛ nb∶ aₛ₁ cb∶ aₛ₂) cΓₛ i p Bₛ aₛComps = {!   !}
+    -- Types
+    lemmaWeakenTerm S.Nat cΓₛ i p Bₛ aₛComps = aₛComps 
+    lemmaWeakenTerm (S.List x) cΓₛ i p Bₛ aₛComps = aₛComps 
+    lemmaWeakenTerm (S.Vec aₛ (A 𝕢 σ)) cΓₛ i p Bₛ aₛComps = aₛComps 
+    lemmaWeakenTerm (S.∶ A 𝕢 σ ⟶ x₁) cΓₛ i p Bₛ aₛComps = aₛComps
+    lemmaWeakenTerm (S.r∶ x ⟶ x₁) cΓₛ i p Bₛ aₛComps = aₛComps 
+    lemmaWeakenTerm (S.Sett x) cΓₛ i p Bₛ aₛComps = aₛComps 
+
+open Weakening
+
+module ElimExt where
+    open import Data.Product
+    private variable
+        []bₛ ∷bₛ sP : S.Term
+
+
+    subStillCompiles : 
+        (aₛ : S.Term) →
+        (i : ℕ) →
+        (bₛ : S.Term) →
+        compileTerm cΓₛ aₛ compilesTermTo aₜ →
+        compileTerm cΓₛ bₛ compilesTermTo bₜ →
+        -- does this always hold??
+        Σ[ aₜₛ ∈ T.Term ] (compileTerm cΓₛ (aₛ S.[ i / bₛ ]) compilesTermTo aₜₛ)
+        
+
+    invertElimL[]b : 
+        compileTerm cΓₛ 
+            (S.eliml S.var i ty∶ Aₛ P∶ sP 
+                nb∶ []bₛ 
+                cb∶ ∷bₛ) 
+            compilesTermTo aₜ →
+        -- cant compute what aₜ is 
+        -- compileTerm cΓₛ []bₛ compilesTermTo {!   !}
+        Σ[ aₜ ∈ T.Term ] (compileTerm cΓₛ []bₛ compilesTermTo aₜ)
+        
+    -- lemma on how one compiles substitution?
+    -- Is there a more general lemma here? i.e. general observational equivalence
+    -- Make this aₛy that elim compiles to elim and then do extensionality on what var i is 
+    lemmaElimLExt : 
+        (cΓₛ : S.Context Γₛ) →
+        (i : ℕ ) →
+        ([]bₛ : S.Term ) →
+        (∷bₛ : S.Term ) →
+        (bₛ : S.Term ) →
+        compileTerm cΓₛ 
+            (S.eliml S.var i ty∶ Aₛ P∶ sP 
+                nb∶ []bₛ 
+                cb∶ ∷bₛ) 
+            compilesTermTo aₜ →
+        compileTerm cΓₛ bₛ compilesTermTo bₜ →
+        -- if lookup var i = [] then cₛ = []b, or cₛ comps to aₛme as []b 
+        (∀ {cₜ td} →
+            compileTerm cΓₛ []bₛ compilesTermTo cₜ → 
+            compileTerm cΓₛ (bₛ S.[ i / S.nill ]) compilesTermTo td → 
+            cₜ ↔te td ) →
+        -- if lookup var i = x :: xs then cₛ = ∷b, or cₛ comps to aₛme as ∷b 
+        (∀ {cₜ td} →
+            -- should I subst into ∷b here? mirroring the current rule?
+            compileTerm ((((cΓₛ S., Aₛ 𝕢 ω) S., S.List Aₛ 𝕢 ω) S., sP 𝕢 ω)) (∷bₛ S.[ 0 / S.var 1 ]) compilesTermTo cₜ → 
+            compileTerm cΓₛ (bₛ S.[ i / S.var 2 S.∷l S.var 1 ]) compilesTermTo td → 
+            cₜ ↔te td ) →
+        -- Both held so elimL = cₛ
+        aₜ ↔te bₜ
+    lemmaElimLExt = {!   !}
+        -- where
+        --     cₛsub1 = subStillCompiles {bₜ = T.nill} bₛ i S.nill bₛComps Te.lemmaRefl
+        --     aₜₛ = proj₁ cₛsub1
+        --     cₛsub1Comps = proj₂ cₛsub1
+        --     []bₛCompsP = invertElimL[]b {cΓₛ = cΓₛ}  {sP = sP} {[]bₛ = []bₛ} {∷bₛ = ∷bₛ} {aₜ = aₜ} elimComps
+        --     []bₛComps = proj₂ []bₛCompsP
+
+    lemmaFunExt : ∀ {f g} →  
+        (∀ {aₜ} →
+            (f T.· aₜ) ↔te (g T.· aₜ)) →
+        f ↔te g
+
+    -- Need lemma that will compile substitution in S to substitution in T with updated i
+
+    lemmaElimComps :
+        compileTerm cΓₛ aₛ compilesTermTo aₜ →
+        compileTerm cΓₛ []bₛ compilesTermTo bₜ →
+        compileTerm ((((cΓₛ S., Aₛ 𝕢 ω) S., S.List Aₛ 𝕢 ω) S., sP 𝕢 ω)) ∷bₛ compilesTermTo cₜ →
+        compileTerm cΓₛ (S.eliml aₛ ty∶ Aₛ P∶ sP 
+                nb∶ []bₛ 
+                cb∶ ∷bₛ) 
+            compilesTermTo 
+        (T.eliml aₜ 
+            nb∶ bₜ 
+            cb∶ cₜ) 
+    lemmaElimComps = {!   !}
+
+
+    -- postulate??
+    lemmaElimTarg : ∀ {tn bₜ} →
+        tn ↔te (cₜ T.[ i / T.nill ]) →
+        -- does the i have to be suc suc ?
+        bₜ ↔te (cₜ T.[ i / T.var 2 T.∷l T.var 1 ]) →
+        (T.eliml T.var i 
+            nb∶ tn 
+            cb∶ bₜ) 
+        ↔te cₜ
+    lemmaElimTarg nilExt consExt = {!   !}
+
+    invertElimListVar : 
+        (compileTerm cΓₛ 
+            (S.eliml S.var x ty∶ Aₛ P∶ sP 
+                nb∶ []bₛ 
+                cb∶ ∷bₛ)) 
+            compilesTermTo aₜ →
+        (compileTerm cΓₛ (S.var x) compilesTermTo {! T.[]  !}) ⊎ (compileTerm cΓₛ (S.var x) compilesTermTo {!   !})
+open ElimExt
+
 
 ~ᵣtermproof :
-    (scΓ : S.Context sΓ) →
-    sa ~ᵣ sc → 
-    (compileTerm scΓ sa) compilesTermTo ta →
-    (compileTerm scΓ sc) compilesTermTo tc → 
-    ta ↔te tc
-~ᵣtermproof {sa = sa} {ta = ta} {tc} scΓ S.~ᵣrefl aComps cComps = 
+    (cΓₛ : S.Context Γₛ) →
+    aₛ ~ᵣ cₛ → 
+    (compileTerm cΓₛ aₛ) compilesTermTo aₜ →
+    (compileTerm cΓₛ cₛ) compilesTermTo cₜ → 
+    aₜ ↔te cₜ
+~ᵣtermproof {aₛ = aₛ} {aₜ = aₜ} {cₜ} cΓₛ S.~ᵣrefl aComps cComps = 
     Te.compIsDeterministic 
-        (compileTerm scΓ sa) 
+        (compileTerm cΓₛ aₛ) 
         aComps cComps
-~ᵣtermproof scΓ (S.~ᵣsym ~) aComps cComps = Te.lemmaSym (~ᵣtermproof scΓ ~ cComps aComps)
+~ᵣtermproof cΓₛ (S.~ᵣsym ~) aComps cComps = Te.lemmaSym (~ᵣtermproof cΓₛ ~ cComps aComps)
 -- Kind of a workaround no? Need general lemma to introduce new intermediate terms to compile (or not)? 
 -- Except if B fails to compile it dont really matter here :/
-~ᵣtermproof scΓ (S.~ᵣtrans {B = B} ~ ~₁) aComps cComps = {!   !}
+~ᵣtermproof cΓₛ (S.~ᵣtrans {B = B} ~ ~₁) aComps cComps = {!   !}
 {- 
     Te.lemmaTrans 
         -- missing proof of compilation for B (intermediate term)
         -- funext? for all B this holds
-        (~ᵣtermproof scΓ ~ aComps {!   !}) 
-        (~ᵣtermproof scΓ ~₁ {!   !} cComps)
+        (~ᵣtermproof cΓₛ ~ aComps {!   !}) 
+        (~ᵣtermproof cΓₛ ~₁ {!   !} cComps)
 -}
-~ᵣtermproof {ta = ta} scΓ (S.~ᵣs {n} {m} ~) aComps cComps = 
-    Te.lemmaBindBase (compileTerm scΓ n) (compileTerm scΓ m) (λ ta₁ → just (T.s ta₁)) aComps cComps 
-        λ nComps mComps → ~ᵣtermproof scΓ ~ nComps mComps
-~ᵣtermproof scΓ (S.~ᵣ∷l {a} {c} {as} {cs} ~h ~t) aComps cComps = 
+~ᵣtermproof {aₜ = aₜ} cΓₛ (S.~ᵣs {n} {m} ~) aComps cComps = 
+    Te.lemmaBindBase (compileTerm cΓₛ n) (compileTerm cΓₛ m) (λ aₜ₁ → just (T.s aₜ₁)) aComps cComps 
+        λ nComps mComps → ~ᵣtermproof cΓₛ ~ nComps mComps
+~ᵣtermproof cΓₛ (S.~ᵣ∷l {a} {c} {as} {cs} ~h ~t) aComps cComps = 
     Te.lemmaBindInd 
         -- ma mb
-        (compileTerm scΓ a) (compileTerm scΓ c) 
+        (compileTerm cΓₛ a) (compileTerm cΓₛ c) 
         -- bodies
-        (λ ta₁ → compileTerm scΓ as >>= (λ tas → just (ta₁ T.∷l tas))) (λ ta₁ → compileTerm scΓ cs >>= (λ tas → just (ta₁ T.∷l tas))) 
+        (λ aₜ₁ → compileTerm cΓₛ as >>= (λ aₜs → just (aₜ₁ T.∷l aₜs))) (λ aₜ₁ → compileTerm cΓₛ cs >>= (λ aₜs → just (aₜ₁ T.∷l aₜs))) 
         -- bindComps
         aComps cComps 
-        (λ hlComps hrComps → ~ᵣtermproof scΓ ~h hlComps hrComps) 
-        λ res tlCompsB trCompsB → 
+        (λ hlComps hrComps → ~ᵣtermproof cΓₛ ~h hlComps hrComps) 
+        λ res tlCompBₛ trCompBₛ → 
             Te.lemmaBindBase 
-                (compileTerm scΓ as) (compileTerm scΓ cs) 
-                (λ tas → just (res T.∷l tas)) 
-                tlCompsB trCompsB 
-                (λ tlComps trComps → ~ᵣtermproof scΓ ~t tlComps trComps) 
-~ᵣtermproof scΓ (S.~ᵣlamω {b} {c} {A = A} ~) aComps cComps =   
+                (compileTerm cΓₛ as) (compileTerm cΓₛ cs) 
+                (λ aₜs → just (res T.∷l aₜs)) 
+                tlCompBₛ trCompBₛ 
+                (λ tlComps trComps → ~ᵣtermproof cΓₛ ~t tlComps trComps) 
+~ᵣtermproof cΓₛ (S.~ᵣlamω {b} {c} {A = A} ~) aComps cComps =   
     Te.lemmaBindBase 
-        (compileTerm (scΓ S., A 𝕢 ω) b) (compileTerm (scΓ S., A 𝕢 ω) c) 
-        (λ tbody → just (T.ƛ tbody)) 
+        (compileTerm (cΓₛ S., A 𝕢 ω) b) (compileTerm (cΓₛ S., A 𝕢 ω) c) 
+        (λ bₜody → just (T.ƛ bₜody)) 
         aComps cComps 
-        λ bodyCompL bodyCompR → ~ᵣtermproof (scΓ S., A 𝕢 ω) ~ bodyCompL bodyCompR 
--- Either convert compilesTermTo or make lemma that takes it into account
--- some rewrite lemma based on target?
-~ᵣtermproof {sc = sc} scΓ (S.~ᵣlam𝟘 {A = A} ~) bComps cComps = 
-    ~ᵣtermproof (scΓ S., A 𝕢 𝟘) ~ bComps (lemmaWeakenTerm sc scΓ zero z≤n A cComps) 
-~ᵣtermproof scΓ S.~ᵣlamr aComps cComp = 
+        λ bodyCompL bodyCompR → ~ᵣtermproof (cΓₛ S., A 𝕢 ω) ~ bodyCompL bodyCompR 
+-- Either convert compilesTermTo or make lemma that aₜkes it into account
+-- some rewrite lemma based on aₜrget?
+~ᵣtermproof {cₛ = cₛ} cΓₛ (S.~ᵣlam𝟘 {A = A} ~) bComps cComps = 
+    ~ᵣtermproof (cΓₛ S., A 𝕢 𝟘) ~ bComps (lemmaWeakenTerm cₛ cΓₛ zero z≤n A cComps) 
+~ᵣtermproof cΓₛ S.~ᵣlamr aComps cComp = 
     Te.compIsDeterministic 
         (just (T.ƛ (T.var 0))) 
         aComps cComp
-~ᵣtermproof scΓ (S.~ᵣappω {b} {d} {a} {c} ~ ~₁) bBindComps dBindComps = 
+~ᵣtermproof cΓₛ (S.~ᵣappω {b} {d} {a} {c} ~ ~₁) bBindComps dBindComps = 
     Te.lemmaBindInd 
-        (compileTerm scΓ b) (compileTerm scΓ d)
-        (λ tf → compileTerm scΓ a >>= (λ ta₁ → just (tf T.· ta₁))) (λ tf → compileTerm scΓ c >>= (λ ta₁ → just (tf T.· ta₁))) 
+        (compileTerm cΓₛ b) (compileTerm cΓₛ d)
+        (λ tf → compileTerm cΓₛ a >>= (λ aₜ₁ → just (tf T.· aₜ₁))) (λ tf → compileTerm cΓₛ c >>= (λ aₜ₁ → just (tf T.· aₜ₁))) 
         bBindComps dBindComps 
-        (λ bComps dComps → ~ᵣtermproof scΓ ~ bComps dComps)
+        (λ bComps dComps → ~ᵣtermproof cΓₛ ~ bComps dComps)
         λ res aBindComps cBindComps → 
             Te.lemmaBindBase 
-                (compileTerm scΓ a) (compileTerm scΓ c)
-                (λ ta₁ → just (res T.· ta₁)) 
+                (compileTerm cΓₛ a) (compileTerm cΓₛ c)
+                (λ aₜ₁ → just (res T.· aₜ₁)) 
                 aBindComps cBindComps 
-                λ {c = c₁} {d = d₁} → ~ᵣtermproof scΓ ~₁
-~ᵣtermproof scΓ (S.~ᵣapp𝟘 ~) aComps cComps = ~ᵣtermproof scΓ ~ aComps cComps 
-~ᵣtermproof {sc = sc} scΓ S.~ᵣappr aComps cComps = 
+                λ {c = c₁} {d = d₁} → ~ᵣtermproof cΓₛ ~₁
+~ᵣtermproof cΓₛ (S.~ᵣapp𝟘 ~) aComps cComps = ~ᵣtermproof cΓₛ ~ aComps cComps 
+~ᵣtermproof {cₛ = cₛ} cΓₛ S.~ᵣappr aComps cComps = 
     Te.compIsDeterministic 
-        (compileTerm scΓ sc)
+        (compileTerm cΓₛ cₛ)
         aComps cComps  
-~ᵣtermproof scΓ S.~ᵣbetaω aComps cComps = {!   !}
-~ᵣtermproof scΓ S.~ᵣnilvω aComps cComps = 
+~ᵣtermproof cΓₛ S.~ᵣbetaω aComps cComps = {!   !}
+~ᵣtermproof cΓₛ S.~ᵣnilvω aComps cComps = 
     Te.compIsDeterministic 
         (just T.nilv) 
         aComps cComps  
-~ᵣtermproof scΓ S.~ᵣnilv𝟘 aComps cComps = 
+~ᵣtermproof cΓₛ S.~ᵣnilv𝟘 aComps cComps = 
     Te.compIsDeterministic 
         (just T.nill)         
         aComps cComps
-~ᵣtermproof scΓ (S.~ᵣ∷vω {a} {c} {as} {cs} {n} {m} ~a ~as ~n) aBindComps cBindComps = 
+~ᵣtermproof cΓₛ (S.~ᵣ∷vω {a} {c} {as} {cs} {n} {m} ~a ~as ~n) aBindComps cBindComps = 
     Te.lemmaBindInd 
-        (compileTerm scΓ a) (compileTerm scΓ c) 
+        (compileTerm cΓₛ a) (compileTerm cΓₛ c) 
         body-a body-c  
         aBindComps cBindComps 
-        (λ aComps cComps → ~ᵣtermproof scΓ ~a aComps cComps)  
-        (λ resH asBindComps csBindComps → 
+        (λ aComps cComps → ~ᵣtermproof cΓₛ ~a aComps cComps)  
+        (λ resH aBₛindComps cBₛindComps → 
             Te.lemmaBindInd 
-                (compileTerm scΓ as) (compileTerm scΓ cs) 
+                (compileTerm cΓₛ as) (compileTerm cΓₛ cs) 
                 (body-as resH) (body-cs resH)
-                asBindComps csBindComps 
-                (λ asComps csComps → ~ᵣtermproof scΓ ~as asComps csComps)  
+                aBₛindComps cBₛindComps 
+                (λ asComps csComps → ~ᵣtermproof cΓₛ ~as asComps csComps)  
                 λ resT nBindComps mBindComps → 
                     Te.lemmaBindBase 
-                        (compileTerm scΓ n) (compileTerm scΓ m) 
+                        (compileTerm cΓₛ n) (compileTerm cΓₛ m) 
                         (body-base resH resT) 
                         nBindComps mBindComps 
-                        λ nComps mComps → ~ᵣtermproof scΓ ~n nComps mComps)          
+                        λ nComps mComps → ~ᵣtermproof cΓₛ ~n nComps mComps)          
         where 
-            body-base = λ ta tas tn → just (ta T.∷v tas 𝕟 tn)
-            body-as = λ ta → (λ tas → compileTerm scΓ n >>= body-base ta tas)
-            body-cs = λ ta → (λ tas → compileTerm scΓ m >>= body-base ta tas)
-            body-a = (λ ta → compileTerm scΓ as >>= body-as ta)
-            body-c = (λ ta → compileTerm scΓ cs >>= body-cs ta)
-~ᵣtermproof scΓ (S.~ᵣ∷v𝟘 {a} {c} {as} {cs} ~a ~as) aBindComps cBindComps = 
+            body-base = λ aₜ aₜs tn → just (aₜ T.∷v aₜs 𝕟 tn)
+            body-as = λ aₜ → (λ aₜs → compileTerm cΓₛ n >>= body-base aₜ aₜs)
+            body-cs = λ aₜ → (λ aₜs → compileTerm cΓₛ m >>= body-base aₜ aₜs)
+            body-a = (λ aₜ → compileTerm cΓₛ as >>= body-as aₜ)
+            body-c = (λ aₜ → compileTerm cΓₛ cs >>= body-cs aₜ)
+~ᵣtermproof cΓₛ (S.~ᵣ∷v𝟘 {a} {c} {as} {cs} ~a ~as) aBindComps cBindComps = 
     Te.lemmaBindInd 
-        (compileTerm scΓ a) (compileTerm scΓ c)
+        (compileTerm cΓₛ a) (compileTerm cΓₛ c)
         body-as body-cs 
         aBindComps cBindComps 
-        (λ aComps cComps → ~ᵣtermproof scΓ ~a aComps cComps)
-        λ res asBindComps csBindComps → 
+        (λ aComps cComps → ~ᵣtermproof cΓₛ ~a aComps cComps)
+        λ res aBₛindComps cBₛindComps → 
             Te.lemmaBindBase 
-                (compileTerm scΓ as) (compileTerm scΓ cs) 
+                (compileTerm cΓₛ as) (compileTerm cΓₛ cs) 
                 (body-base res) 
-                asBindComps csBindComps 
-                (λ asComps csComps → ~ᵣtermproof scΓ ~as asComps csComps)          
+                aBₛindComps cBₛindComps 
+                (λ asComps csComps → ~ᵣtermproof cΓₛ ~as asComps csComps)          
         where
-            body-base =  λ ta tas → just (ta T.∷l tas)
-            body-cs = λ ta → compileTerm scΓ cs >>= body-base ta  
-            body-as = λ ta → compileTerm scΓ as >>= body-base ta
--- Might be example why I need option, need cb doesnt align with cb [ 0 / S.var 1]
--- Need lemmaEta to consider different sc cases, here I need to be more observational stuff
+            body-base =  λ aₜ aₜs → just (aₜ T.∷l aₜs)
+            body-cs = λ aₜ → compileTerm cΓₛ cs >>= body-base aₜ  
+            body-as = λ aₜ → compileTerm cΓₛ as >>= body-base aₜ
+-- Might be example why I need option, need ∷b doesnt align with ∷b [ 0 / S.var 1]
+-- Need lemmaEaₜ to consider different cₛ cases, here I need to be more observational stuff
 -- funext on what var i is? or on result of substitution?
 -- Maybe invert var i?
--- Invert to show ta = T.eliml then do funext on what var i (or lookup var i) can be
-~ᵣtermproof {sc = sc} scΓ (S.~ᵣηlist {nb} {cb = cb} ~nb ~cb) bindComps cComps = 
+-- Invert to show aₜ = T.eliml then do funext on what var i (or lookup var i) can be
+~ᵣtermproof {cₛ = cₛ} cΓₛ (S.~ᵣηlist {[]b} {i = i} {cb = ∷b} ~[]b ~∷b) bindComps cComps =
     lemmaElimLExt 
+        cΓₛ 
+        i 
+        []b ∷b cₛ
         bindComps cComps 
-        (λ nbComps scComps → ~ᵣtermproof scΓ ~nb nbComps scComps)
-        -- scΓ isnt the same in both here tho...?
-        λ cbComps scComps → ~ᵣtermproof scΓ ~cb cbComps scComps
-~ᵣtermproof scΓ (S.~ᵣηvec ~ ~₁) aComps cComps = {!   !}
+        (λ []bComps c[]Comps → ~ᵣtermproof cΓₛ ~[]b []bComps c[]Comps) 
+        λ ∷bComps c∷bComps → ~ᵣtermproof {!   !} ~∷b ∷bComps {!   !}
+~ᵣtermproof cΓₛ (S.~ᵣηvec ~ ~₁) aComps cComps = {!   !}
 ---- Types
-~ᵣtermproof {ta = ta} scΓ (S.~ᵣlist ~) aComps cComps = Te.compAbsurd {a = ta} aComps 
-~ᵣtermproof {ta = ta} scΓ (S.~ᵣpiω ~ ~₁) aComps cComps = Te.compAbsurd {a = ta} aComps
-~ᵣtermproof {ta = ta} scΓ (S.~ᵣpi𝟘 ~) aComps cComps = Te.compAbsurd {a = ta} aComps
-~ᵣtermproof {ta = ta} scΓ (S.~ᵣpir ~) aComps cComps = Te.compAbsurd {a = ta} aComps
-~ᵣtermproof {ta = ta} scΓ (S.~ᵣvecω ~ ~₁) aComps cComps = Te.compAbsurd {a = ta} aComps
-~ᵣtermproof {ta = ta} scΓ (S.~ᵣvec𝟘 ~) aComps cComps = Te.compAbsurd {a = ta} aComps
+~ᵣtermproof {aₜ = aₜ} cΓₛ (S.~ᵣlist ~) aComps cComps = Te.compAbsurd {a = aₜ} aComps 
+~ᵣtermproof {aₜ = aₜ} cΓₛ (S.~ᵣpiω ~ ~₁) aComps cComps = Te.compAbsurd {a = aₜ} aComps
+~ᵣtermproof {aₜ = aₜ} cΓₛ (S.~ᵣpi𝟘 ~) aComps cComps = Te.compAbsurd {a = aₜ} aComps
+~ᵣtermproof {aₜ = aₜ} cΓₛ (S.~ᵣpir ~) aComps cComps = Te.compAbsurd {a = aₜ} aComps
+~ᵣtermproof {aₜ = aₜ} cΓₛ (S.~ᵣvecω ~ ~₁) aComps cComps = Te.compAbsurd {a = aₜ} aComps
+~ᵣtermproof {aₜ = aₜ} cΓₛ (S.~ᵣvec𝟘 ~) aComps cComps = Te.compAbsurd {a = aₜ} aComps
 
 
 lemmaWeakenType : 
-    (sA : S.Term) → 
+    (Aₛ : S.Term) → 
     (i : ℕ) → 
     (l : ℕ) →
-    compileType sA compilesTypeTo tA →
-    compileType (S.shiftindices sA i l) compilesTypeTo tA
-lemmaWeakenType S.Nat i l sAComps = sAComps
+    compileType Aₛ compilesTypeTo Aₜ →
+    compileType (S.shiftindices Aₛ i l) compilesTypeTo Aₜ
+lemmaWeakenType S.Nat i l AₛComps = AₛComps
 lemmaWeakenType (S.List A) i l bindComps = 
     Ty.lemmaBindSubstBase
         (compileType A) (compileType (S.shiftindices A i l))
-        (λ tA₁ → just (T.List tA₁))
+        (λ Aₜ₁ → just (T.List Aₜ₁))
         bindComps
         λ {A = A₁} → lemmaWeakenType A i l
 lemmaWeakenType (S.Vec A (n 𝕢 𝟘)) i l bindComps = 
     Ty.lemmaBindSubstBase
         (compileType A) (compileType (S.shiftindices A i l))
-        (λ tA₁ → just (T.List tA₁))
+        (λ Aₜ₁ → just (T.List Aₜ₁))
         bindComps
         λ {A = A₁} → lemmaWeakenType A i l
 lemmaWeakenType (S.Vec A (n 𝕢 ω)) i l bindComps = 
     Ty.lemmaBindSubstBase
         (compileType A) (compileType (S.shiftindices A i l))
-        (λ tA₁ → just (T.Vec tA₁))
+        (λ Aₜ₁ → just (T.Vec Aₜ₁))
         bindComps
         λ {A = A₁} → lemmaWeakenType A i l
 lemmaWeakenType (S.∶ A 𝕢 𝟘 ⟶ B) i l bindComps = lemmaWeakenType B i (suc l) bindComps
@@ -618,9 +647,9 @@ lemmaWeakenType (S.∶ A 𝕢 ω ⟶ B) i l bindComps =
         where
             A↑ = S.shiftindices A i l
             B↑ = S.shiftindices B i (suc l)
-            body-base = λ tA tB → just (tA T.⟶ tB)
-            body-B = λ tA → compileType B >>= body-base tA
-            body-B↑ = λ tA → compileType B↑ >>= body-base tA
+            body-base = λ Aₜ Bₜ → just (Aₜ T.⟶ Bₜ)
+            body-B = λ Aₜ → compileType B >>= body-base Aₜ
+            body-B↑ = λ Aₜ → compileType B↑ >>= body-base Aₜ
 lemmaWeakenType (S.r∶ A ⟶ B) i l bindComps = 
     Ty.lemmaBindSubstInd
         (compileType A) (compileType A↑)
@@ -636,26 +665,26 @@ lemmaWeakenType (S.r∶ A ⟶ B) i l bindComps =
         where
             A↑ = S.shiftindices A i l
             B↑ = S.shiftindices B i (suc l)
-            body-base = λ tA tB → just (tA T.⟶ tB)
-            body-B = λ tA → compileType B >>= body-base tA
-            body-B↑ = λ tA → compileType B↑ >>= body-base tA
+            body-base = λ Aₜ Bₜ → just (Aₜ T.⟶ Bₜ)
+            body-B = λ Aₜ → compileType B >>= body-base Aₜ
+            body-B↑ = λ Aₜ → compileType B↑ >>= body-base Aₜ
 
 ~ᵣtypeproof :
-    sA ~ᵣ sB → 
-    (compileType sA) compilesTypeTo tA →
-    (compileType sB) compilesTypeTo tB →
-    tA ↔ty tB
-~ᵣtypeproof {sA} S.~ᵣrefl AComps BComps = 
-    Ty.compIsDeterministic (compileType sA) AComps BComps
-~ᵣtypeproof {sA} (S.~ᵣsym ~) AComps BComps = Ty.lemmaSym (~ᵣtypeproof ~ BComps AComps)
-~ᵣtypeproof {sA} (S.~ᵣtrans ~ ~₁) AComps BComps = Ty.lemmaTrans (~ᵣtypeproof ~ AComps {!   !}) {!   !}
+    Aₛ ~ᵣ Bₛ → 
+    (compileType Aₛ) compilesTypeTo Aₜ →
+    (compileType Bₛ) compilesTypeTo Bₜ →
+    Aₜ ↔ty Bₜ
+~ᵣtypeproof {Aₛ} S.~ᵣrefl AComps BComps = 
+    Ty.compIsDeterministic (compileType Aₛ) AComps BComps
+~ᵣtypeproof {Aₛ} (S.~ᵣsym ~) AComps BComps = Ty.lemmaSym (~ᵣtypeproof ~ BComps AComps)
+~ᵣtypeproof {Aₛ} (S.~ᵣtrans ~ ~₁) AComps BComps = Ty.lemmaTrans (~ᵣtypeproof ~ AComps {!   !}) {!   !}
 ~ᵣtypeproof {S.List .A} (S.~ᵣlist {A} {B} ~) ABindComps BBindComps = 
     Ty.lemmaBindBase
         (compileType A) (compileType B)
-        (λ tA₁ → just (T.List tA₁))
+        (λ Aₜ₁ → just (T.List Aₜ₁))
         ABindComps BBindComps
         λ AComps BComps → ~ᵣtypeproof ~ AComps BComps
-~ᵣtypeproof {sA} (S.~ᵣpiω {A} {C} {B = B} {D} ~ ~₁) ABindComps CBindCompss = 
+~ᵣtypeproof {Aₛ} (S.~ᵣpiω {A} {C} {B = B} {D} ~ ~₁) ABindComps CBindCompss = 
     Ty.lemmaBindInd
         (compileType A) (compileType C)
         body-B body-D
@@ -668,12 +697,12 @@ lemmaWeakenType (S.r∶ A ⟶ B) i l bindComps =
                 BBindComps DBindComps
                 λ BComps DComps → ~ᵣtypeproof ~₁ BComps DComps
         where
-            body-base = λ tA tB → just (tA T.⟶ tB)
-            body-D = λ tA → compileType D >>= body-base tA
-            body-B = λ tA → compileType B >>= body-base tA
-~ᵣtypeproof {sA} {sB} (S.~ᵣpi𝟘 {A = A} ~) AComps BComps =  
-    ~ᵣtypeproof ~ AComps (lemmaWeakenType sB 1 0 BComps)
-~ᵣtypeproof {sA} (S.~ᵣpir {A} {B} ~) ABindCompsₗ ABindCompsᵣ = 
+            body-base = λ Aₜ Bₜ → just (Aₜ T.⟶ Bₜ)
+            body-D = λ Aₜ → compileType D >>= body-base Aₜ
+            body-B = λ Aₜ → compileType B >>= body-base Aₜ
+~ᵣtypeproof {Aₛ} {Bₛ} (S.~ᵣpi𝟘 {A = A} ~) AComps BComps =  
+    ~ᵣtypeproof ~ AComps (lemmaWeakenType Bₛ 1 0 BComps)
+~ᵣtypeproof {Aₛ} (S.~ᵣpir {A} {B} ~) ABindCompsₗ ABindCompsᵣ = 
     Ty.lemmaBindInd
         (compileType A) (compileType A)
         body-B body-A
@@ -686,19 +715,20 @@ lemmaWeakenType (S.r∶ A ⟶ B) i l bindComps =
                 BBindComps ABindComps
                 λ BComps AComps → Ty.lemmaSym (~ᵣtypeproof ~ AComps BComps)
         where
-            body-base = λ tA tB → just (tA T.⟶ tB)
-            body-B = λ tA → compileType B >>= body-base tA
-            body-A = λ tA → compileType A >>= body-base tA  
-~ᵣtypeproof {sA} (S.~ᵣvecω {A = A} {B} ~n ~A) ABindComps BBindComps = 
+            body-base = λ Aₜ Bₜ → just (Aₜ T.⟶ Bₜ)
+            body-B = λ Aₜ → compileType B >>= body-base Aₜ
+            body-A = λ Aₜ → compileType A >>= body-base Aₜ  
+~ᵣtypeproof {Aₛ} (S.~ᵣvecω {A = A} {B} ~n ~A) ABindComps BBindComps = 
     Ty.lemmaBindBase
         (compileType A) (compileType B)
-        (λ tA → just (T.Vec tA))
+        (λ Aₜ → just (T.Vec Aₜ))
         ABindComps BBindComps
         λ AComps BComps → ~ᵣtypeproof ~A AComps BComps
-~ᵣtypeproof {sA} (S.~ᵣvec𝟘 {A} {B} ~) ABindComps BBindComps = 
+~ᵣtypeproof {Aₛ} (S.~ᵣvec𝟘 {A} {B} ~) ABindComps BBindComps = 
     Ty.lemmaBindBase
         (compileType A) (compileType B)
-        (λ tA → just (T.List tA))
+        (λ Aₜ → just (T.List Aₜ))
         ABindComps BBindComps
         λ AComps BComps → ~ᵣtypeproof ~ AComps BComps
 
+    

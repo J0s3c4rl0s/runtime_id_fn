@@ -14,7 +14,6 @@ open import Data.Nat
 open import Data.Bool using (if_then_else_; Bool)
 open import Data.Sum
 open import Data.Maybe 
--- open import Relation.Nullary.Decidable
 open import Agda.Builtin.Equality.Rewrite
 
 private variable
@@ -38,7 +37,12 @@ module Weakening where
     open import Relation.Binary.PropositionalEquality
     open import Data.Nat.Properties using (+-comm)
 
-    insertSkip : {cΓₛ : S.Context Γₛ} → ContextRemap cΓₛ → (i : ℕ) → (p : i ≤ S.conLen Γₛ)  → (Aₛ : S.Type) → ContextRemap (S.insertType cΓₛ i p Aₛ 𝟘)
+    insertSkip : {cΓₛ : S.Context Γₛ} → 
+        ContextRemap cΓₛ → 
+        (i : ℕ) → 
+        (p : i ≤ S.conLen Γₛ)  → 
+        (Aₛ : S.Type) → 
+        ContextRemap (S.insertType cΓₛ i p Aₛ 𝟘)
     insertSkip rΓ zero z≤n Aₛ = rΓ ,ᵣ Aₛ skip
     insertSkip (rΓ ,ᵣ Bₛ skip) (suc i) (s≤s p) Aₛ = insertSkip rΓ i p Aₛ ,ᵣ S.shiftindices Bₛ 1 i skip
     insertSkip (rΓ ,ᵣ Bₛ ↦ Bₜ) (suc i) (s≤s p) Aₛ = insertSkip rΓ i p Aₛ ,ᵣ S.shiftindices Bₛ 1 i ↦ Bₜ
@@ -70,7 +74,9 @@ module Weakening where
             rewrite ,ᵣskip-injective₁ bindComps = refl
 
     invertRemapAss₁ :     
-        (compileRemap cΓₛ >>= (λ rΓ₁ → compileType Aₛ >>= (λ Aₜ → just (rΓ₁ ,ᵣ Aₛ ↦ Aₜ)))) ≡ just (rΓ ,ᵣ Aₛ ↦ Aₜ) →
+        (compileRemap cΓₛ >>= (λ rΓ₁ → compileType Aₛ >>= (λ Aₜ → just (rΓ₁ ,ᵣ Aₛ ↦ Aₜ)))) 
+            ≡ 
+        just (rΓ ,ᵣ Aₛ ↦ Aₜ) →
         compileRemap cΓₛ ≡ just rΓ
     invertRemapAss₁ {cΓₛ = S.[]} {rΓ = []ᵣ} bindComps = refl
     invertRemapAss₁ {cΓₛ = cΓₛ S., A 𝕢 𝟘} {Aₛ} {rΓ = rΓ ,ᵣ .A skip} bindComps with compileRemap cΓₛ | compileType Aₛ
@@ -98,7 +104,7 @@ module Weakening where
     -- rewrite rule?
     if-injective : ∀ {cond : Bool} {cons : A → B} {x₁ x₂ : A} →
         (if cond then cons x₁ else cons x₂) 
-        ≡ 
+            ≡ 
         cons (if cond then x₁ else x₂)
     if-injective {cond = Bool.false} = refl
     if-injective {cond = Bool.true} = refl
@@ -357,6 +363,69 @@ module Weakening where
     lemmaWeakenTerm (S.∶ A 𝕢 σ ⟶ x₁) cΓₛ i p Bₛ aₛComps = aₛComps
     lemmaWeakenTerm (S.r∶ x ⟶ x₁) cΓₛ i p Bₛ aₛComps = aₛComps 
     lemmaWeakenTerm (S.Sett x) cΓₛ i p Bₛ aₛComps = aₛComps 
+    
+    lemmaWeakenType : 
+        (Aₛ : S.Term) → 
+        (i : ℕ) → 
+        (l : ℕ) →
+        compileType Aₛ compilesTypeTo Aₜ →
+        compileType (S.shiftindices Aₛ i l) compilesTypeTo Aₜ
+    lemmaWeakenType S.Nat i l AₛComps = AₛComps
+    lemmaWeakenType (S.List A) i l bindComps = 
+        Ty.lemmaBindSubstBase
+            (compileType A) (compileType (S.shiftindices A i l))
+            (λ Aₜ₁ → just (T.List Aₜ₁))
+            bindComps
+            λ {A = A₁} → lemmaWeakenType A i l
+    lemmaWeakenType (S.Vec A (n 𝕢 𝟘)) i l bindComps = 
+        Ty.lemmaBindSubstBase
+            (compileType A) (compileType (S.shiftindices A i l))
+            (λ Aₜ₁ → just (T.List Aₜ₁))
+            bindComps
+            λ {A = A₁} → lemmaWeakenType A i l
+    lemmaWeakenType (S.Vec A (n 𝕢 ω)) i l bindComps = 
+        Ty.lemmaBindSubstBase
+            (compileType A) (compileType (S.shiftindices A i l))
+            (λ Aₜ₁ → just (T.Vec Aₜ₁))
+            bindComps
+            λ {A = A₁} → lemmaWeakenType A i l
+    lemmaWeakenType (S.∶ A 𝕢 𝟘 ⟶ B) i l bindComps = lemmaWeakenType B i (suc l) bindComps
+    lemmaWeakenType (S.∶ A 𝕢 ω ⟶ B) i l bindComps = 
+        Ty.lemmaBindSubstInd
+            (compileType A) (compileType A↑)
+            body-B body-B↑
+            bindComps
+            (λ AComps → lemmaWeakenType A i l AComps)
+            λ res BBindComps → 
+                Ty.lemmaBindSubstBase
+                    (compileType B) (compileType B↑)
+                    (body-base res)
+                    BBindComps
+                    λ BComps → lemmaWeakenType B i (suc l) BComps
+            where
+                A↑ = S.shiftindices A i l
+                B↑ = S.shiftindices B i (suc l)
+                body-base = λ Aₜ Bₜ → just (Aₜ T.⟶ Bₜ)
+                body-B = λ Aₜ → compileType B >>= body-base Aₜ
+                body-B↑ = λ Aₜ → compileType B↑ >>= body-base Aₜ
+    lemmaWeakenType (S.r∶ A ⟶ B) i l bindComps = 
+        Ty.lemmaBindSubstInd
+            (compileType A) (compileType A↑)
+            body-B body-B↑
+            bindComps
+            (λ AComps → lemmaWeakenType A i l AComps)
+            λ res BBindComps → 
+                Ty.lemmaBindSubstBase
+                    (compileType B) (compileType B↑)
+                    (body-base res)
+                    BBindComps
+                    λ BComps → lemmaWeakenType B i (suc l) BComps
+            where
+                A↑ = S.shiftindices A i l
+                B↑ = S.shiftindices B i (suc l)
+                body-base = λ Aₜ Bₜ → just (Aₜ T.⟶ Bₜ)
+                body-B = λ Aₜ → compileType B >>= body-base Aₜ
+                body-B↑ = λ Aₜ → compileType B↑ >>= body-base Aₜ
 
 open Weakening
 
@@ -604,70 +673,6 @@ open ElimExt
 ~ᵣtermproof {aₜ = aₜ} cΓₛ (S.~ᵣpir ~) aComps cComps = Te.compAbsurd {a = aₜ} aComps
 ~ᵣtermproof {aₜ = aₜ} cΓₛ (S.~ᵣvecω ~ ~₁) aComps cComps = Te.compAbsurd {a = aₜ} aComps
 ~ᵣtermproof {aₜ = aₜ} cΓₛ (S.~ᵣvec𝟘 ~) aComps cComps = Te.compAbsurd {a = aₜ} aComps
-
-
-lemmaWeakenType : 
-    (Aₛ : S.Term) → 
-    (i : ℕ) → 
-    (l : ℕ) →
-    compileType Aₛ compilesTypeTo Aₜ →
-    compileType (S.shiftindices Aₛ i l) compilesTypeTo Aₜ
-lemmaWeakenType S.Nat i l AₛComps = AₛComps
-lemmaWeakenType (S.List A) i l bindComps = 
-    Ty.lemmaBindSubstBase
-        (compileType A) (compileType (S.shiftindices A i l))
-        (λ Aₜ₁ → just (T.List Aₜ₁))
-        bindComps
-        λ {A = A₁} → lemmaWeakenType A i l
-lemmaWeakenType (S.Vec A (n 𝕢 𝟘)) i l bindComps = 
-    Ty.lemmaBindSubstBase
-        (compileType A) (compileType (S.shiftindices A i l))
-        (λ Aₜ₁ → just (T.List Aₜ₁))
-        bindComps
-        λ {A = A₁} → lemmaWeakenType A i l
-lemmaWeakenType (S.Vec A (n 𝕢 ω)) i l bindComps = 
-    Ty.lemmaBindSubstBase
-        (compileType A) (compileType (S.shiftindices A i l))
-        (λ Aₜ₁ → just (T.Vec Aₜ₁))
-        bindComps
-        λ {A = A₁} → lemmaWeakenType A i l
-lemmaWeakenType (S.∶ A 𝕢 𝟘 ⟶ B) i l bindComps = lemmaWeakenType B i (suc l) bindComps
-lemmaWeakenType (S.∶ A 𝕢 ω ⟶ B) i l bindComps = 
-    Ty.lemmaBindSubstInd
-        (compileType A) (compileType A↑)
-        body-B body-B↑
-        bindComps
-        (λ AComps → lemmaWeakenType A i l AComps)
-        λ res BBindComps → 
-            Ty.lemmaBindSubstBase
-                (compileType B) (compileType B↑)
-                (body-base res)
-                BBindComps
-                λ BComps → lemmaWeakenType B i (suc l) BComps
-        where
-            A↑ = S.shiftindices A i l
-            B↑ = S.shiftindices B i (suc l)
-            body-base = λ Aₜ Bₜ → just (Aₜ T.⟶ Bₜ)
-            body-B = λ Aₜ → compileType B >>= body-base Aₜ
-            body-B↑ = λ Aₜ → compileType B↑ >>= body-base Aₜ
-lemmaWeakenType (S.r∶ A ⟶ B) i l bindComps = 
-    Ty.lemmaBindSubstInd
-        (compileType A) (compileType A↑)
-        body-B body-B↑
-        bindComps
-        (λ AComps → lemmaWeakenType A i l AComps)
-        λ res BBindComps → 
-            Ty.lemmaBindSubstBase
-                (compileType B) (compileType B↑)
-                (body-base res)
-                BBindComps
-                λ BComps → lemmaWeakenType B i (suc l) BComps
-        where
-            A↑ = S.shiftindices A i l
-            B↑ = S.shiftindices B i (suc l)
-            body-base = λ Aₜ Bₜ → just (Aₜ T.⟶ Bₜ)
-            body-B = λ Aₜ → compileType B >>= body-base Aₜ
-            body-B↑ = λ Aₜ → compileType B↑ >>= body-base Aₜ
 
 ~ᵣtypeproof :
     Aₛ ~ᵣ Bₛ → 

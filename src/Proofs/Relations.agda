@@ -152,19 +152,18 @@ open Ty
     using (_↔ty_)
     renaming (_compilesTo_ to _compilesTypeTo_) public
 
-module TermComps (_↔te_ : T.Term → T.Term → Set) where
-    private variable
-                sΓ : S.PreContext
-                scΓ : S.Context sΓ
-                ma mb mc : Maybe T.Term
-                a b c : T.Term
+-- module TermComps (_↔te_ : T.Term → T.Term → Set) where
+--     private variable
+--                 sΓ : S.PreContext
+--                 scΓ : S.Context sΓ
+--                 ma mb mc : Maybe T.Term
+--                 a b c : T.Term
 
-    ⟦_⊢_⟧ : S.Context sΓ → S.Term → Set
-    ⟦ scΓ ⊢ a ⟧ = Σ[ ta ∈ T.Term ] compileTerm scΓ a ≡ just ta
+--     ⟦_⊢_⟧ : S.Context sΓ → S.Term → Set
+--     ⟦ scΓ ⊢ a ⟧ = Σ[ ta ∈ T.Term ] compileTerm scΓ a ≡ just ta
 
-    _⊢_⇒te_ : (scΓ : S.Context sΓ) → (a : S.Term) → T.Term → Set
-    _⊢_⇒te_ scΓ a tb = Σ[ (ta , _) ∈ ⟦ scΓ ⊢ a ⟧ ] (ta ↔te tb)
-    -- (ta , snd) ⇒te tb = ta ↔te tb
+--     _⊢_⇒te_ : (scΓ : S.Context sΓ) → (a : S.Term) → T.Term → Set
+--     _⊢_⇒te_ scΓ a tb = Σ[ (ta , _) ∈ ⟦ scΓ ⊢ a ⟧ ] (ta ↔te tb)
 
 module Te where
     abstract
@@ -179,8 +178,8 @@ module Te where
         _↔te_ = _≡_
 
         open Compiles _↔te_ public
-        open TermComps _↔te_ public
-        
+        -- open TermComps _↔te_ public
+
         lemmaRefl : a ↔te a
         lemmaRefl = refl
 
@@ -192,14 +191,19 @@ module Te where
 
         import Data.Maybe.Properties as MaybeProps
 
-        TeDeterministic : 
-            (scΓ : S.Context sΓ) →
-            (sa : S.Term) → 
-            (scΓ ⊢ sa ⇒te a) →  
-            (scΓ ⊢ sa ⇒te b) →  
-            a ↔te b   
-        TeDeterministic _ _ ((ta , taComps) , ta↔a) ((tb , tbComps) , tb↔b)
-            rewrite taComps | MaybeProps.just-injective tbComps = lemmaTrans (lemmaSym ta↔a) tb↔b
+        -- TeDeterministic : 
+        --     (scΓ : S.Context sΓ) →
+        --     (sa : S.Term) → 
+        --     (scΓ ⊢ sa ⇒te a) →  
+        --     (scΓ ⊢ sa ⇒te b) →  
+        --     a ↔te b   
+        -- TeDeterministic _ _ ((ta , taComps) , ta↔a) ((tb , tbComps) , tb↔b)
+        --     rewrite taComps | MaybeProps.just-injective tbComps = lemmaTrans (lemmaSym ta↔a) tb↔b
+
+        _⊢_⇒te_ : (scΓ : S.Context sΓ) → (a : S.Term) → T.Term → Set
+        scΓ ⊢ aₛ ⇒te aₜ with compileTerm scΓ aₛ
+        ... | just res = {!   !}
+        ... | nothing = ⊥
 
         compIsDeterministic : 
             (ma : Maybe T.Term) →

@@ -49,8 +49,8 @@ data _⊢_∶_ : Context → Term → Type → Set where
         Γ ⊢ a ∷l b ∶ List A
     ⊢listel : 
         Γ ⊢ l ∶ List A →
-        Γ ⊢ nb ∶ P → -- !!!! put things in the context
-        Γ ⊢ cb ∶ P → 
+        Γ ⊢ nb ∶ P → 
+        (((Γ , A) , List A) , P) ⊢ cb ∶ P → 
         Γ ⊢ eliml l 
                 nb∶ nb 
                 cb∶ cb 

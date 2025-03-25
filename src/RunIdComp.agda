@@ -3,11 +3,11 @@ module RunIdComp where
 import RunId as S 
 import STLC as T
 
----- Directly import syntax only used in S 
+---- Directly import synaₜx only used in S 
 open S using (
     -- Quantities 
     𝟘; ω; 
-    -- Annotations
+    -- Annoaₜtions
     _𝕢_)
 
 open import Data.Unit using (⊤; tt)
@@ -22,191 +22,185 @@ _>>_ : {A B : Set} → Maybe A → Maybe B → Maybe B
 m >> n = m >>= λ _ → n
 
 private variable
-    sΓ : S.PreContext
-    scΓ : S.Context sΓ
-    tΓ : T.Context
+    Γₛ : S.PreContext
+    cΓₛ : S.Context Γₛ
 
 -- Figure out how it actually makes sense to keep track of indices 
-data ContextRemap : S.Context sΓ  → Set where
+data ContextRemap : S.Context Γₛ  → Set where
     []ᵣ : ContextRemap S.[]
-    _,ᵣ_skip : ContextRemap scΓ → (sA : S.Term) → ContextRemap (scΓ S., sA S.𝕢 S.𝟘)  
-    _,ᵣ_↦_ : ContextRemap scΓ → (sA : S.Term) → (tA : T.Type) → ContextRemap (scΓ S., sA S.𝕢 S.ω)
+    _,ᵣ_skip : ContextRemap cΓₛ → (Aₛ : S.Term) → ContextRemap (cΓₛ S., Aₛ S.𝕢 𝟘)  
+    _,ᵣ_↦_ : ContextRemap cΓₛ → (Aₛ : S.Term) → (Aₜ : T.Type) → ContextRemap (cΓₛ S., Aₛ S.𝕢 ω)
 
 compileType : S.Type → Maybe T.Type
 
-compileRemap : (scΓ : S.Context sΓ) → Maybe (ContextRemap scΓ) 
+compileRemap : (cΓₛ : S.Context Γₛ) → Maybe (ContextRemap cΓₛ) 
 compileRemap S.[] = just []ᵣ 
-compileRemap (scΓ S., sA S.𝕢 S.𝟘) = do 
-    rΓ ← compileRemap scΓ
-    just (rΓ ,ᵣ sA skip)
-compileRemap (scΓ S., sA S.𝕢 S.ω) = do 
-    rΓ ← compileRemap scΓ
-    tA ← compileType sA
-    just (rΓ ,ᵣ sA ↦ tA) 
+compileRemap (cΓₛ S., Aₛ S.𝕢 𝟘) = do 
+    rΓ ← compileRemap cΓₛ
+    just (rΓ ,ᵣ Aₛ skip)
+compileRemap (cΓₛ S., Aₛ S.𝕢 ω) = do 
+    rΓ ← compileRemap cΓₛ
+    Aₜ ← compileType Aₛ
+    just (rΓ ,ᵣ Aₛ ↦ Aₜ) 
 
--- outside of FP this could be a collection of ints to skip over and do maths instead
-remapIndex : ℕ → ContextRemap scΓ → Maybe ℕ
+-- ousₜide of FP this could be a collection of insₜ to skip over and do maths instead
+remapIndex : ℕ → ContextRemap cΓₛ → Maybe ℕ
 remapIndex i []ᵣ = nothing
-remapIndex zero (scΓ ,ᵣ sA skip) = nothing
+remapIndex zero (cΓₛ ,ᵣ Aₛ skip) = nothing
 -- this entry wont exist so decrement index
-remapIndex (suc i) (scΓ ,ᵣ sA skip) = remapIndex i scΓ
-remapIndex zero (scΓ ,ᵣ sA ↦ tA) = just zero
-remapIndex (suc i) (scΓ ,ᵣ sA ↦ tA) = do 
-    n ← remapIndex i scΓ 
+remapIndex (suc i) (cΓₛ ,ᵣ Aₛ skip) = remapIndex i cΓₛ
+remapIndex zero (cΓₛ ,ᵣ Aₛ ↦ Aₜ) = just zero
+remapIndex (suc i) (cΓₛ ,ᵣ Aₛ ↦ Aₜ) = do 
+    n ← remapIndex i cΓₛ 
     just (suc n)
-
-lookupType : S.Context sΓ → ℕ → Maybe (S.Type × S.Quantity) 
-lookupType S.[] i = nothing
-lookupType (scon S., A S.𝕢 σ) zero = just (A , σ) 
-lookupType (scon S., A S.𝕢 σ) (suc i) = lookupType scon i
 
 
 compileType S.Nat = just T.Nat
-compileType (S.List sA) = do 
-    tA ← compileType sA 
-    just (T.List tA) 
-compileType (S.Vec sA (_ S.𝕢 S.𝟘)) = do 
-    tA ← compileType sA
-    just (T.List tA) 
-compileType (S.Vec sA (_ S.𝕢 S.ω)) = do 
-    tA ← compileType sA
-    just (T.Vec tA)
-compileType (S.∶ sA 𝕢 𝟘 ⟶ sB) = compileType sB
-compileType (S.∶ sA 𝕢 ω ⟶ sB) = do 
-    tA ← compileType sA 
-    tB ← compileType sB
-    just (tA T.⟶ tB)
+compileType (S.List Aₛ) = do 
+    Aₜ ← compileType Aₛ 
+    just (T.List Aₜ) 
+compileType (S.Vec Aₛ (_ S.𝕢 𝟘)) = do 
+    Aₜ ← compileType Aₛ
+    just (T.List Aₜ) 
+compileType (S.Vec Aₛ (_ S.𝕢 ω)) = do 
+    Aₜ ← compileType Aₛ
+    just (T.Vec Aₜ)
+compileType (S.∶ Aₛ 𝕢 𝟘 ⟶ Bₛ) = compileType Bₛ
+compileType (S.∶ Aₛ 𝕢 ω ⟶ Bₛ) = do 
+    Aₜ ← compileType Aₛ 
+    Bₜ ← compileType Bₛ
+    just (Aₜ T.⟶ Bₜ)
 -- Force into id? Or compile normally?
-compileType (S.r∶ sA ⟶ sB) = do 
-    tA ← compileType sA 
-    tB ← compileType sB
-    just (tA T.⟶ tB)
+compileType (S.r∶ Aₛ ⟶ Bₛ) = do 
+    Aₜ ← compileType Aₛ 
+    Bₜ ← compileType Bₛ
+    just (Aₜ T.⟶ Bₜ)
 -- Not sure what to do here... reject?
 compileType (S.Sett l) = nothing
 -- Reject terms in type positon.
-compileType sA = nothing
+compileType Aₛ = nothing
 
-compileTerm : (scΓ : S.Context sΓ) → S.Term → Maybe T.Term
-compileTerm scon (S.var x) = do 
+compileTerm : (cΓₛ : S.Context Γₛ) → S.Term → Maybe T.Term
+compileTerm cΓₛ (S.var x) = do 
     -- Compute remap
-    remap ← compileRemap scon
+    remap ← compileRemap cΓₛ
     -- Recompute index (how)?
-    n ← remapIndex x remap
+    n ← remapIndex x remap 
     just (T.var n)
 -- shift indices tbody ? Wont it automatically be shifted down?
-compileTerm scon (S.ƛ∶ sA S.𝕢 S.𝟘 ♭ sbody) = compileTerm (scon S., sA S.𝕢 S.𝟘) sbody
+compileTerm cΓₛ (S.ƛ∶ Aₛ S.𝕢 𝟘 ♭ sbody) = compileTerm (cΓₛ S., Aₛ S.𝕢 𝟘) sbody
 -- what abt (lambda (f : a runid-> b). f 42) (lambda. 6)
 -- Options: 
----- 1. Remove beta reduction 
----- 2. Require well typed for beta reduction 
-compileTerm scon (S.ƛ∶ sA S.𝕢 S.ω ♭ sbody) = do 
-    tbody ← compileTerm (scon S., sA S.𝕢 S.ω) sbody
+---- 1. Remove beaₜ reduction 
+---- 2. Require well typed for beaₜ reduction 
+compileTerm cΓₛ (S.ƛ∶ Aₛ S.𝕢 ω ♭ sbody) = do 
+    tbody ← compileTerm (cΓₛ S., Aₛ S.𝕢 ω) sbody
     just (T.ƛ tbody) 
 -- reject when erased? 
 -- builtin id function?
-compileTerm scon (S.ƛr∶ sA ♭ sterm) = do 
-    -- should I try compiling sA just in case?
+compileTerm cΓₛ (S.ƛr∶ Aₛ ♭ aₛ) = do 
+    -- should I try compiling Aₛ just in case?
     just (T.ƛ (T.var 0)) 
-compileTerm scon (sf S.· sa 𝕢 S.𝟘) = compileTerm scon sf
-compileTerm scon (sf S.· sa 𝕢 S.ω) = do 
-    tf ← compileTerm scon sf 
-    ta ← compileTerm scon sa 
-    just (tf T.· ta) 
+compileTerm cΓₛ (fₛ S.· aₛ 𝕢 𝟘) = compileTerm cΓₛ fₛ
+compileTerm cΓₛ (fₛ S.· aₛ 𝕢 ω) = do 
+    fₜ ← compileTerm cΓₛ fₛ 
+    aₜ ← compileTerm cΓₛ aₛ 
+    just (fₜ T.· aₜ) 
 -- Replace by arg
-compileTerm scon (sf S.·ᵣ sa) = compileTerm scon sa
-compileTerm scon S.z = just T.z
-compileTerm scon (S.s sa) = do 
-    ta ← compileTerm scon sa 
-    just (T.s ta) 
-compileTerm scon S.nill = just T.nill
-compileTerm scon (sa S.∷l sas) = do 
-    ta ← compileTerm scon sa 
-    tas ← compileTerm scon sas 
-    just (ta T.∷l tas) 
-compileTerm scon (S.nilv𝕢 S.𝟘) = just T.nill
-compileTerm scon (S.nilv𝕢 S.ω) = just T.nilv
-compileTerm scon (sa S.∷v sas 𝕟 sn 𝕢 S.𝟘) = do 
-    ta ← compileTerm scon sa 
-    tas ← compileTerm scon sas 
-    just (ta T.∷l tas) 
-compileTerm scon (sa S.∷v sas 𝕟 sn 𝕢 S.ω) = do 
-    ta ← compileTerm scon sa 
-    tas ← compileTerm scon sas 
-    tn ← compileTerm scon sn 
-    just (ta T.∷v tas 𝕟 tn)
+compileTerm cΓₛ (fₛ S.·ᵣ aₛ) = compileTerm cΓₛ aₛ
+compileTerm cΓₛ S.z = just T.z
+compileTerm cΓₛ (S.s aₛ) = do 
+    aₜ ← compileTerm cΓₛ aₛ 
+    just (T.s aₜ) 
+compileTerm cΓₛ S.nill = just T.nill
+compileTerm cΓₛ (aₛ S.∷l asₛ) = do 
+    aₜ ← compileTerm cΓₛ aₛ 
+    asₜ ← compileTerm cΓₛ asₛ 
+    just (aₜ T.∷l asₜ) 
+compileTerm cΓₛ (S.nilv𝕢 𝟘) = just T.nill
+compileTerm cΓₛ (S.nilv𝕢 ω) = just T.nilv
+compileTerm cΓₛ (aₛ S.∷v asₛ 𝕟 nₛ 𝕢 𝟘) = do 
+    aₜ ← compileTerm cΓₛ aₛ 
+    asₜ ← compileTerm cΓₛ asₛ 
+    just (aₜ T.∷l asₜ) 
+compileTerm cΓₛ (aₛ S.∷v asₛ 𝕟 nₛ 𝕢 ω) = do 
+    aₜ ← compileTerm cΓₛ aₛ 
+    asₜ ← compileTerm cΓₛ asₛ 
+    nₜ ← compileTerm cΓₛ nₛ 
+    just (aₜ T.∷v asₜ 𝕟 nₜ)
 {-
 ---- Attempt building basic reduction optimization into compiler
--- Assume must be an unerased nat
-compileTerm scon (S.elimnat sa P∶ sP zb∶ sz sb∶ ss) = do 
-    tz ← compileTerm scon sz 
-    ts ← compileTerm (scon S., S.Nat S.𝕢 S.ω) ss 
-    T.z ← compileTerm scon sa where
-        -- substitute into ts?
-        T.s ta → just ({! ts   !})
-        ta → just (T.elimnat ta zb∶ tz sb∶ ts)  
+-- Asₛume must be an unerased nat
+compileTerm cΓₛ (S.elimnat aₛ P∶ Pₛ zb∶ zₛ sb∶ sₛ) = do 
+    zₜ ← compileTerm cΓₛ zₛ 
+    sₜ ← compileTerm (cΓₛ S., S.Nat S.𝕢 ω) sₛ 
+    T.z ← compileTerm cΓₛ aₛ where
+        -- substitute into sₜ?
+        T.s aₜ → just ({! sₜ   !})
+        aₜ → just (T.elimnat aₜ zb∶ zₜ sb∶ sₜ)  
     just {!   !}
 -}
 ---- dont optimize variant
-compileTerm scon (S.elimnat sa P∶ sP zb∶ sz sb∶ ss) = do 
-    ta ← compileTerm scon sa 
-    tz ← compileTerm scon sz 
-    ts ← compileTerm 
-        ((scon S., 
+compileTerm cΓₛ (S.elimnat aₛ P∶ Pₛ zb∶ zₛ sb∶ sₛ) = do 
+    aₜ ← compileTerm cΓₛ aₛ 
+    zₜ ← compileTerm cΓₛ zₛ 
+    sₜ ← compileTerm 
+        ((cΓₛ S., 
             S.Nat S.𝕢 ω) S., 
-            sP S.𝕢 ω) 
-        ss 
-    just (T.elimnat ta zb∶ tz sb∶ ts)
-compileTerm scon (S.eliml sa ty∶ A P∶ sP nb∶ sn cb∶ sc) = do 
-    ta ← compileTerm scon sa 
-    tn ← compileTerm scon sn 
-    -- How will compilation change the presence of the P entry? What should the usage of P be?
+            Pₛ S.𝕢 ω) 
+        sₛ 
+    just (T.elimnat aₜ zb∶ zₜ sb∶ sₜ)
+compileTerm cΓₛ (S.eliml aₛ ty∶ Aₛ P∶ Pₛ nb∶ nₛ cb∶ cₛ) = do 
+    aₜ ← compileTerm cΓₛ aₛ 
+    nₜ ← compileTerm cΓₛ nₛ 
+    -- How will compilation change the presence of the P entry? What should the uaₛge of P be?
     -- What about e.g. f x = Int? I literally _have to_ reduce this application... 
     tc ← compileTerm 
-        (((scon S., 
-            A S.𝕢 ω) S., 
-            S.List A S.𝕢 ω) S., 
-            sP S.𝕢 ω) 
-        sc 
-    just (T.eliml ta nb∶ tn cb∶ tc)
-compileTerm scon (S.elimv sa 𝕢 𝟘 ty∶ A P∶ sP nb∶ sn cb∶ sc) = do 
-    ta ← compileTerm scon sa 
-    tn ← compileTerm scon sn 
+        (((cΓₛ S., 
+            Aₛ S.𝕢 ω) S., 
+            S.List Aₛ S.𝕢 ω) S., 
+            Pₛ S.𝕢 ω) 
+        cₛ 
+    just (T.eliml aₜ nb∶ nₜ cb∶ tc)
+compileTerm cΓₛ (S.elimv aₛ 𝕢 𝟘 ty∶ Aₛ P∶ Pₛ nb∶ nₛ cb∶ cₛ) = do 
+    aₜ ← compileTerm cΓₛ aₛ 
+    nₜ ← compileTerm cΓₛ nₛ 
     tc ← compileTerm 
-        ((((scon S., 
+        ((((cΓₛ S., 
             S.Nat 𝕢 𝟘) S., 
-            A 𝕢 ω) S., 
-            S.Vec A (S.var 1 𝕢 𝟘) 𝕢 ω) S.,
-            sP 𝕢 ω) 
-        sc 
-    just (T.eliml ta nb∶ tn cb∶ tc)
-compileTerm scon (S.elimv sa 𝕢 ω ty∶ A P∶ sP nb∶ sn cb∶ sc) = do 
-    ta ← compileTerm scon sa 
-    tn ← compileTerm scon sn 
+            Aₛ 𝕢 ω) S., 
+            S.Vec Aₛ (S.var 1 𝕢 𝟘) 𝕢 ω) S.,
+            Pₛ 𝕢 ω) 
+        cₛ 
+    just (T.eliml aₜ nb∶ nₜ cb∶ tc)
+compileTerm cΓₛ (S.elimv aₛ 𝕢 ω ty∶ A P∶ Pₛ nb∶ nₛ cb∶ cₛ) = do 
+    aₜ ← compileTerm cΓₛ aₛ 
+    nₜ ← compileTerm cΓₛ nₛ 
     tc ← compileTerm  
-        ((((scon S., 
+        ((((cΓₛ S., 
             S.Nat 𝕢 ω) S., 
             A 𝕢 ω) S., 
             S.Vec A (S.var 1 𝕢 ω) 𝕢 ω) S., 
-            sP 𝕢 ω) 
-        sc 
-    just (T.elimv ta nb∶ tn cb∶ tc)
+            Pₛ 𝕢 ω) 
+        cₛ 
+    just (T.elimv aₜ nb∶ nₜ cb∶ tc)
 -- Reject types in term position
-compileTerm scon stype = nothing
+compileTerm cΓₛ Aₛ = nothing
 
 
 -- I dont actually use this rn
-compileContext : (scΓ : S.Context sΓ) → Maybe T.Context
+compileContext : (cΓₛ : S.Context Γₛ) → Maybe T.Context
 compileContext S.[] = just T.[]
-compileContext (scon S., A S.𝕢 S.𝟘) = compileContext scon
-compileContext (scon S., A S.𝕢 S.ω) = do 
-    tcon ← compileContext scon 
-    tty ← compileType A
-    just (tcon T., tty) 
+compileContext (cΓₛ S., Aₛ S.𝕢 𝟘) = compileContext cΓₛ
+compileContext (cΓₛ S., Aₛ S.𝕢 ω) = do 
+    Γₜ ← compileContext cΓₛ 
+    Aₜ ← compileType Aₛ
+    just (Γₜ T., Aₜ) 
 
 -- Would a compiler monad make sense? 
--- Top level assumes empty context
+-- Top level asₛumes empty context
 compile : S.Term → S.Type → Maybe (T.Term × T.Type) 
-compile sterm stype = do
-    tterm ← compileTerm S.[] sterm
-    ttype ← compileType stype 
-    just (tterm , ttype)
+compile aₛ Aₛ = do
+    aₜ ← compileTerm S.[] aₛ
+    Aₜ ← compileType Aₛ 
+    just (aₜ , Aₜ)

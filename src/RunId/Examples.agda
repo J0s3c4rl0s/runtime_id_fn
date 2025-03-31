@@ -78,6 +78,79 @@ module utilsTests where
             testLam : (ƛ∶ Nat 𝕢 σ ♭ var 0) [ 0 / a ] ≡ ((ƛ∶ Nat 𝕢 σ ♭ var 0))
             testLam = refl
 
+module ~ᵣTests where
+
+    --- TEST CASES FOR SUBBING I IN
+
+    -- ~ᵣelimlId0 :  
+    --     (eliml var 0 ty∶ Nat P∶ Vec Nat (n 𝕢 𝟘) 
+    --     nb∶ var 0 
+    --     cb∶ var 3)
+    --     ~ᵣ 
+    --     var 0
+    -- ~ᵣelimlId0 =
+    --     ~ᵣηlist
+    --         {!  ~ᵣrefl  !}
+    --         {!   !}
+
+    -- ~ᵣelimlId1 :  
+    --     (eliml var 1 ty∶ Nat P∶ Vec Nat (n 𝕢 𝟘) 
+    --     nb∶ var 1 
+    --     cb∶ var 4)
+    --     ~ᵣ 
+    --     var 1
+    -- ~ᵣelimlId1 =
+    --     ~ᵣηlist
+    --         {!  ~ᵣrefl  !}
+    --         {!   !}
+
+    ~ᵣelimlAcc :  
+        (eliml var 0 ty∶ Nat P∶ Vec Nat (n 𝕢 𝟘) 
+        nb∶ nilv𝕢 𝟘 
+        -- value of index (n/m) doesnt matter for this test
+        cb∶ (var 2 ∷v var 0 𝕟 m 𝕢 𝟘))
+        ~ᵣ 
+        var 0
+    ~ᵣelimlAcc =
+            ~ᵣηlist
+                ~ᵣnilv𝟘  
+                (~ᵣ∷v𝟘 ~ᵣrefl ~ᵣrefl)
+                
+    ~ᵣelimlTail : 
+        (eliml var 0 ty∶ Nat P∶ Vec Nat (n 𝕢 𝟘)
+        nb∶ nilv𝕢 𝟘 
+        -- value of index (n/m) doesnt matter for this test
+        cb∶ (var 2 ∷v var 1 𝕟 m 𝕢 𝟘))
+        ~ᵣ 
+        var 0
+    ~ᵣelimlTail = 
+        ~ᵣηlist
+            ~ᵣnilv𝟘
+            (~ᵣ∷v𝟘 ~ᵣrefl ~ᵣrefl)
+
+    ~ᵣelimvAcc :  
+        (elimv (var 0 𝕢 𝟘) ty∶ Nat P∶ List Nat 
+        nb∶ nill 
+        cb∶ (var 2 ∷l var 0))
+        ~ᵣ 
+        var 0
+    ~ᵣelimvAcc =
+        ~ᵣηvec 
+            (~ᵣsym ~ᵣnilv𝟘) 
+            (~ᵣsym (~ᵣ∷v𝟘 ~ᵣrefl ~ᵣrefl))
+                
+    ~ᵣelimvTail :  
+        (elimv (var 0 𝕢 𝟘) ty∶ Nat P∶ List Nat 
+        nb∶ nill 
+        cb∶ (var 2 ∷l var 1))
+        ~ᵣ 
+        var 0
+    ~ᵣelimvTail = 
+        ~ᵣηvec 
+            (~ᵣsym ~ᵣnilv𝟘) 
+            (~ᵣsym (~ᵣ∷v𝟘 ~ᵣrefl ~ᵣrefl))
+
+
 module typeRuleTests where
 
     -- common patterm
@@ -250,33 +323,6 @@ module typeRuleTests where
                     nb∶ nilv𝟘 
                     -- Too lazy to just fetch it directly from the vector 
                     cb∶ (var 2 ∷v var 0 𝕟𝟘 ((listLengthDef ·𝟘 Nat) ·ω var 1)))  
-
-        ~ᵣlemma : 
-            (eliml var 0 ty∶ Nat P∶ Vec Nat (((listLengthDef · Nat 𝕢 𝟘) · var 0 𝕢 ω) 𝕢 𝟘) 
-            nb∶ nilv𝕢 𝟘 
-            cb∶ (var 2 ∷v var 0 𝕟 (listLengthDef · Nat 𝕢 𝟘) · var 1 𝕢 ω 𝕢 𝟘))
-            ~ᵣ 
-            var 0
-        ~ᵣlemma = 
-            ~ᵣηlist
-                ~ᵣnilv𝟘  
-                (~ᵣ∷v𝟘 ~ᵣrefl ~ᵣrefl) 
-            {-
-            ~ᵣηlist
-                ~ᵣnilv𝟘        
-                (inj₁ (~ᵣ∷v𝟘 ~ᵣrefl ~ᵣrefl)) 
-            -}
-        ~ᵣlemma2 : 
-            (eliml var 0 ty∶ Nat P∶
-            ƛ∶ List Nat 𝕢 𝟘 ♭ List Nat
-            nb∶ nilv𝕢 𝟘 
-            cb∶ (var 2 ∷v var 1 𝕟 (listLengthDef · Nat 𝕢 𝟘) · var 1 𝕢 ω 𝕢 𝟘))
-            ~ᵣ 
-            var 0
-        ~ᵣlemma2 = 
-            ~ᵣηlist
-                ~ᵣnilv𝟘
-                (~ᵣ∷v𝟘 ~ᵣrefl ~ᵣrefl)
 
         lemmaVec＝base : Vec Nat (z 𝕢 𝟘) ＝
             Vec Nat

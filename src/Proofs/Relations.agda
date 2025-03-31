@@ -45,25 +45,46 @@ module Compiles {A : Set} (_↔_ : A → A → Set) where
 
 -- should I even differ between term and type?
 module Ty where
+
+    _⇒_ : S.Type → T.Type → Set
+    Aₛ ⇒ Aₜ = compileType Aₛ ≡ just Aₜ
+
     abstract
         private variable
-            A B C : T.Type
-
+            Aₜ Bₜ Cₜ : T.Type
+        
         -- equivalence of types
         -- Do I even need a relation or should this _always_ be syntactic?
         _↔ty_ : T.Type → T.Type → Set
         _↔ty_ = _≡_
 
-        open Compiles _↔ty_ public
-  
-        lemmaRefl : A ↔ty A
+        
+        lemmaRefl : Aₜ ↔ty Aₜ
         lemmaRefl = refl
 
-        lemmaSym : A ↔ty B → B ↔ty A 
+        lemmaSym : Aₜ ↔ty Bₜ → Bₜ ↔ty Aₜ 
         lemmaSym refl = refl
 
-        lemmaTrans : A ↔ty B → B ↔ty C → A ↔ty C  
+        lemmaTrans : Aₜ ↔ty Bₜ → Bₜ ↔ty Cₜ → Aₜ ↔ty Cₜ  
         lemmaTrans refl refl = refl
+
+        ---- CONGRUENCE RULES 
+
+        List-cong : 
+            Aₜ ↔ty Bₜ →
+            (T.List Aₜ) ↔ty (T.List Bₜ)
+        List-cong refl = refl
+
+        Vec-cong : 
+            Aₜ ↔ty Bₜ →
+            (T.Vec Aₜ) ↔ty (T.Vec Bₜ)
+        Vec-cong refl = refl
+
+        ----- OLD RULES
+        private variable
+            A B C : T.Type
+        
+        open Compiles _↔ty_ public
 
         compIsDeterministic : 
             (mA : Maybe T.Type) →
@@ -149,23 +170,27 @@ module Ty where
                 λ res resCompsL resCompsR → compIsDeterministic (body res) resCompsL resCompsR
 
 open Ty 
-    using (_↔ty_)
+    using (_↔ty_; _⇒_)
     renaming (_compilesTo_ to _compilesTypeTo_) public
 
--- module TermComps (_↔te_ : T.Term → T.Term → Set) where
---     private variable
---                 sΓ : S.PreContext
---                 scΓ : S.Context sΓ
---                 ma mb mc : Maybe T.Term
---                 a b c : T.Term
 
---     ⟦_⊢_⟧ : S.Context sΓ → S.Term → Set
---     ⟦ scΓ ⊢ a ⟧ = Σ[ ta ∈ T.Term ] compileTerm scΓ a ≡ just ta
-
---     _⊢_⇒te_ : (scΓ : S.Context sΓ) → (a : S.Term) → T.Term → Set
---     _⊢_⇒te_ scΓ a tb = Σ[ (ta , _) ∈ ⟦ scΓ ⊢ a ⟧ ] (ta ↔te tb)
 
 module Te where
+    private variable
+        Γₛ : S.PreContext
+        cΓₛ : S.Context Γₛ
+        aₜ bₜ cₜ asₜ bsₜ fₜ gₜ nₜ mₜ : T.Term
+        aₛ bₛ cₛ : S.Term
+
+    -- obs equivalence of term
+    _↔te_ : T.Term → T.Term → Set
+
+    open Compiles _↔te_ public
+    -- open TermComps _↔te_ public
+
+    _⊢_⇒_ : (cΓₛ : S.Context Γₛ) → (aₛ : S.Term) → T.Term → Set
+    cΓₛ ⊢ aₛ ⇒ aₜ = compileTerm cΓₛ aₛ ≡ just aₜ
+    
     abstract
         private variable
             sΓ : S.PreContext
@@ -173,37 +198,79 @@ module Te where
             ma mb mc : Maybe T.Term
             a b c : T.Term
         
-        -- obs equivalence of term
-        _↔te_ : T.Term → T.Term → Set
-        _↔te_ = _≡_
-
-        open Compiles _↔te_ public
-        -- open TermComps _↔te_ public
-
-        lemmaRefl : a ↔te a
-        lemmaRefl = refl
-
-        lemmaSym : a ↔te b → b ↔te a 
-        lemmaSym refl = refl
-
-        lemmaTrans : a ↔te b → b ↔te c → a ↔te c  
-        lemmaTrans refl refl = refl
 
         import Data.Maybe.Properties as MaybeProps
 
-        -- TeDeterministic : 
-        --     (scΓ : S.Context sΓ) →
-        --     (sa : S.Term) → 
-        --     (scΓ ⊢ sa ⇒te a) →  
-        --     (scΓ ⊢ sa ⇒te b) →  
-        --     a ↔te b   
-        -- TeDeterministic _ _ ((ta , taComps) , ta↔a) ((tb , tbComps) , tb↔b)
-        --     rewrite taComps | MaybeProps.just-injective tbComps = lemmaTrans (lemmaSym ta↔a) tb↔b
+        _↔te_ = _≡_
 
-        _⊢_⇒te_ : (scΓ : S.Context sΓ) → (a : S.Term) → T.Term → Set
-        scΓ ⊢ aₛ ⇒te aₜ with compileTerm scΓ aₛ
-        ... | just res = {!   !}
-        ... | nothing = ⊥
+        lemmaRefl : aₜ ↔te aₜ
+        lemmaRefl = refl
+
+        lemmaSym : aₜ ↔te bₜ → bₜ ↔te aₜ 
+        lemmaSym refl = refl
+
+        lemmaTrans : aₜ ↔te bₜ → bₜ ↔te cₜ → aₜ ↔te cₜ  
+        lemmaTrans refl refl = refl
+   
+
+        compIsDeterministic' : 
+            (cΓₛ : S.Context Γₛ) →
+            (aₛ : S.Term) →
+            cΓₛ ⊢ aₛ ⇒ aₜ  →
+            cΓₛ ⊢ aₛ ⇒ bₜ  →
+            aₜ ↔te bₜ
+        compIsDeterministic' cΓₛ aₛ compsl compsr with compileTerm cΓₛ aₛ
+        compIsDeterministic' cΓₛ aₛ refl refl | just x = refl
+        
+        ----- CONGRUENCE RULES
+        s-cong : 
+            aₜ ↔te bₜ →
+            T.s aₜ ↔te T.s bₜ        
+        s-cong refl = refl
+
+        ∷l-cong : 
+            aₜ ↔te bₜ →
+            asₜ ↔te bsₜ →
+            (aₜ T.∷l asₜ) ↔te (bₜ T.∷l bsₜ)        
+        ∷l-cong refl refl = refl
+
+        ∷v-cong : 
+            aₜ ↔te bₜ →
+            asₜ ↔te bsₜ →
+            nₜ ↔te mₜ →
+            (aₜ T.∷v asₜ 𝕟 nₜ) ↔te (bₜ T.∷v bsₜ 𝕟 mₜ)        
+        ∷v-cong = {!   !}
+
+        ƛ-cong : 
+            aₜ ↔te bₜ →
+            T.ƛ aₜ ↔te T.ƛ bₜ        
+        ƛ-cong refl = refl
+
+        ·-cong : 
+            fₜ ↔te gₜ →
+            aₜ ↔te bₜ →
+            (fₜ T.· aₜ) ↔te (gₜ T.· bₜ)
+        ·-cong refl refl = refl
+
+        ---- OLD LEMMAS
+
+        -- need funext for body?
+        lemmaBindInd' :
+            (ma : Maybe T.Term) →  
+            (mb : Maybe T.Term) →  
+            (body1 : T.Term → Maybe T.Term) →
+            (body2 : T.Term → Maybe T.Term) →
+            (ma >>= body1) compilesTo a → 
+            (mb >>= body2) compilesTo b → 
+            (inpsEqv : ∀ {c d} → ma compilesTo c → 
+                mb compilesTo d → 
+                c ↔te d) → 
+            (outsEqv : ∀ {c d} → (res : T.Term) → {_ : ma compilesTo res} →
+                body1 res compilesTo c → 
+                body2 res compilesTo d → 
+                c ↔te d) →
+            a ↔te b
+        lemmaBindInd' = {!   !}
 
         compIsDeterministic : 
             (ma : Maybe T.Term) →
@@ -316,7 +383,7 @@ module Te where
             
 
 open Te 
-    using (_↔te_; ⟦_⊢_⟧; _⊢_⇒te_) 
+    using (_↔te_; _⊢_⇒_) 
     renaming (_compilesTo_ to _compilesTermTo_) public
  
 open Compiles2 _↔te_ _↔ty_ public 

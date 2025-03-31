@@ -74,10 +74,10 @@ shiftindices nill i l = nill
 shiftindices (t ∷l t₁) i l = shiftindices t i l ∷l shiftindices t₁ i l
 shiftindices (nilv𝕢 σ) i l = nilv𝕢 σ
 shiftindices (t ∷v t₁ 𝕟 n 𝕢 σ) i l = shiftindices t i l ∷v shiftindices t₁ i l 𝕟 shiftindices n i l 𝕢 σ
-shiftindices (elimnat t P∶ t₁ zb∶ t₂ sb∶ t₃) i l = 
+shiftindices (elimnat t P∶ t₁ zb∶ zb sb∶ sb) i l = 
     elimnat (shiftindices t i l) P∶ (shiftindices t₁ i (suc l)) 
-            zb∶ (shiftindices t₂ i l) 
-            sb∶ (shiftindices t₃ i (2 + l))
+            zb∶ (shiftindices zb i l) 
+            sb∶ (shiftindices sb i (2 + l))
 shiftindices (eliml t ty∶ A P∶ t₁ nb∶ t₃ cb∶ t₄) i l = 
     eliml (shiftindices t i l) ty∶ shiftindices A i l P∶ (shiftindices t₁ i (suc l)) 
             nb∶ (shiftindices t₃ i l) 

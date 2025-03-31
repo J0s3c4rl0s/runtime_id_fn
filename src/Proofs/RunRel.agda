@@ -101,7 +101,6 @@ module Weakening where
     -- invertRemapAss₂ {cΓₛ = cΓₛ S., A 𝕢 ω} {rΓ = rΓ ,ᵣ .A ↦ Aₜ} bindComps with invertRemapAss₁ bindComps
     -- ... | eq rewrite eq = invertCompTy bindComps
 
-    -- rewrite rule?
     if-injective : ∀ {cond : Bool} {cons : A → B} {x₁ x₂ : A} →
         (if cond then cons x₁ else cons x₂) 
             ≡ 
@@ -543,7 +542,8 @@ open ElimExt
     Te.compIsDeterministic 
         (compileTerm cΓₛ aₛ) 
         aComps cComps
-~ᵣtermproof cΓₛ (S.~ᵣsym ~) aComps cComps = Te.lemmaSym (~ᵣtermproof cΓₛ ~ cComps aComps)
+~ᵣtermproof cΓₛ (S.~ᵣsym ~) aComps cComps = 
+    Te.lemmaSym (~ᵣtermproof cΓₛ ~ cComps aComps)
 -- Kind of a workaround no? Need general lemma to introduce new intermediate terms to compile (or not)? 
 -- Except if B fails to compile it dont really matter here :/
 ~ᵣtermproof cΓₛ (S.~ᵣtrans {B = B} ~ ~₁) aComps cComps = {!   !}

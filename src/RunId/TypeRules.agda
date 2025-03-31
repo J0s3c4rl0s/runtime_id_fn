@@ -131,7 +131,8 @@ data _⊢_∶_ where
         cΓ' ⊢ nb 𝕢 σ ∶ (P [ 0 / nill ]) → 
         {eq : cΓ'' ≡ (cΓ +c cΓ')} →
         -- I presume list elements must have same erasure as List
-        (((cΓ' , A 𝕢 σ) , 
+        (((cΓ' , 
+            A 𝕢 σ) , 
             List A 𝕢 σ) , 
             (P [ 0 / var 0 ]) 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P [ 0 / (var 2 ∷l var 1) ]) → 
         cΓ'' ⊢ eliml l ty∶ A P∶ P 
@@ -509,7 +510,8 @@ data _~ᵣ_ where
     ~ᵣηlist :
         nb ~ᵣ (a [ i / nill ]) →
         -- substitute into branch replacing tail with acc
-        (cb [ 0 / var 1 ]) ~ᵣ (a [ i / var 2 ∷l var 1 ]) →
+        -- Context has been weakened so update RHS to new context through shifting
+        (cb [ 0 / var 1 ]) ~ᵣ (shiftindices a 3 0 [ (3 + i) / var 2 ∷l var 1 ]) →
         -- May not be necessary, subst acc for tail should suffice
         -- Add two options, either acc or tail, prev solution works bad with proof
         -- cb ~ᵣ ((a [ i / var 2 ∷l var 0 ])) ⊎ cb ~ᵣ ((a [ i / var 2 ∷l var 1 ])) →
@@ -522,7 +524,7 @@ data _~ᵣ_ where
         -- do I gotta shift any indices?
         nb ~ᵣ (a [ i / nilv𝕢 σ ]) →
         -- Missing choice of acc or tail?
-        cb ~ᵣ (a [ i / var 2 ∷v var 1 𝕟 var 3 𝕢 σ ]) →
+        (cb [ 0 / var 1 ]) ~ᵣ (shiftindices a 4 0 [ (4 + i) / var 2 ∷v var 1 𝕟 var 3 𝕢 σ ]) →
         (elimv (var i 𝕢 σ) ty∶ A P∶ P
             nb∶ nb 
             cb∶ cb) 

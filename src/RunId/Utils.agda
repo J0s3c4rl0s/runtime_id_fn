@@ -22,6 +22,7 @@ _+q_ : Quantity → Quantity → Quantity
 𝟘 +q q2 = q2
 ω +q q2 = ω
 
+
 +q-right-idω : σ +q ω ≡ ω 
 +q-right-idω {𝟘} = refl
 +q-right-idω {ω} = refl
@@ -121,8 +122,7 @@ nill [ i / a ] = nill
 (h ∷l t) [ i / a ] = (h [ i / a ]) ∷l (t [ i / a ])
 nilv𝟘 [ i / a ] = nilv𝟘
 nilvω [ i / a ] = nilvω
-(h ∷v t 𝕟𝟘 n) [ i / a ] = (h [ i / a ]) ∷v (t [ i / a ]) 𝕟𝟘 (n [ i / a ])
-(h ∷v t 𝕟ω n) [ i / a ] = (h [ i / a ]) ∷v (t [ i / a ]) 𝕟ω (n [ i / a ])
+(h ∷v t 𝕟 n 𝕢 σ) [ i / a ] = (h [ i / a ]) ∷v (t [ i / a ]) 𝕟 (n [ i / a ]) 𝕢 σ
 (elimnat b P∶ P zb∶ zb sb∶ sb) [ i / a ] = 
     elimnat b [ i / a ] P∶ P [ i / a ] 
         zb∶ zb [ i / a ] 

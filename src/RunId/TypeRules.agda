@@ -508,10 +508,23 @@ data _~ᵣ_ where
     
     -- eta rules
     ~ᵣηlist :
-        nb ~ᵣ (a [ i / nill ]) →
-        -- substitute into branch replacing tail with acc
+        (nb 
+            -- Replace scrutinee with destructor
+            [ i / nill ])
+            ~ᵣ 
+        (a 
+            -- Replace scrutinee with destructor
+            [ i / nill ]) →
         -- Context has been weakened so update RHS to new context through shifting
-        (cb [ 0 / var 1 ]) ~ᵣ (shiftindices a 3 0 [ (3 + i) / var 2 ∷l var 1 ]) →
+        (cb 
+            -- Replace scrutinee with destructor
+            [ (3 + i) / var 2 ∷l var 1 ]
+            -- Replace tail with acc
+            [ 0 / var 1 ]) 
+            ~ᵣ 
+        (shiftindices a 3 0 
+            -- Replace scrutinee with destructor
+            [ (3 + i) / var 2 ∷l var 1 ]) →
         -- May not be necessary, subst acc for tail should suffice
         -- Add two options, either acc or tail, prev solution works bad with proof
         -- cb ~ᵣ ((a [ i / var 2 ∷l var 0 ])) ⊎ cb ~ᵣ ((a [ i / var 2 ∷l var 1 ])) →
@@ -521,13 +534,25 @@ data _~ᵣ_ where
             ~ᵣ 
         a
     ~ᵣηvec :
-        -- do I gotta shift any indices?
-        nb ~ᵣ (a [ i / nilv𝕢 σ ]) →
-        -- Missing choice of acc or tail?
-        (cb [ 0 / var 1 ]) ~ᵣ (shiftindices a 4 0 [ (4 + i) / var 2 ∷v var 1 𝕟 var 3 𝕢 σ ]) →
+        (nb
+            -- Replace scrutinee with destructor
+            [ i / nilv𝕢 σ ]) 
+            ~ᵣ 
+        (a 
+            -- Replace scrutinee with destructor
+            [ i / nilv𝕢 σ ]) →
+        (cb 
+            -- Replace scrutinee with destructor
+            [ (4 + i) / var 2 ∷v var 1 𝕟 var 3 𝕢 σ ]
+            -- Replace acc with tail 
+            [ 0 / var 1 ]) 
+            ~ᵣ 
+        (shiftindices a 4 0 
+            -- Replace scrutinee with destructor
+            [ (4 + i) / var 2 ∷v var 1 𝕟 var 3 𝕢 σ ]) →
         (elimv (var i 𝕢 σ) ty∶ A P∶ P
             nb∶ nb 
             cb∶ cb) 
             ~ᵣ 
         a
- 
+  

@@ -38,7 +38,7 @@ data Context where
     [] : Context []
     _,_ : Context Γ → Annotation A σ → Context (Γ , A)
 
-infix 10 _,_
+infixl 10 _,_
 infix 12 _𝕢_
 infix 8 _∋_
 

@@ -51,7 +51,7 @@ module Ty where
 
     abstract
         private variable
-            Aₜ Bₜ Cₜ : T.Type
+            Aₜ Bₜ Cₜ Dₜ : T.Type
         
         -- equivalence of types
         -- Do I even need a relation or should this _always_ be syntactic?
@@ -69,6 +69,12 @@ module Ty where
         lemmaTrans refl refl = refl
 
         ---- CONGRUENCE RULES 
+
+        ⟶-cong : 
+            Aₜ ↔ty Cₜ →
+            Bₜ ↔ty Dₜ →
+            (Aₜ T.⟶ Bₜ) ↔ty (Cₜ T.⟶ Dₜ)
+        ⟶-cong refl refl = refl
 
         List-cong : 
             Aₜ ↔ty Bₜ →

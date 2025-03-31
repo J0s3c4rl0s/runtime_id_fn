@@ -273,7 +273,7 @@ module Weakening where
         (l : ℕ) →
         Cₛ ⇒ Cₜ →
         S.shiftindices Cₛ i l ⇒ Cₜ
-    lemmaWeakenType S.Nat i l Comps = {!   !}
+    lemmaWeakenType S.Nat i l Comps = Comps
     lemmaWeakenType (S.List Aₛ) i l Comps 
         with compileType Aₛ in AComps
     ... | just Aₜ 
@@ -287,10 +287,22 @@ module Weakening where
     lemmaWeakenType (S.Vec Aₛ (nₛ 𝕢 ω)) i l Comps 
         with compileType Aₛ in AComps
     ... | just Aₜ 
-            rewrite lemmaWeakenType Aₛ i l AComps = Comps
-    lemmaWeakenType (S.∶ Aₛ 𝕢 𝟘 ⟶ Bₛ) i l Comps = {!   !}
-    lemmaWeakenType (S.∶ Aₛ 𝕢 ω ⟶ Bₛ) i l Comps = {!   !}
-    lemmaWeakenType (S.r∶ Aₛ ⟶ Bₛ) i l Comps = {!   !}
+            rewrite lemmaWeakenType Aₛ i l AComps = 
+                Comps
+    lemmaWeakenType (S.∶ Aₛ 𝕢 𝟘 ⟶ Bₛ) i l Comps = 
+        lemmaWeakenType Bₛ i (suc l) Comps
+    lemmaWeakenType (S.∶ Aₛ 𝕢 ω ⟶ Bₛ) i l Comps 
+        with compileType Aₛ in AComps
+    ... | just Aₜ rewrite lemmaWeakenType Aₛ i l AComps 
+            with compileType Bₛ in AComps
+    ...     | just Bₜ rewrite lemmaWeakenType Bₛ i (suc l) AComps = 
+                Comps
+    lemmaWeakenType (S.r∶ Aₛ ⟶ Bₛ) i l Comps 
+        with compileType Aₛ in AComps
+    ... | just Aₜ rewrite lemmaWeakenType Aₛ i l AComps 
+            with compileType Bₛ in AComps
+    ...     | just Bₜ rewrite lemmaWeakenType Bₛ i (suc l) AComps = 
+                Comps
 
 open Weakening
 
@@ -422,7 +434,8 @@ open import Data.Product
     Aₜ ↔ty Cₜ
 ~ᵣtypeproof S.~ᵣrefl lComps rComps 
     rewrite lComps | just-injective rComps = Ty.lemmaRefl
-~ᵣtypeproof (S.~ᵣsym ~) lComps rComps = {!   !}
+~ᵣtypeproof (S.~ᵣsym ~) lComps rComps = 
+    Ty.lemmaSym (~ᵣtypeproof ~ rComps lComps)
 ~ᵣtypeproof (S.~ᵣtrans ~ ~₁) lComps rComps = {!   !}
 ~ᵣtypeproof {S.List Aₛ} (S.~ᵣlist {B = Bₛ} ~) lComps rComps
     with compileType Aₛ in AComps | compileType Bₛ in BComps
@@ -444,5 +457,21 @@ open import Data.Product
 ... | just Bₜ 
         rewrite just-injective (sym lComps) = 
             ~ᵣtypeproof ~ BComps (lemmaWeakenType Cₛ 1 0 rComps)
-~ᵣtypeproof {S.∶ Aₛ 𝕢 ω ⟶ Bₛ} (S.~ᵣpiω ~ ~₁) lComps rComps = {!   !}
-~ᵣtypeproof {S.r∶ Aₛ ⟶ Bₛ} (S.~ᵣpir ~) lComps rComps = {!   !}
+~ᵣtypeproof {S.∶ Aₛ 𝕢 ω ⟶ Bₛ} (S.~ᵣpiω {C = Cₛ} {D = Dₛ} ~A ~B) lComps rComps  
+    with compileType Aₛ in AComps | compileType Cₛ in CComps 
+... | just Aₜ | just Cₜ
+        with compileType Bₛ in BComps | compileType Dₛ in DComps 
+...     | just Bₜ | just Dₜ
+            rewrite just-injective (sym lComps) | just-injective (sym rComps) = 
+                Ty.⟶-cong 
+                    (~ᵣtypeproof ~A AComps CComps) 
+                    (~ᵣtypeproof ~B BComps DComps)
+~ᵣtypeproof {S.r∶ Aₛ ⟶ Bₛ} (S.~ᵣpir ~) lComps rComps  
+    with compileType Aₛ in AComps 
+... | just Aₜ 
+        with compileType Bₛ in BComps 
+...     | just Bₜ
+            rewrite just-injective (sym lComps) | just-injective (sym rComps) = 
+                Ty.⟶-cong 
+                    Ty.lemmaRefl 
+                    (Ty.lemmaSym (~ᵣtypeproof ~ AComps BComps))

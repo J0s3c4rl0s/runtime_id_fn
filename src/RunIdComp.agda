@@ -155,35 +155,35 @@ compileTerm cΓₛ (S.eliml aₛ ty∶ Aₛ P∶ Pₛ nb∶ nₛ cb∶ cₛ) = d
     nₜ ← compileTerm cΓₛ nₛ 
     -- How will compilation change the presence of the P entry? What should the uaₛge of P be?
     -- What about e.g. f x = Int? I literally _have to_ reduce this application... 
-    tc ← compileTerm 
+    cₜ ← compileTerm 
         (((cΓₛ S., 
             Aₛ S.𝕢 ω) S., 
             S.List Aₛ S.𝕢 ω) S., 
             Pₛ S.𝕢 ω) 
         cₛ 
-    just (T.eliml aₜ nb∶ nₜ cb∶ tc)
+    just (T.eliml aₜ nb∶ nₜ cb∶ cₜ)
 compileTerm cΓₛ (S.elimv aₛ 𝕢 𝟘 ty∶ Aₛ P∶ Pₛ nb∶ nₛ cb∶ cₛ) = do 
     aₜ ← compileTerm cΓₛ aₛ 
     nₜ ← compileTerm cΓₛ nₛ 
-    tc ← compileTerm 
+    cₜ ← compileTerm 
         ((((cΓₛ S., 
             S.Nat 𝕢 𝟘) S., 
             Aₛ 𝕢 ω) S., 
             S.Vec Aₛ (S.var 1 𝕢 𝟘) 𝕢 ω) S.,
             Pₛ 𝕢 ω) 
         cₛ 
-    just (T.eliml aₜ nb∶ nₜ cb∶ tc)
+    just (T.eliml aₜ nb∶ nₜ cb∶ cₜ)
 compileTerm cΓₛ (S.elimv aₛ 𝕢 ω ty∶ A P∶ Pₛ nb∶ nₛ cb∶ cₛ) = do 
     aₜ ← compileTerm cΓₛ aₛ 
     nₜ ← compileTerm cΓₛ nₛ 
-    tc ← compileTerm  
+    cₜ ← compileTerm  
         ((((cΓₛ S., 
             S.Nat 𝕢 ω) S., 
             A 𝕢 ω) S., 
             S.Vec A (S.var 1 𝕢 ω) 𝕢 ω) S., 
             Pₛ 𝕢 ω) 
         cₛ 
-    just (T.elimv aₜ nb∶ nₜ cb∶ tc)
+    just (T.elimv aₜ nb∶ nₜ cb∶ cₜ)
 -- Reject types in term position
 compileTerm cΓₛ Aₛ = nothing
 

@@ -492,8 +492,8 @@ data _~ᵣ_ where
         Vec A (n 𝕢 𝟘) ~ᵣ List B
     
     -- redundant with refl
-    ~ᵣnilvω :
-        nilvω ~ᵣ nilvω
+    -- ~ᵣnilvω :
+    --     nilvω ~ᵣ nilvω
     ~ᵣnilv𝟘 :
         nilv𝟘 ~ᵣ nill 
     ~ᵣ∷vω : 

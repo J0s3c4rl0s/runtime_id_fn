@@ -20,24 +20,19 @@ elimnatExTe = (S.elimnat S.z P∶ S.Nat
             sb∶ S.s (S.var 0))
 
 testElimNat : 
-    compileTerm 
-        S.[] 
-        elimnatExTe
-        compilesTermTo 
-    (T.elimnat T.z 
-        zb∶ T.z 
-        sb∶ T.s (T.var 0))
-testElimNat = Te.lemmaRefl
+    S.[] ⊢ elimnatExTe ⇒ 
+        (T.elimnat T.z 
+            zb∶ T.z 
+            sb∶ T.s (T.var 0))
+testElimNat = refl
 
-testElimNat↑ : 
-    compileTerm 
-        (S.insertType S.[] zero z≤n S.Nat 𝟘) 
+testElimNat↑ :  
+    (S.insertType S.[] zero z≤n S.Nat 𝟘) ⊢
         (S.shiftindices 
             elimnatExTe 
             1 
-            zero) 
-        compilesTermTo 
-    (T.elimnat T.z 
-        zb∶ T.z 
-        sb∶ T.s (T.var 0))
-testElimNat↑ = Te.lemmaRefl
+            zero) ⇒ 
+        (T.elimnat T.z 
+            zb∶ T.z 
+            sb∶ T.s (T.var 0))
+testElimNat↑ = refl

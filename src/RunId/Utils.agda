@@ -1,7 +1,7 @@
 module RunId.Utils where
 open import RunId.Syntax
 
-open import Data.Nat using (ℕ; suc; _+_; _≡ᵇ_; _≟_; _≤ᵇ_; _≤_; s≤s; z≤n)
+open import Data.Nat -- using (ℕ; suc; _+_; _≡ᵇ_; _≟_; _≤ᵇ_; _≤_; s≤s; z≤n)
 open import Data.Bool using (Bool; true; false; if_then_else_)
 open import Relation.Nullary.Decidable using (Dec; yes; no)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym)
@@ -62,36 +62,37 @@ _+c_ : Context Γ → Context Γ → Context Γ
 ∋→ℕ (S i) = suc (∋→ℕ i)
 
 -- Dont think this should change Quantity
-shiftindices : Term → ℕ → ℕ → Term -- Only do this for free variables, lower and upper bound
-shiftindices (var x) i l = if l ≤ᵇ x then var (x + i) else var x 
-shiftindices (ƛ∶ t 𝕢 σ ♭ t₁) i l = ƛ∶ shiftindices t i l 𝕢 σ ♭ shiftindices t₁ i (suc l)
-shiftindices (ƛr∶ t ♭ t₁) i l = (ƛr∶ shiftindices t i l ♭ shiftindices t₁ i (suc l))
-shiftindices (t · t₁ 𝕢 σ) i l = shiftindices t i l · shiftindices t₁ i l 𝕢 σ
-shiftindices (f ·ᵣ a) i l = shiftindices f i l ·ᵣ shiftindices a i l
-shiftindices z i l = z
-shiftindices (s t) i l = s (shiftindices t i l) 
-shiftindices nill i l = nill
-shiftindices (t ∷l t₁) i l = shiftindices t i l ∷l shiftindices t₁ i l
-shiftindices (nilv𝕢 σ) i l = nilv𝕢 σ
-shiftindices (t ∷v t₁ 𝕟 n 𝕢 σ) i l = shiftindices t i l ∷v shiftindices t₁ i l 𝕟 shiftindices n i l 𝕢 σ
-shiftindices (elimnat t P∶ t₁ zb∶ zb sb∶ sb) i l = 
-    elimnat (shiftindices t i l) P∶ (shiftindices t₁ i (suc l)) 
-            zb∶ (shiftindices zb i l) 
-            sb∶ (shiftindices sb i (2 + l))
-shiftindices (eliml t ty∶ A P∶ t₁ nb∶ t₃ cb∶ t₄) i l = 
-    eliml (shiftindices t i l) ty∶ shiftindices A i l P∶ (shiftindices t₁ i (suc l)) 
-            nb∶ (shiftindices t₃ i l) 
-            cb∶ (shiftindices t₄ i (3 + l))
-shiftindices (elimv (t 𝕢 σ) ty∶ A P∶ t₁ nb∶ t₄ cb∶ t₅) i l = 
-    elimv ((shiftindices t i l) 𝕢 σ) ty∶ shiftindices A i l P∶ (shiftindices t₁ i (suc l)) 
-            nb∶ (shiftindices t₄ i l) 
-            cb∶ (shiftindices t₅ i (4 + l))
-shiftindices Nat i l = Nat
-shiftindices (List t) i l = List (shiftindices t i l)
-shiftindices (Vec t₁ (A 𝕢 σ)) i l = Vec (shiftindices t₁ i l) (shiftindices A i l 𝕢 σ)
-shiftindices (∶ t 𝕢 σ ⟶ t₁) i l = ∶ shiftindices t i l 𝕢 σ ⟶ shiftindices t₁ i (suc l)
-shiftindices (r∶ t ⟶ t₁) i l = r∶ shiftindices t i l ⟶ shiftindices t₁ i (suc l)
-shiftindices (Sett level) i l = Sett level
+_↑_≥_ : Term → ℕ → ℕ → Term -- Only do this for free variables, lower and upper bound
+_↑_≥_ (var x) i l = if l ≤ᵇ x then var (x + i) else var x 
+_↑_≥_ (ƛ∶ t 𝕢 σ ♭ t₁) i l = ƛ∶ _↑_≥_ t i l 𝕢 σ ♭ _↑_≥_ t₁ i (suc l)
+_↑_≥_ (ƛr∶ t ♭ t₁) i l = (ƛr∶ _↑_≥_ t i l ♭ _↑_≥_ t₁ i (suc l))
+_↑_≥_ (t · t₁ 𝕢 σ) i l = _↑_≥_ t i l · _↑_≥_ t₁ i l 𝕢 σ
+_↑_≥_ (f ·ᵣ a) i l = _↑_≥_ f i l ·ᵣ _↑_≥_ a i l
+_↑_≥_ z i l = z
+_↑_≥_ (s t) i l = s (_↑_≥_ t i l) 
+_↑_≥_ nill i l = nill
+_↑_≥_ (t ∷l t₁) i l = _↑_≥_ t i l ∷l _↑_≥_ t₁ i l
+_↑_≥_ (nilv𝕢 σ) i l = nilv𝕢 σ
+_↑_≥_ (t ∷v t₁ 𝕟 n 𝕢 σ) i l = _↑_≥_ t i l ∷v _↑_≥_ t₁ i l 𝕟 _↑_≥_ n i l 𝕢 σ
+_↑_≥_ (elimnat t P∶ t₁ zb∶ zb sb∶ sb) i l = 
+    elimnat (_↑_≥_ t i l) P∶ (_↑_≥_ t₁ i (suc l)) 
+            zb∶ (_↑_≥_ zb i l) 
+            sb∶ (_↑_≥_ sb i (2 + l))
+_↑_≥_ (eliml t ty∶ A P∶ t₁ nb∶ t₃ cb∶ t₄) i l = 
+    eliml (_↑_≥_ t i l) ty∶ _↑_≥_ A i l P∶ (_↑_≥_ t₁ i (suc l)) 
+            nb∶ (_↑_≥_ t₃ i l) 
+            cb∶ (_↑_≥_ t₄ i (3 + l))
+_↑_≥_ (elimv (t 𝕢 σ) ty∶ A P∶ t₁ nb∶ t₄ cb∶ t₅) i l = 
+    elimv ((_↑_≥_ t i l) 𝕢 σ) ty∶ _↑_≥_ A i l P∶ (_↑_≥_ t₁ i (2+ l)) 
+            nb∶ (_↑_≥_ t₄ i l) 
+            cb∶ (_↑_≥_ t₅ i (4 + l))
+_↑_≥_ Nat i l = Nat
+_↑_≥_ (List t) i l = List (_↑_≥_ t i l)
+_↑_≥_ (Vec t₁ (A 𝕢 σ)) i l = Vec (_↑_≥_ t₁ i l) (_↑_≥_ A i l 𝕢 σ)
+_↑_≥_ (∶ t 𝕢 σ ⟶ t₁) i l = ∶ _↑_≥_ t i l 𝕢 σ ⟶ _↑_≥_ t₁ i (suc l)
+_↑_≥_ (r∶ t ⟶ t₁) i l = r∶ _↑_≥_ t i l ⟶ _↑_≥_ t₁ i (suc l)
+_↑_≥_ (Sett level) i l = Sett level
+
 
 conLen : PreContext → ℕ
 conLen [] = 0
@@ -99,23 +100,23 @@ conLen (Γ , x) = suc (conLen Γ)
 
 insertTypePre : (Γ : PreContext) → (i : ℕ) → (p : i ≤ conLen Γ) → Type → PreContext 
 insertTypePre Γ 0 p A = Γ , A
-insertTypePre (Γ , B) (suc i) (s≤s p) A = insertTypePre Γ i p A , shiftindices B 1 i
+insertTypePre (Γ , B) (suc i) (s≤s p) A = insertTypePre Γ i p A , _↑_≥_ B 1 i
 
 -- use Annotation instead?
 insertType : Context Γ → (i : ℕ) → (p : i ≤ conLen Γ)  → (A : Type) → Quantity → Context (insertTypePre Γ i p A)
 insertType cΓ 0 z≤n A σ = cΓ , A 𝕢 σ
-insertType (cΓ , B 𝕢 ρ) (suc i) (s≤s p) A σ = insertType cΓ i p A σ , shiftindices B 1 i 𝕢 ρ 
+insertType (cΓ , B 𝕢 ρ) (suc i) (s≤s p) A σ = insertType cΓ i p A σ , _↑_≥_ B 1 i 𝕢 ρ 
 
 -- There are some hijinks around when substitution is admissible, dont think quants change
 _[_/_]  : Term → ℕ → Term → Term
 var j [  i / a ] = if i ≡ᵇ j then a else var j 
-(ƛ∶ bₜ 𝕢 σ ♭ b) [ i / a ] = ƛ∶ bₜ [ i / a ]  𝕢 σ ♭ (b [ suc i / shiftindices a 1 0 ])
-(ƛr∶ b ♭ b₁) [ i / a ] = (ƛr∶ b [ i / a ] ♭ (b₁ [ suc i / shiftindices a 1 0 ]))
+(ƛ∶ bₜ 𝕢 σ ♭ b) [ i / a ] = ƛ∶ bₜ [ i / a ]  𝕢 σ ♭ (b [ suc i / _↑_≥_ a 1 0 ])
+(ƛr∶ b ♭ b₁) [ i / a ] = (ƛr∶ b [ i / a ] ♭ (b₁ [ suc i / _↑_≥_ a 1 0 ]))
 (b ·𝟘 c) [ i / a ] = (b [ i / a ]) ·𝟘 (c [ i / a ])
 (b ·ω c) [ i / a ] = (b [ i / a ]) ·ω (c [ i / a ])
 (f ·ᵣ b) [ i / a ] = (f [ i / a ]) ·ᵣ (b [ i / a ])
-(∶ b 𝕢 σ ⟶ c) [ i / a ] = ∶ b [ i / a ] 𝕢 σ ⟶ (c [ suc i / shiftindices a 1 0 ]) 
-(r∶ b ⟶ c) [ i / a ] = r∶ b [ i / a ] ⟶ (c [ suc i / shiftindices a 1 0 ]) 
+(∶ b 𝕢 σ ⟶ c) [ i / a ] = ∶ b [ i / a ] 𝕢 σ ⟶ (c [ suc i / _↑_≥_ a 1 0 ]) 
+(r∶ b ⟶ c) [ i / a ] = r∶ b [ i / a ] ⟶ (c [ suc i / _↑_≥_ a 1 0 ]) 
 z [ i / a ] = z
 s b [ i / a ] = s (b [ i / a ]) 
 nill [ i / a ] = nill
@@ -127,15 +128,15 @@ nilvω [ i / a ] = nilvω
 (elimnat b P∶ P zb∶ zb sb∶ sb) [ i / a ] = 
     elimnat b [ i / a ] P∶ P [ i / a ] 
         zb∶ zb [ i / a ] 
-        sb∶ (sb [ i + 2 / shiftindices a 2 0 ])
+        sb∶ (sb [ i + 2 / _↑_≥_ a 2 0 ])
 (eliml b ty∶ A P∶ P nb∶ nb cb∶ cb) [ i / a ] = 
     eliml b [ i / a ] ty∶ A [ i / a ] P∶ P [ i / a ] 
         nb∶ nb [ i / a ] 
-        cb∶ (cb [ i + 3 / shiftindices a 3 0 ])
+        cb∶ (cb [ i + 3 / _↑_≥_ a 3 0 ])
 (elimv (b 𝕢 σ) ty∶ A P∶ P nb∶ nb cb∶ cb) [ i / a ] = 
     elimv (b [ i / a ] 𝕢 σ) ty∶ A [ i / a ] P∶ P [ i / a ] 
         nb∶ nb [ i / a ] 
-        cb∶ (cb [ i + 4 / shiftindices a 4 0 ])
+        cb∶ (cb [ i + 4 / _↑_≥_ a 4 0 ])
 Nat [ i / a ] = Nat
 List b [ i / a ] = List (b [ i / a ])
 Vec b (n 𝕢 σ) [ i / a ] = Vec (b [ i / a ]) (((n [ i / a ])) 𝕢 σ)

@@ -8,7 +8,8 @@ open S using (
     -- Quantities 
     𝟘; ω; 
     -- Annoaₜtions
-    _𝕢_)
+    _𝕢_;
+    _↑_≥_)
 
 open import Data.Unit using (⊤; tt)
 open import Data.List
@@ -28,17 +29,17 @@ private variable
 -- Figure out how it actually makes sense to keep track of indices 
 data ContextRemap : S.Context Γₛ  → Set where
     []ᵣ : ContextRemap S.[]
-    _,ᵣ_skip : ContextRemap cΓₛ → (Aₛ : S.Term) → ContextRemap (cΓₛ S., Aₛ S.𝕢 𝟘)  
-    _,ᵣ_↦_ : ContextRemap cΓₛ → (Aₛ : S.Term) → (Aₜ : T.Type) → ContextRemap (cΓₛ S., Aₛ S.𝕢 ω)
+    _,ᵣ_skip : ContextRemap cΓₛ → (Aₛ : S.Term) → ContextRemap (cΓₛ S., Aₛ 𝕢 𝟘)  
+    _,ᵣ_↦_ : ContextRemap cΓₛ → (Aₛ : S.Term) → (Aₜ : T.Type) → ContextRemap (cΓₛ S., Aₛ 𝕢 ω)
 
 compileType : S.Type → Maybe T.Type
 
 compileRemap : (cΓₛ : S.Context Γₛ) → Maybe (ContextRemap cΓₛ) 
 compileRemap S.[] = just []ᵣ 
-compileRemap (cΓₛ S., Aₛ S.𝕢 𝟘) = do 
+compileRemap (cΓₛ S., Aₛ 𝕢 𝟘) = do 
     rΓ ← compileRemap cΓₛ
     just (rΓ ,ᵣ Aₛ skip)
-compileRemap (cΓₛ S., Aₛ S.𝕢 ω) = do 
+compileRemap (cΓₛ S., Aₛ 𝕢 ω) = do 
     rΓ ← compileRemap cΓₛ
     Aₜ ← compileType Aₛ
     just (rΓ ,ᵣ Aₛ ↦ Aₜ) 
@@ -59,10 +60,10 @@ compileType S.Nat = just T.Nat
 compileType (S.List Aₛ) = do 
     Aₜ ← compileType Aₛ 
     just (T.List Aₜ) 
-compileType (S.Vec Aₛ (_ S.𝕢 𝟘)) = do 
+compileType (S.Vec Aₛ (_ 𝕢 𝟘)) = do 
     Aₜ ← compileType Aₛ
     just (T.List Aₜ) 
-compileType (S.Vec Aₛ (_ S.𝕢 ω)) = do 
+compileType (S.Vec Aₛ (_ 𝕢 ω)) = do 
     Aₜ ← compileType Aₛ
     just (T.Vec Aₜ)
 compileType (S.∶ Aₛ 𝕢 𝟘 ⟶ Bₛ) = compileType Bₛ
@@ -88,13 +89,13 @@ compileTerm cΓₛ (S.var x) = do
     n ← remapIndex x remap 
     just (T.var n)
 -- shift indices tbody ? Wont it automatically be shifted down?
-compileTerm cΓₛ (S.ƛ∶ Aₛ S.𝕢 𝟘 ♭ sbody) = compileTerm (cΓₛ S., Aₛ S.𝕢 𝟘) sbody
+compileTerm cΓₛ (S.ƛ∶ Aₛ 𝕢 𝟘 ♭ sbody) = compileTerm (cΓₛ S., Aₛ 𝕢 𝟘) sbody
 -- what abt (lambda (f : a runid-> b). f 42) (lambda. 6)
 -- Options: 
 ---- 1. Remove beaₜ reduction 
 ---- 2. Require well typed for beaₜ reduction 
-compileTerm cΓₛ (S.ƛ∶ Aₛ S.𝕢 ω ♭ sbody) = do 
-    tbody ← compileTerm (cΓₛ S., Aₛ S.𝕢 ω) sbody
+compileTerm cΓₛ (S.ƛ∶ Aₛ 𝕢 ω ♭ sbody) = do 
+    tbody ← compileTerm (cΓₛ S., Aₛ 𝕢 ω) sbody
     just (T.ƛ tbody) 
 -- reject when erased? 
 -- builtin id function?
@@ -133,7 +134,7 @@ compileTerm cΓₛ (aₛ S.∷v asₛ 𝕟 nₛ 𝕢 ω) = do
 -- Asₛume must be an unerased nat
 compileTerm cΓₛ (S.elimnat aₛ P∶ Pₛ zb∶ zₛ sb∶ sₛ) = do 
     zₜ ← compileTerm cΓₛ zₛ 
-    sₜ ← compileTerm (cΓₛ S., S.Nat S.𝕢 ω) sₛ 
+    sₜ ← compileTerm (cΓₛ S., S.Nat 𝕢 ω) sₛ 
     T.z ← compileTerm cΓₛ aₛ where
         -- substitute into sₜ?
         T.s aₜ → just ({! sₜ   !})
@@ -145,43 +146,42 @@ compileTerm cΓₛ (S.elimnat aₛ P∶ Pₛ zb∶ zₛ sb∶ sₛ) = do
     aₜ ← compileTerm cΓₛ aₛ 
     zₜ ← compileTerm cΓₛ zₛ 
     sₜ ← compileTerm 
-        ((cΓₛ S., 
-            S.Nat S.𝕢 ω) S., 
-            Pₛ S.𝕢 ω) 
+        (cΓₛ S., 
+            S.Nat 𝕢 ω S., 
+            Pₛ 𝕢 ω) 
         sₛ 
     just (T.elimnat aₜ zb∶ zₜ sb∶ sₜ)
 compileTerm cΓₛ (S.eliml aₛ ty∶ Aₛ P∶ Pₛ nb∶ nₛ cb∶ cₛ) = do 
     aₜ ← compileTerm cΓₛ aₛ 
     nₜ ← compileTerm cΓₛ nₛ 
-    -- How will compilation change the presence of the P entry? What should the uaₛge of P be?
-    -- What about e.g. f x = Int? I literally _have to_ reduce this application... 
     cₜ ← compileTerm 
-        (((cΓₛ S., 
-            Aₛ S.𝕢 ω) S., 
-            S.List Aₛ S.𝕢 ω) S., 
-            Pₛ S.𝕢 ω) 
+        (cΓₛ S., 
+            Aₛ 𝕢 ω S., 
+            S.List ( Aₛ ↑ 1 ≥ 0) 𝕢 ω S., 
+            (_↑_≥_ Pₛ 1 1) 𝕢 ω) 
         cₛ 
     just (T.eliml aₜ nb∶ nₜ cb∶ cₜ)
+-- Unite these two with a case on σ?
 compileTerm cΓₛ (S.elimv aₛ 𝕢 𝟘 ty∶ Aₛ P∶ Pₛ nb∶ nₛ cb∶ cₛ) = do 
     aₜ ← compileTerm cΓₛ aₛ 
     nₜ ← compileTerm cΓₛ nₛ 
     cₜ ← compileTerm 
-        ((((cΓₛ S., 
-            S.Nat 𝕢 𝟘) S., 
-            Aₛ 𝕢 ω) S., 
-            S.Vec Aₛ (S.var 1 𝕢 𝟘) 𝕢 ω) S.,
-            Pₛ 𝕢 ω) 
+        (cΓₛ S., 
+            S.Nat 𝕢 𝟘 S., 
+            (Aₛ ↑ 1 ≥ 0) 𝕢 ω S., 
+            S.Vec (Aₛ ↑ 2 ≥ 0) (S.var 1 𝕢 𝟘) 𝕢 ω S., 
+            (Pₛ ↑ 1 ≥ 1) 𝕢 ω) 
         cₛ 
     just (T.eliml aₜ nb∶ nₜ cb∶ cₜ)
-compileTerm cΓₛ (S.elimv aₛ 𝕢 ω ty∶ A P∶ Pₛ nb∶ nₛ cb∶ cₛ) = do 
+compileTerm cΓₛ (S.elimv aₛ 𝕢 ω ty∶ Aₛ P∶ Pₛ nb∶ nₛ cb∶ cₛ) = do 
     aₜ ← compileTerm cΓₛ aₛ 
     nₜ ← compileTerm cΓₛ nₛ 
     cₜ ← compileTerm  
-        ((((cΓₛ S., 
-            S.Nat 𝕢 ω) S., 
-            A 𝕢 ω) S., 
-            S.Vec A (S.var 1 𝕢 ω) 𝕢 ω) S., 
-            Pₛ 𝕢 ω) 
+        (cΓₛ S., 
+            S.Nat 𝕢 ω S., 
+            (Aₛ ↑ 1 ≥ 0) 𝕢 ω S., 
+            S.Vec (Aₛ ↑ 2 ≥ 0) (S.var 1 𝕢 ω) 𝕢 ω S., 
+            (Pₛ ↑ 1 ≥ 1) 𝕢 ω) 
         cₛ 
     just (T.elimv aₜ nb∶ nₜ cb∶ cₜ)
 -- Reject types in term position
@@ -191,8 +191,8 @@ compileTerm cΓₛ Aₛ = nothing
 -- I dont actually use this rn
 compileContext : (cΓₛ : S.Context Γₛ) → Maybe T.Context
 compileContext S.[] = just T.[]
-compileContext (cΓₛ S., Aₛ S.𝕢 𝟘) = compileContext cΓₛ
-compileContext (cΓₛ S., Aₛ S.𝕢 ω) = do 
+compileContext (cΓₛ S., Aₛ 𝕢 𝟘) = compileContext cΓₛ
+compileContext (cΓₛ S., Aₛ 𝕢 ω) = do 
     Γₜ ← compileContext cΓₛ 
     Aₜ ← compileType Aₛ
     just (Γₜ T., Aₜ) 

@@ -131,9 +131,9 @@ data _⊢_∶_ where
         cΓ' ⊢ nb 𝕢 σ ∶ (P [ 0 / nill ]) → 
         {eq : cΓ'' ≡ (cΓ +c cΓ')} →
         -- I presume list elements must have same erasure as List
-        (((cΓ' , 
-            A 𝕢 σ) , 
-            List A 𝕢 σ) , 
+        (cΓ' , 
+            A 𝕢 σ , 
+            List A 𝕢 σ , 
             (P [ 0 / var 0 ]) 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P [ 0 / (var 2 ∷l var 1) ]) → 
         cΓ'' ⊢ eliml l ty∶ A P∶ P 
                 nb∶ nb 

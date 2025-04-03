@@ -9,7 +9,8 @@ open import Proofs.RunRel.Weakening
 open S using (
     𝟘; ω;
     _𝕢_;
-    _~ᵣ_)
+    _~ᵣ_;
+    _↑_≥_)
 
 open import Data.Nat
 open import Data.Bool hiding (_≤_)
@@ -30,31 +31,42 @@ private variable
     aₛ bₛ cₛ asₛ bsₛ fₛ : S.Term
     σ π ρ : S.Quantity
 
-    i l j k x : ℕ
+    i l j k x n m : ℕ
 
     rΓ rΓ' : ContextRemap cΓₛ
 
     Aₜ Bₜ Cₜ : T.Type
     aₜ bₜ cₜ : T.Term
-
+    
 
 module ElimExt where
     open import Data.Product
     private variable
         []bₛ ∷bₛ Pₛ : S.Term
+        []bₜ ∷bₜ Pₜ : T.Term
 
     
-    lemmaElimL[] : 
+    list[]Comp : 
         (cₛ : S.Term) →
         compileRemap cΓₛ ≡ just rΓ → 
         remapIndex i rΓ ≡ just l →
         cΓₛ ⊢ cₛ ⇒ cₜ →
         cΓₛ ⊢ cₛ S.[ i / S.nill ] ⇒ (cₜ T.[ l / T.nill ])
+    list[]Comp cₛ cΓₛComps remapEq cₛComps = {!   !}
+
+    -- 
+    listConsComp : 
+        (cΓₛ S., Aₛ 𝕢 ω S., S.List (Aₛ ↑ 1 ≥ 0) 𝕢 ω S., (Pₛ ↑ 1 ≥ 1) 𝕢 ω) ⊢ ∷bₛ ⇒ ∷bₜ →
+        -- What should result be? Perhaps give substitution with updated index?
+        (cΓₛ S., Aₛ 𝕢 ω S., S.List (Aₛ ↑ 1 ≥ 0) 𝕢 ω S., (Pₛ ↑ 1 ≥ 1) 𝕢 ω) ⊢ ∷bₛ S.[ 0 / S.var 1 ] ⇒ (∷bₜ T.[ 0 / (T.var 1) ])
+
+    tmp : 
+        (cΓₛ S., Aₛ 𝕢 ω S., S.List (Aₛ ↑ 1 ≥ 0) 𝕢 ω S., (Pₛ ↑ 1 ≥ 1) 𝕢 ω) ⊢ 
+            (cₛ ↑ 3 ≥ 0) S.[ (3 + i) / S.var 2 S.∷l S.var 1 ] ⇒ ((cₜ T.↑ 3 ≥ 0) T.[ (3 + n) / T.var 2 T.∷l T.var 1 ])
 
 
 open ElimExt
 open import Data.Product
-
 
 ~ᵣtermproof :
     (cΓₛ : S.Context Γₛ) →
@@ -139,23 +151,37 @@ open import Data.Product
                         (~ᵣtermproof cΓₛ ~a aComps cComps) 
                         (~ᵣtermproof cΓₛ ~as asComps csComps) 
                         (~ᵣtermproof cΓₛ ~n nComps mComps)
-~ᵣtermproof {aₛ = S.eliml .(S.var i) ty∶ Aₛ P∶ Pₛ nb∶ []bₛ cb∶ ∷bₛ} {cₛ} cΓₛ (S.~ᵣηlist {i = i} ~[] ~∷) lComps rComps = {!   !}
--- -- varComps needs to be done manually, get rΓ then get reindex 
---     with compileRemap cΓₛ in cΓComps
--- ... | just rΓ 
---         with remapIndex i rΓ in remapEq
--- ...     | just n
---             with compileTerm cΓₛ []bₛ in []bComps
--- ...         | just []bₜ 
---                 with compileTerm (((cΓₛ S., Aₛ 𝕢 ω) S., S.List Aₛ 𝕢 ω) S., Pₛ 𝕢 ω) ∷bₛ in ∷bComps
--- ...             | just ∷bₜ  
--- -- Probably need some extensionality principle, 
--- -- how to deal differing contexts and 
---                     rewrite sym (just-injective lComps) = {!   !}
---                     where
---                         tmp[] = ~ᵣtermproof cΓₛ ~[] []bComps (lemmaElimL[] cₛ cΓComps remapEq rComps)
---                         -- what is implied context on either side of this?
---                         tmp∷ = ~ᵣtermproof {!   !} ~∷ {!  ∷bComps !} {!   !}
+~ᵣtermproof {aₛ = S.eliml .(S.var i) ty∶ Aₛ P∶ Pₛ nb∶ []bₛ cb∶ ∷bₛ} {cₛ} cΓₛ (S.~ᵣηlist {i = i} ~[] ~∷) lComps rComps -- = {!   !}
+-- varComps needs to be done manually, get rΓ then get reindex 
+    with compileRemap cΓₛ in cΓComps
+... | just rΓ 
+        with remapIndex i rΓ in remapEq
+...     | just n
+            with compileTerm cΓₛ []bₛ in []bComps
+...         | just []bₜ 
+                with compileTerm 
+                    (cΓₛ S., 
+                        Aₛ 𝕢 ω S., 
+                        S.List (Aₛ ↑ 1 ≥ 0) 𝕢 ω S.,
+                        (Pₛ ↑ 1 ≥ 1) 𝕢 ω) 
+                    ∷bₛ in ∷bComps
+...             | just ∷bₜ  
+                    rewrite sym (just-injective lComps) = 
+                        Te.elimlη 
+                            (~ᵣtermproof cΓₛ ~[] []bComps (list[]Comp cₛ cΓComps remapEq rComps)) 
+                            tmp∷
+                        where
+                            tmp[] = ~ᵣtermproof cΓₛ ~[] []bComps (list[]Comp cₛ cΓComps remapEq rComps)
+                            -- what is implied context on either side of this?
+                            tmp∷ = 
+                                ~ᵣtermproof 
+                                    ((cΓₛ S., 
+                                            Aₛ 𝕢 ω S., 
+                                            S.List (Aₛ ↑ 1 ≥ 0) 𝕢 ω S.,
+                                            (Pₛ ↑ 1 ≥ 1) 𝕢 ω)) 
+                                    ~∷ 
+                                    (listConsComp ∷bComps) -- (consComp ∷bComps) 
+                                    {!   !}
 ~ᵣtermproof {aₛ = S.elimv x ty∶ innerty P∶ aₛ nb∶ aₛ₁ cb∶ aₛ₂} cΓₛ (S.~ᵣηvec ~ ~₁) lComps rComps = {!   !}
 
 
@@ -206,4 +232,4 @@ open import Data.Product
             rewrite just-injective (sym lComps) | just-injective (sym rComps) = 
                 Ty.⟶-cong 
                     Ty.lemmaRefl   
-                    (Ty.lemmaSym (~ᵣtypeproof ~ AComps BComps)) 
+                    (Ty.lemmaSym (~ᵣtypeproof ~ AComps BComps))  

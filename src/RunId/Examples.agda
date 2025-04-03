@@ -51,6 +51,29 @@ module utilsTests where
         -- proof zero z≤n ⊢Sett = {!   !}
         -- proof zero z≤n (⊢conv ⊢ x) = {!   !}
         -- proof zero z≤n (⊢TM-𝟘 ⊢) = {!   !}
+        flip : 
+            Term →
+            ℕ →
+            ℕ → 
+            Term
+        flip a i j = 
+
+        tmp : Term
+        tmp = 
+            shiftindices 
+                (shiftindices (var 0) 1 0) 
+                1 
+                2
+
+        tmp2 : Term
+        tmp2 = 
+            shiftindices 
+                (shiftindices (var 0) 1 1) 
+                1 
+                0
+
+        doubleShiftTest : 
+            {!   !} ≡ {!   !}
 
     module substitution where
         lemmaRefl : (i ≡ᵇ i) ≡ true

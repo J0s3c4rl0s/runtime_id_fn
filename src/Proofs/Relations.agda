@@ -12,7 +12,10 @@ open S using (
 
 open import Data.Maybe using (Maybe; just; nothing; _>>=_)
 open import Data.Product -- using (_×_; _,_; proj₁; proj₂)
+open import Data.Nat
+
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong; subst)
+
 open import Data.Unit
 open import Data.Empty
 
@@ -67,8 +70,10 @@ module Te where
     private variable
         Γₛ : S.PreContext
         cΓₛ : S.Context Γₛ
-        aₜ bₜ cₜ asₜ bsₜ fₜ gₜ nₜ mₜ : T.Term
+        aₜ bₜ cₜ asₜ bsₜ fₜ gₜ nₜ mₜ []bₜ ∷bₜ : T.Term
         aₛ bₛ cₛ : S.Term
+
+        n m : ℕ
 
     -- obs equivalence of term
     _↔te_ : T.Term → T.Term → Set
@@ -129,5 +134,12 @@ module Te where
             (fₜ T.· aₜ) ↔te (gₜ T.· bₜ)
         ·-cong refl refl = refl            
 
+        -- Eta exensionality 
+        elimlη : 
+            []bₜ ↔te (cₜ T.[ n / T.nill ])  → 
+            (∷bₜ T.[ 0 / T.var 1 ]) ↔te ((cₜ T.↑ 3 ≥ 0) T.[ (3 + n) / T.var 2 T.∷l T.var 1 ]) →
+            (T.eliml T.var n nb∶ []bₜ cb∶ ∷bₜ) ↔te cₜ
+        elimlη []↔ ∷↔ = {!    !}
+
 open Te using (_↔te_; _⊢_⇒_) public
- 
+  

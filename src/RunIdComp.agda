@@ -158,7 +158,7 @@ compileTerm cΓₛ (S.eliml aₛ ty∶ Aₛ P∶ Pₛ nb∶ nₛ cb∶ cₛ) = d
         (cΓₛ S., 
             Aₛ 𝕢 ω S., 
             S.List ( Aₛ ↑ 1 ≥ 0) 𝕢 ω S., 
-            (_↑_≥_ Pₛ 1 1) 𝕢 ω) 
+            (Pₛ ↑ 1 ≥ 1) 𝕢 ω) 
         cₛ 
     just (T.eliml aₜ nb∶ nₜ cb∶ cₜ)
 -- Unite these two with a case on σ?

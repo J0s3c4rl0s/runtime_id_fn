@@ -49,7 +49,7 @@ data _⊢_∶_ where
         -- Avoiding green slime in the easiest way possible
         {num : ℕ} →
         {eq : (∋→ℕ i) ≡ num} →
-        cΓ ⊢ var num 𝕢 σ ∶ shiftindices A (suc (∋→ℕ i)) 0
+        cΓ ⊢ var num 𝕢 σ ∶ (A ↑ (suc (∋→ℕ i)) ≥ 0)
     -- functions
     ⊢pi :
         -- Not sure if this should be 0 usage for : Sett ? 
@@ -188,7 +188,7 @@ data _＝_ where
     {-   
     ＝var :
         (i : Γ ∋ a)  →
-        Γ ⊢ var (∋→ℕ i) ＝ shiftindices a (suc (∋→ℕ i)) 0
+        Γ ⊢ var (∋→ℕ i) ＝ a ↑_≥_  (suc (∋→ℕ i)) 0
     -}
 
     ＝pi : 
@@ -442,7 +442,7 @@ data _~ᵣ_ where
     -- does this make sense  
     ~ᵣpi𝟘 : 
         -- shift em, wait maybe shift B??
-        B ~ᵣ shiftindices D 1 0 →
+        B ~ᵣ( D ↑ 1 ≥ 0) →
         (∶ A 𝕢 𝟘 ⟶ B) ~ᵣ D 
     -- should it be runid equiv to a fun?
     ~ᵣpir : 
@@ -456,7 +456,7 @@ data _~ᵣ_ where
         (ƛ∶ A 𝕢 ω ♭ b)  ~ᵣ (ƛ∶ A 𝕢 ω ♭ c)
     ~ᵣlam𝟘 :
         -- I guess this implicitly checks that the target types match
-        b ~ᵣ shiftindices c 1 0 →
+        b ~ᵣ (c ↑ 1 ≥ 0) →
         -- This feels like it wont play well with prev rule
         (ƛ∶ A 𝕢 𝟘 ♭ b)  ~ᵣ c
     ~ᵣlamr : 
@@ -521,8 +521,8 @@ data _~ᵣ_ where
             [ (3 + i) / var 2 ∷l var 1 ]
             -- Replace tail with acc
             [ 0 / var 1 ]) 
-            ~ᵣ 
-        (shiftindices a 3 0 
+            ~ᵣ  
+        ((a ↑ 3 ≥ 0)
             -- Replace scrutinee with destructor
             [ (3 + i) / var 2 ∷l var 1 ]) →
         -- May not be necessary, subst acc for tail should suffice
@@ -547,7 +547,7 @@ data _~ᵣ_ where
             -- Replace acc with tail 
             [ 0 / var 1 ]) 
             ~ᵣ 
-        (shiftindices a 4 0 
+        ((a ↑ 4 ≥ 0) 
             -- Replace scrutinee with destructor
             [ (4 + i) / var 2 ∷v var 1 𝕟 var 3 𝕢 σ ]) →
         (elimv (var i 𝕢 σ) ty∶ A P∶ P

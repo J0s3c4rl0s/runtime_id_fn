@@ -59,7 +59,7 @@ data _⊢_∶_ where
         zeroC Γ ⊢ ∶ A 𝕢 π ⟶ B 𝕢 𝟘 ∶ Sett 𝓁 
     -- Add special rules!!
     ⊢rpi : 
-        A ~ᵣ B →
+        (A ↑ 1 ≥ 0) ~ᵣ B →
         -- Not sure if this should be 0 usage for : Sett ? 
         zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁  →
         (zeroC Γ , A 𝕢 𝟘) ⊢ B 𝕢 𝟘 ∶ Sett 𝓁  →

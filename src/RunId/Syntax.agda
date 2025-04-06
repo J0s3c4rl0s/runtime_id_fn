@@ -90,9 +90,13 @@ data Term where
     r∶_⟶_ : Type → Type → Type -- Runtime Pi type
     Sett : ℕ → Type -- Universe 
 
+pattern ƛ𝟘∶_♭_ A b = ƛ∶_♭_ (A 𝕢 𝟘) b
+pattern ƛω∶_♭_ A b = ƛ∶_♭_ (A 𝕢 ω) b
 pattern _·𝟘_ f a = _·_𝕢_ f a 𝟘
 pattern _·ω_ f a = _·_𝕢_ f a ω
 
+pattern Vec𝟘 A n = Vec A (n 𝕢 𝟘)
+pattern Vecω A n = Vec A (n 𝕢 ω)
 pattern nilv𝟘 = nilv𝕢_ 𝟘
 pattern nilvω = nilv𝕢_ ω
 pattern _∷v_𝕟𝟘_ a as n = _∷v_𝕟_𝕢_ a as n 𝟘

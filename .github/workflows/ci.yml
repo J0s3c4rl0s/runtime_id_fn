@@ -6,7 +6,7 @@ on:
     paths:
       - 'src/**'
       - '.github/workflows/**.yml'
-    branches: [master]
+    branches: [main]
 
 jobs:
   test:

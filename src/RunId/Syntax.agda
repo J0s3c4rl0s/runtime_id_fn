@@ -85,15 +85,20 @@ data Term where
     -- Types
     Nat : Type
     List : Type → Type
-    Vec : Term → Annotation A σ → Type
+    Vec : Type → Annotation n σ → Type
     ∶_⟶_ : Annotation A σ → Type → Type -- Pi type
     r∶_⟶_ : Type → Type → Type -- Runtime Pi type
     Sett : ℕ → Type -- Universe 
+
+infixr 9 ∶_⟶_
 
 pattern ƛ𝟘∶_♭_ A b = ƛ∶_♭_ (A 𝕢 𝟘) b
 pattern ƛω∶_♭_ A b = ƛ∶_♭_ (A 𝕢 ω) b
 pattern _·𝟘_ f a = _·_𝕢_ f a 𝟘
 pattern _·ω_ f a = _·_𝕢_ f a ω
+
+infixl 9 _·ω_
+infixl 9 _·𝟘_
 
 pattern Vec𝟘 A n = Vec A (n 𝕢 𝟘)
 pattern Vecω A n = Vec A (n 𝕢 ω)

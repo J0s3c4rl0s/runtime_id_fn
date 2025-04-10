@@ -48,7 +48,7 @@ data _⊢_∶_ where
         (i : cΓ ∋ (A 𝕢 σ)) →
         -- Avoiding green slime in the easiest way possible
         {num : ℕ} →
-        {eq : (∋→ℕ i) ≡ num} →
+        (eq : (∋→ℕ i) ≡ num) →
         cΓ ⊢ var num 𝕢 σ ∶ (A ↑ (suc (∋→ℕ i)) ≥ 0)
     -- functions
     ⊢pi :
@@ -56,7 +56,7 @@ data _⊢_∶_ where
         zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁  →
         (zeroC Γ , A 𝕢 𝟘) ⊢ B 𝕢 𝟘 ∶ Sett 𝓁  →
         -- same universe level?
-        zeroC Γ ⊢ ∶ A 𝕢 π ⟶ B 𝕢 𝟘 ∶ Sett 𝓁 
+        zeroC Γ ⊢ (∶ A 𝕢 π ⟶ B ) 𝕢 𝟘 ∶ Sett 𝓁 
     -- Add special rules!!
     ⊢rpi : 
         (A ↑ 1 ≥ 0) ~ᵣ B →
@@ -129,12 +129,12 @@ data _⊢_∶_ where
         cΓ ⊢ l 𝕢 σ ∶ List A →
         zeroC (Γ , List A) ⊢ P 𝕢 𝟘 ∶ Sett 𝓁 → 
         cΓ' ⊢ nb 𝕢 σ ∶ (P [ 0 / nill ]) → 
-        {eq : cΓ'' ≡ (cΓ +c cΓ')} →
         -- I presume list elements must have same erasure as List
         (((cΓ' , 
             A 𝕢 σ) , 
             List A 𝕢 σ) , 
             (P [ 0 / var 0 ]) 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P [ 0 / (var 2 ∷l var 1) ]) → 
+        {eq : cΓ'' ≡ (cΓ +c cΓ')} →
         cΓ'' ⊢ eliml l ty∶ A P∶ P 
                 nb∶ nb 
                 cb∶ cb 

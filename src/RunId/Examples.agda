@@ -191,10 +191,10 @@ module typeRuleTests where
 
     module var where
         testZ : (cΓ , Nat 𝕢 σ) ⊢ var 0 𝕢 σ ∶ Nat
-        testZ = ⊢var Z {eq = refl}
+        testZ = ⊢var Z refl
 
         testSZ : ((cΓ , Nat 𝕢 σ) , List Nat 𝕢 ρ) ⊢ var 1 𝕢 σ ∶ Nat
-        testSZ = ⊢var (S Z) {eq = refl}
+        testSZ = ⊢var (S Z) refl
         
 
     module functions where
@@ -207,7 +207,7 @@ module typeRuleTests where
             idDef = ƛ∶ Sett 0  𝕢 𝟘 ♭ (ƛ∶ var 0 𝕢 ω ♭ (var 0))
 
             idTyped : [] ⊢ idDef 𝕢 ω ∶ idTy
-            idTyped = ⊢lam  (⊢lam (⊢var Z {eq = refl}) (⊢var Z {eq = refl})) ⊢Sett 
+            idTyped = ⊢lam  (⊢lam (⊢var Z refl) (⊢var Z refl)) ⊢Sett 
     
         module const where
             -- testTy : Term
@@ -304,31 +304,31 @@ module typeRuleTests where
     module listToVec where    
 
         listLengthTy : Term 
-        listLengthTy = ∶ Sett 0 𝕢 𝟘 ⟶ (∶ List (var 0) 𝕢 ω ⟶ Nat)
+        listLengthTy = ∶ Sett 0 𝕢 𝟘 ⟶ ∶ List (var 0) 𝕢 ω ⟶ Nat
 
         listLengthDef : Term
         listLengthDef = 
             ƛ∶ Sett 0 𝕢 𝟘 ♭ 
-                (ƛ∶ List (var 0) 𝕢 ω ♭ 
-                    (eliml (var 0) ty∶ var 1 P∶ Nat 
+                ƛ∶ List (var 0) 𝕢 ω ♭ 
+                    eliml (var 0) ty∶ var 1 P∶ Nat 
                         nb∶ z 
-                        cb∶ s (var 0)))
+                        cb∶ s (var 0)
                         
         -- Should work in any arbitrary mode
-        listLengthTyped : [] ⊢ listLengthDef 𝕢 σ ∶ listLengthTy
-        listLengthTyped {σ = 𝟘} = 
+        listLengthTypedEmpty : [] ⊢ listLengthDef 𝕢 σ ∶ listLengthTy
+        listLengthTypedEmpty {σ = 𝟘} = 
             ⊢TM-𝟘
-                (listLengthTyped {σ = ω})
-        listLengthTyped {σ = ω} = 
+                (listLengthTypedEmpty {σ = ω})
+        listLengthTypedEmpty {σ = ω} = 
             ⊢lam
                 (⊢lam
                     (⊢listel {𝓁 = 0}
-                        (⊢var Z {eq = refl})
+                        (⊢var Z refl)
                         ⊢Nat
                         ⊢z
-                        {eq = refl}
-                        (⊢s (⊢var Z {eq = refl})))
-                    (⊢List (⊢var Z {eq = refl})))
+                        (⊢s (⊢var Z refl))
+                        {eq = refl})
+                    (⊢List (⊢var Z refl)))
                 ⊢Sett
                 
         listLengthDefComp : ((listLengthDef ·𝟘 Nat) ·ω (z ∷l nill)) ＝ s z
@@ -341,15 +341,15 @@ module typeRuleTests where
 
 
         listToVecTy : Term 
-        listToVecTy = r∶ List Nat ⟶ Vec Nat (((listLengthDef ·𝟘 Nat) ·ω var 0) 𝕢 𝟘 )
+        listToVecTy = r∶ List Nat ⟶ Vec𝟘 Nat (listLengthDef ·𝟘 Nat ·ω var 0) 
 
         listToVecDef : Term
         listToVecDef = 
             ƛr∶ List Nat ♭ 
-                (eliml var 0 ty∶ Nat P∶ Vec Nat (((listLengthDef ·𝟘 Nat) ·ω var 0) 𝕢 𝟘) 
+                (eliml var 0 ty∶ Nat P∶ Vec𝟘 Nat (listLengthDef ·𝟘 Nat ·ω var 0) 
                     nb∶ nilv𝟘 
                     -- Too lazy to just fetch it directly from the vector 
-                    cb∶ (var 2 ∷v var 0 𝕟𝟘 ((listLengthDef ·𝟘 Nat) ·ω var 1)))  
+                    cb∶ (var 2 ∷v var 0 𝕟𝟘 (listLengthDef ·𝟘 Nat ·ω var 1)))  
 
         lemmaVec＝base : Vec Nat (z 𝕢 𝟘) ＝
             Vec Nat
@@ -394,29 +394,160 @@ module typeRuleTests where
         --     ⊢rlam {𝓁 = 0}
         --         ~ᵣlemma
         --         (⊢listel {𝓁 = 0}
-        --             (⊢var Z {eq = refl})
+        --             (⊢var Z refl)
         --             (⊢Vec
         --                 (⊢app
         --                     (⊢app 
-        --                         {!  listLengthTyped  !}
+        --                         {!  listLengthTypedEmpty  !}
         --                         (⊢Nat {𝓁 = 0}))
-        --                     (⊢var Z {eq = refl}))
+        --                     (⊢var Z refl))
         --                 ⊢Nat)
         --             (⊢conv 
         --                 (⊢nilv {𝓁 = 0} ⊢Nat)
         --                 lemmaVec＝base)
         --             (⊢conv 
         --                 (⊢∷v 
-        --                     (⊢var (S (S Z)) {eq = refl})
+        --                     (⊢var (S (S Z)) refl)
         --                     (⊢app 
-        --                         (⊢app {!  listLengthTyped  !} ⊢Nat {eq = refl}) 
-        --                         (⊢var (S Z) {eq = refl})  {eq = refl})
-        --                     (⊢var Z {eq = refl})) 
+        --                         (⊢app {!  listLengthTypedEmpty  !} ⊢Nat refl) 
+        --                         (⊢var (S Z) refl)  refl)
+        --                     (⊢var Z refl)) 
         --                 lemmaVec＝ind))
         --         (⊢List ⊢Nat) 
 
+        listLengthTyped : cΓ ⊢ listLengthDef 𝕢 σ ∶ listLengthTy
+        listLengthTyped = {!   !}
 
 
+        lenAppLemma :  ∀ {xs} →
+            cΓ ⊢ A 𝕢 𝟘 ∶ Sett 0 →
+            cΓ ⊢ xs 𝕢 σ ∶ List A →
+            cΓ ⊢ ((listLengthDef ·𝟘 A) ·ω xs) 𝕢 σ ∶ Nat
+        lenAppLemma ⊢A ⊢xs = 
+            ⊢app 
+                (⊢app {cΓ = {!   !}}
+                    listLengthTyped 
+                    ⊢A
+                    {eq = refl})
+                ⊢xs
+                {eq = {! refl  !}} 
+
+        listToVecGenTy : Type
+        listToVecGenTy =
+            -- A 
+            ∶ (Sett 0) 𝕢 𝟘 ⟶ 
+                -- B
+                ∶ (Sett 0) 𝕢 𝟘 ⟶
+                --  f: A -->r B
+                ∶ (r∶ (var 1) ⟶ (var 1)) 𝕢 ω ⟶ 
+                -- (xs : List A) -> Vec B (len xs)
+                (r∶ List (var 2) ⟶ Vec𝟘 (var 1) ((listLengthDef ·𝟘 var 2) ·ω (var 0)))
+
+        listToVecGenDef : Term
+        listToVecGenDef = 
+            ƛ𝟘∶ (Sett 0) ♭ 
+                ƛ𝟘∶ (Sett 0) ♭ 
+                    ƛω∶ (r∶ (var 1) ⟶ (var 1)) ♭ 
+                        ƛr∶ (List (var 2)) ♭ 
+                            eliml (var 0) ty∶ var 3 P∶ (Vec𝟘 (var 3) ((listLengthDef ·𝟘 (var 4)) ·ω (var 0))) 
+                                nb∶ nilv𝟘 
+                                cb∶ ((var 2) ∷v (var 0) 𝕟𝟘 ((listLengthDef ·𝟘 Nat) ·ω var 1))
+
+        listToVecGenTypedEmpty : [] ⊢ listToVecGenDef 𝕢 ω ∶ listToVecGenTy
+        listToVecGenTypedEmpty = 
+            ⊢lam 
+                (⊢lam 
+                    (⊢lam 
+                        (⊢rlam 
+                            (~ᵣηlist ~ᵣnilv𝟘 (~ᵣ∷v𝟘 ~ᵣrefl ~ᵣrefl)) 
+                            (⊢conv 
+                                (⊢listel 
+                                    (⊢var Z refl) 
+                                    (⊢Vec (lenAppLemma (⊢var (S (S (S (S Z)))) refl) (⊢var Z refl)) (⊢var (S (S (S Z))) refl)) 
+                                    (⊢conv 
+                                        (⊢nilv (⊢var (S (S (S Z))) refl)) 
+                                        {!   !}) 
+                                    (⊢conv 
+                                        (⊢∷v (⊢var (S (S Z)) refl) {!   !} {!   !}) 
+                                        -- invalid bc 6 != 3
+                                        {!   !})
+                                    {eq = {!   !}}) 
+                                -- invalid bc 3 != 1
+                                {!   !}) 
+                            (⊢List (⊢var (S (S Z)) refl))) 
+                        -- Cant prove this since its var 2 ~ var 1, I dont know yet that they will 
+                        -- I would rather like to assume it
+                        (⊢rpi {!   !} (⊢var (S Z) refl) (⊢var (S Z) refl))) 
+                    ⊢Sett)
+                ⊢Sett
+
+        listFoldrTy : Type
+        listFoldrTy = 
+            -- A : Set
+            ∶ (Sett 0) 𝕢 𝟘 ⟶
+            -- P : Set
+            ∶ (Sett 0) 𝕢 𝟘 ⟶
+            -- p : P 
+            ∶ (var 0) 𝕢 ω ⟶
+            -- (a : A) -> (as : List A) -> (p : P) -> P
+            ∶ (∶ var 2 𝕢 ω ⟶ ∶ List (var 3) 𝕢 ω ⟶ ∶ var 3 𝕢 ω ⟶ var 4) 𝕢 ω ⟶ 
+            ∶ List (var 3) 𝕢 ω ⟶ 
+            var 3
+
+        listFoldrDef : Term 
+        listFoldrDef = 
+            -- A : Set    P : Set
+            ƛ𝟘∶ (Sett 0) ♭ ƛ𝟘∶ (Sett 0) ♭ 
+                -- base : P
+                ƛω∶ (var 0) ♭
+                -- step : A -> List A -> P -> P
+                ƛω∶ ∶ var 2 𝕢 ω ⟶ ∶ List (var 3) 𝕢 ω ⟶ ∶ var 3 𝕢 ω ⟶ var 4 ♭ 
+                    -- xs 
+                    ƛω∶ List (var 3) ♭ 
+                        eliml (var 0) ty∶ var 4 P∶ var 4 
+                            nb∶ var 2 
+                            cb∶ var 4 ·ω var 2 ·ω var 1 ·ω var 0  
+        vecToListTy : Type
+        vecToListTy = 
+            -- A : Set
+            ∶ Sett 0 𝕢 𝟘 ⟶
+            -- n : N 
+            ∶ Nat 𝕢 𝟘 ⟶ 
+            -- Vec A n
+            r∶ Vec𝟘 (var 1) (var 0) ⟶
+            List (var 2)
+        vecToListDef : Term    
+        vecToListDef = 
+            {!   !}
+
+        module mapTest where
+            mapListTy : Type
+            mapListTy = 
+                -- A : Set 
+                ∶ Sett 0 𝕢 𝟘 ⟶
+                -- B : Set 
+                ∶ Sett 0 𝕢 𝟘 ⟶ 
+                -- f : A -->r B
+                ∶ r∶ {!   !} ⟶ {!   !} 𝕢 ω ⟶ 
+                {!   !}
+
+            mapRListTy : Type
+            mapRListTy =
+                -- A : Set 
+                ∶ Sett 0 𝕢 𝟘 ⟶
+                -- B : Set 
+                ∶ Sett 0 𝕢 𝟘 ⟶ 
+                -- f : A -->r B
+                ∶ (r∶ (var 1) ⟶ (var 1)) 𝕢 ω ⟶ 
+                -- List A
+                r∶ List (var 2) ⟶
+                List (var 3)
+            
+            mapRListDef : Term
+            mapRListDef = 
+                -- A 
+                ƛ𝟘∶ {!   !} ♭ {!   !}
+        
     module jesperEx where
         -- may want to make lambda have 0 use
         jesper-ex : Term
@@ -454,4 +585,4 @@ module typeRuleTests where
                     (⊢var {!   !})
                     (⊢s ⊢z))
                 (⊢rpi ~ᵣrefl ⊢Nat ⊢Nat)
-        -} 
+        -}

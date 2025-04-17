@@ -6,7 +6,7 @@ open import Data.Empty
 open import Data.Sum
 open import Data.Bool
 open import Relation.Nullary using (¬_; Dec; yes; no)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import Relation.Binary.PropositionalEquality hiding ([_]) -- using (_≡_; refl)
 
 open import RunId.Syntax
 open import RunId.Utils
@@ -208,6 +208,9 @@ module typeRuleTests where
 
             idTyped : [] ⊢ idDef 𝕢 ω ∶ idTy
             idTyped = ⊢lam  (⊢lam (⊢var Z refl) (⊢var Z refl)) ⊢Sett 
+
+            idTypedGen : cΓ ⊢ idDef 𝕢 ω ∶ idTy
+            idTypedGen = ⊢lam (⊢lam (⊢var Z refl) (⊢var Z refl)) ⊢Sett
     
         module const where
             -- testTy : Term
@@ -223,8 +226,15 @@ module typeRuleTests where
     module application where
 
         module regular where
+            open import Relation.Binary.PropositionalEquality
             -- testTy : Term
             -- testTy = {!   !}
+            tmp : cΓ ≡ ((cΓ +c (𝟘 *c zeroC Γ)) +c (ω *c zeroC Γ))
+            tmp {[]} {cΓ = []} = refl
+            tmp {Γ , x} {cΓ = cΓ , .x 𝕢 σ} = cong (λ cΓ' → cΓ' , x 𝕢 σ) (tmp {cΓ = cΓ})
+
+            idAppTyped : cΓ  ⊢ (functions.id.idDef ·𝟘 Nat ·ω z) 𝕢 ω ∶ Nat
+            idAppTyped {Γ} {cΓ = cΓ} = ⊢app (⊢app functions.id.idTypedGen ⊢Nat {sym +c-rightid0}) ⊢z {sym +c-rightid0} 
 
         module erased where
             -- testTy : Term
@@ -247,8 +257,8 @@ module typeRuleTests where
                 testz = ⊢z 
 
                 -- Why is it zeroC for z?
-                -- testsz :  cΓ ⊢ s z 𝕢 σ ∶ Nat
-                -- testsz = ⊢s {!   !}
+                testsz :  cΓ ⊢ s z 𝕢 σ ∶ Nat
+                testsz = ⊢s {!  !}
             
 
             -- Maybe also some tests for dependent P?
@@ -275,8 +285,13 @@ module typeRuleTests where
                 testnil = ⊢nill
              
                 -- same problem for 0 contxt...
-                -- testcons : cΓ ⊢ (z ∷l nill) 𝕢 σ ∶ List Nat
-                -- testcons = ⊢∷l {!   !} {!   !}
+                testconsNat : cΓ ⊢ (z ∷l nill) 𝕢 σ ∶ List Nat
+                testconsNat = ⊢∷l {!   !} {!   !}
+
+                testcons : 
+                    cΓ ⊢ a 𝕢 σ ∶ A →
+                    cΓ ⊢ (a ∷l nill) 𝕢 σ ∶ List A
+                testcons ⊢a = ⊢∷l ⊢a {!   !}
             
             -- Maybe also some tests for dependent P?
             module eliminators where
@@ -300,6 +315,199 @@ module typeRuleTests where
                 -- test : {!   !} ⊢ {!   !} 𝕢 {!   !} ∶ {!   !}
                 -- test = {!   !}
 
+    module mapHOFBeta where
+        liftHOF : ℕ → Term → Term
+        liftHOF i (var x) = var x
+        liftHOF i (ƛ∶ x ♭ e) = ƛ∶ x ♭ liftHOF (suc i) e
+        liftHOF i (ƛr∶ x ♭ e) = {!   !}
+        liftHOF i (var j ·ω e₁) = if (i ≡ᵇ j) then var j ·ᵣ e₁ else var j ·ω e₁
+        liftHOF i (e · e₁ 𝕢 x) = {!   !}
+        liftHOF i (e ·ᵣ e₁) = {!   !}
+        liftHOF i z = {!   !}
+        liftHOF i (s e) = {!   !}
+        liftHOF i nill = nill
+        liftHOF i (e ∷l e₁) = liftHOF i e ∷l liftHOF i e₁
+        liftHOF i (nilv𝕢 x) = {!   !}
+        liftHOF i (e ∷v e₁ 𝕟 e₂ 𝕢 x) = {!   !}
+        liftHOF i (elimnat e P∶ e₁ zb∶ e₂ sb∶ e₃) = {!   !}
+        liftHOF i (eliml e ty∶ innerty P∶ P nb∶ nb cb∶ cb) = 
+            eliml liftHOF i e ty∶ liftHOF i innerty P∶ liftHOF (suc i) P nb∶ liftHOF i nb cb∶ liftHOF (3 + i) cb
+        liftHOF i (elimv x ty∶ innerty P∶ e nb∶ e₁ cb∶ e₂) = {!   !}
+        liftHOF i Nat = Nat
+        liftHOF i (List x) = List (liftHOF i x)
+        liftHOF i (Vec x x₁) = {!   !}
+        liftHOF i (∶ x ⟶ x₁) = {!   !}
+        liftHOF i (r∶ x ⟶ x₁) = {!   !}
+        liftHOF i (Sett x) = {!   !}
+
+        idNatDef : Term
+        idNatDef = ƛr∶ Nat ♭ var 0
+
+        idNatTyped : cΓ ⊢ idNatDef 𝕢 ω ∶ (r∶ Nat ⟶ Nat)
+        idNatTyped = 
+            {!   !}
+
+        mapDef : Term 
+        mapDef = ƛω∶ ∶ (Nat 𝕢 ω) ⟶ Nat ♭ ƛω∶ List Nat ♭ (eliml var 0 ty∶ Nat P∶ List Nat nb∶ nill cb∶ ((var 4 ·ω var 2) ∷l var 0))
+
+        mapBody = ƛω∶ List Nat ♭ (eliml var 0 ty∶ Nat P∶ List Nat nb∶ nill cb∶ ((var 4 ·ω var 2) ∷l var 0))
+        
+        mapRBody = ƛr∶ List Nat ♭ (eliml var 0 ty∶ Nat P∶ List Nat nb∶ nill cb∶ ((var 4 ·ω var 2) ∷l var 0))
+
+        exDef : Term
+        exDef = ƛr∶ List Nat ♭ (((ƛω∶ r∶ Nat ⟶ Nat ♭ liftHOF 0 mapBody) ·ω idNatDef) ·ω (var 0))
+
+        ~betaex : (ƛ∶ r∶ Nat ⟶ Nat 𝕢 ω ♭ liftHOF 0 mapBody ·ω idNatDef ·ω var 0) ~ᵣ var 0
+        ~betaex = (~ᵣtrans (~ᵣappω ~ᵣbetaω ~ᵣrefl) (~ᵣtrans ~ᵣbetaω (~ᵣηlist ~ᵣrefl (~ᵣ∷l ~ᵣappr ~ᵣrefl)))) 
+
+        convRule : 
+            a ＝ b → 
+            b ~ᵣ c → 
+            a ~ᵣ c
+
+        ~betaexConv : (ƛ∶ r∶ Nat ⟶ Nat 𝕢 ω ♭ liftHOF 0 mapBody ·ω idNatDef ·ω var 0) ~ᵣ var 0
+        ~betaexConv = convRule 
+            (betapp ＝beta ＝beta) 
+            (~ᵣηlist ~ᵣrefl (~ᵣ∷l ~ᵣappr ~ᵣrefl))
+
+        exTyped : [] ⊢ exDef 𝕢 ω ∶ (r∶ List Nat ⟶ List Nat)
+        exTyped = 
+            ⊢rlam {𝓁 = 0}
+                -- body ~ var 0
+                ~betaex
+                -- [], List Nat ⊢ body : List Nat 
+                (⊢app 
+                    {cΓ = [] , (List Nat 𝕢  ω)}
+                    {cΓ' = [] , (List Nat 𝕢 ω)}
+                    -- Do I here need to "upgrade" map?
+                    -- ? ⊢ map ·ω idNat : List Nat -> List Nat
+                    (⊢app 
+                        {cΓ = [] , (List Nat) 𝕢 ω}
+                        {cΓ' = [] , (List Nat 𝕢 ω)}
+                        -- ? ⊢ map : (Nat ->r Nat) -> (List Nat -> List Nat)
+                        (⊢lam {𝓁 = 0} 
+                            -- how about upgrade here to runid?
+                            -- ?, Nat ->r Nat ⊢ λ : List Nat ♭ elimbody : List Nat → List Nat 
+                            (⊢lam {𝓁 = 0}
+                                -- ?, Nat ->r Nat, List Nat ⊢ elimbody : List Nat
+                                (let cΓPresent = [] , List Nat 𝕢 ω , (r∶ Nat ⟶ Nat) 𝕢 ω , List Nat 𝕢 ω in 
+                                ⊢listel {𝓁 = 0}
+                                    {cΓ = cΓPresent}
+                                    {cΓ' = zeroC ([] , List Nat , (r∶ Nat ⟶ Nat) , List Nat)}
+                                    {cΓ'' = cΓPresent}
+                                    -- var 0 : List Nat  
+                                    (⊢var Z refl) 
+                                    -- List Nat : Set
+                                    (⊢List ⊢Nat) 
+                                    ⊢nill
+                                    -- List Nat, Nat ->r Nat, List Nat , Nat, List Nat, List Nat ⊢ (var 4 ·ᵣ var 2) ∷l var 0 : List Nat
+                                    (⊢∷l 
+                                        (let cΓCur = cΓPresent , Nat 𝕢 ω , List Nat 𝕢 ω , List Nat 𝕢 ω in 
+                                        (⊢appᵣ 
+                                            {cΓ = cΓCur}
+                                            {cΓ' = cΓCur}
+                                            (⊢var (S (S (S (S Z)))) refl) 
+                                            (⊢var (S (S Z)) refl) 
+                                            {refl})) 
+                                        (⊢var Z refl))
+                                    {refl})
+                                --  
+                              (⊢List ⊢Nat))
+                            -- ? ⊢ Nat ->r Nat : Set 
+                            (⊢rpi ~ᵣrefl ⊢Nat ⊢Nat))
+                        -- ? ⊢ idNat : Nat ->r Nat  
+                        idNatTyped
+                        {refl}) 
+                    -- [], List Nat ⊢ var 0 : List Nat
+                    (⊢var Z refl)
+                    {refl})
+                -- List Nat : Set 
+                (⊢List ⊢Nat) 
+                
+        -- cant do this
+        -- Which itself is not a type rule that can organically happen, I dont have point free programming
+        exTyped2 : [] ⊢ ((ƛω∶ r∶ Nat ⟶ Nat ♭ liftHOF 0 mapBody) ·ω idNatDef) 𝕢 ω ∶ (r∶ List Nat ⟶ List Nat)
+        exTyped2 = 
+            ⊢app {cΓ = contFun} {cΓ' = contArg} 
+                (⊢lam
+                    -- (contFun , List Nat 𝕢 ω) ⊢ (eliml var 0 ty∶ Nat P∶ List Nat nb∶ nill cb∶ ((var 4 ·ᵣ var 2) ∷l var 0)) 
+                    {!  ⊢lam ?  ?!}
+                    (⊢rpi ~ᵣrefl ⊢Nat ⊢Nat)) 
+                idNatTyped
+                where
+                    contFun = {!   !}
+                    contArg = {!   !}  
+            
+        exTyped3Fail : [] ⊢ (((ƛω∶ r∶ Nat ⟶ Nat ♭ liftHOF 0 mapBody) ·ω idNatDef) ·ᵣ var 0) 𝕢 ω ∶ List Nat
+        exTyped3Fail = 
+            ⊢appᵣ {cΓ = []} {cΓ' = []} 
+                (⊢conv 
+                    (let
+                            contFun = {!   !}
+                            contArg = {!   !}
+                        in 
+                    ⊢app {cΓ = contFun} {cΓ' = contArg}
+                        (⊢lam 
+                            (⊢lam 
+                                {!   !} 
+                                {!   !}) 
+                            (⊢rpi ~ᵣrefl ⊢Nat ⊢Nat)) 
+                        idNatTyped) 
+                    -- A -> B = A ->r B no bueno
+                    {!   !}) 
+                {!   !}
+    
+        exDefR : Term
+        exDefR = ƛr∶ List Nat ♭ (((ƛω∶ r∶ Nat ⟶ Nat ♭ liftHOF 0 mapBody) ·ω idNatDef) ·ᵣ (var 0))
+
+        inferRule : 
+            cΓ ⊢ (ƛr∶ A ♭ b) 𝕢 ω ∶ (r∶ A ⟶ B) → 
+            cΓ ⊢ (ƛω∶ A ♭ b) 𝕢 ω ∶ (r∶ A ⟶ B)  
+            
+        exTypedInfer : ([] , List Nat 𝕢 ω) ⊢ (((ƛω∶ r∶ Nat ⟶ Nat ♭ liftHOF 0 mapBody) ·ω idNatDef) ·ᵣ var 0) 𝕢 ω ∶ List Nat
+        exTypedInfer = -- {!   !}
+            ⊢appᵣ {cΓ = [] , List Nat 𝕢 ω} {cΓ' = [] , List Nat 𝕢 ω} 
+                (let
+                    contFun = [] , List Nat 𝕢 ω
+                    contArg = contFun
+                in 
+                ⊢app {cΓ = contFun} {cΓ' = contArg}
+                    (⊢lam {𝓁 = 0} 
+                        (inferRule 
+                            (⊢rlam {𝓁 = 0} 
+                                (~ᵣηlist ~ᵣrefl (~ᵣ∷l ~ᵣappr ~ᵣrefl)) 
+                                (let 
+                                    contScr = (contFun , (r∶ Nat ⟶ Nat) 𝕢 ω) , List Nat 𝕢 ω 
+                                    contNil = zeroC ([] , List Nat , (r∶ Nat ⟶ Nat) , List Nat) 
+                                    contCons = contScr
+                                in 
+                                    ⊢listel {𝓁 = 0} {cΓ = contScr} {cΓ' = contNil} {cΓ'' = contCons} 
+                                        (⊢var Z refl) 
+                                        (⊢List ⊢Nat) 
+                                        ⊢nill 
+                                        (let 
+                                            contHead : Context ([] , List Nat , (r∶ Nat ⟶ Nat) , List Nat , Nat , List Nat , List Nat)
+                                            contHead = contScr , Nat 𝕢 ω , List Nat 𝕢 ω , List Nat 𝕢 ω 
+                                            -- contTail = {!   !} 
+                                        in 
+                                            ⊢∷l {cΓ = contHead} 
+                                                (let
+                                                    contRFun : Context ([] , List Nat , (r∶ Nat ⟶ Nat) , List Nat , Nat , List Nat , List Nat) 
+                                                    contRFun = contHead 
+                                                    contRArg = contHead 
+                                                in
+                                                    ⊢appᵣ {cΓ = contRFun} {cΓ' = contRArg} 
+                                                        (⊢var (S (S (S (S Z)))) refl) 
+                                                        (⊢var (S (S Z)) refl) 
+                                                        {refl}) 
+                                                (⊢var Z refl))
+                                        {refl}) 
+                                (⊢List ⊢Nat))) 
+                        (⊢rpi ~ᵣrefl ⊢Nat ⊢Nat)) 
+                    idNatTyped
+                    {refl}) 
+                (⊢var Z refl)
+                {refl}
 
     module listToVec where    
 
@@ -313,6 +521,21 @@ module typeRuleTests where
                     eliml (var 0) ty∶ var 1 P∶ Nat 
                         nb∶ z 
                         cb∶ s (var 0)
+
+        listLengthTyped : cΓ ⊢ listLengthDef 𝕢 σ ∶ listLengthTy
+        listLengthTyped {cΓ = cΓ} {σ = σ} = 
+            {!   !}
+            -- ⊢lam
+            --     (⊢lam 
+            --         (⊢listel 
+            --             (⊢var Z refl) 
+            --             (⊢Nat {𝓁 = 0}) 
+            --             ⊢z 
+            --             (⊢s (⊢var Z refl)) 
+            --             {?}
+            --             -- {cong (λ x → (x , Sett 0 𝕢 𝟘) , List (var 0) 𝕢 σ) (sym +c-rightid0)})
+            --         (⊢List (⊢var Z refl))) 
+            --     ⊢Sett
                         
         -- Should work in any arbitrary mode
         listLengthTypedEmpty : [] ⊢ listLengthDef 𝕢 σ ∶ listLengthTy
@@ -389,35 +612,37 @@ module typeRuleTests where
                                 ＝beta)))))
                 ＝refl)
 
-        -- listToVecTyped : [] ⊢ listToVecDef 𝕢 ω ∶ listToVecTy
-        -- listToVecTyped = 
-        --     ⊢rlam {𝓁 = 0}
-        --         ~ᵣlemma
-        --         (⊢listel {𝓁 = 0}
-        --             (⊢var Z refl)
-        --             (⊢Vec
-        --                 (⊢app
-        --                     (⊢app 
-        --                         {!  listLengthTypedEmpty  !}
-        --                         (⊢Nat {𝓁 = 0}))
-        --                     (⊢var Z refl))
-        --                 ⊢Nat)
-        --             (⊢conv 
-        --                 (⊢nilv {𝓁 = 0} ⊢Nat)
-        --                 lemmaVec＝base)
-        --             (⊢conv 
-        --                 (⊢∷v 
-        --                     (⊢var (S (S Z)) refl)
-        --                     (⊢app 
-        --                         (⊢app {!  listLengthTypedEmpty  !} ⊢Nat refl) 
-        --                         (⊢var (S Z) refl)  refl)
-        --                     (⊢var Z refl)) 
-        --                 lemmaVec＝ind))
-        --         (⊢List ⊢Nat) 
-
-        listLengthTyped : cΓ ⊢ listLengthDef 𝕢 σ ∶ listLengthTy
-        listLengthTyped = {!   !}
-
+        listToVecTyped : cΓ ⊢ listToVecDef 𝕢 ω ∶ listToVecTy 
+        listToVecTyped {Γ} {cΓ = cΓ} = 
+            ⊢rlam {𝓁 = 0} 
+                (~ᵣηlist ~ᵣnilv𝟘 (~ᵣ∷v𝟘 ~ᵣrefl ~ᵣrefl)) 
+                (⊢listel {𝓁 = 0} 
+                    (⊢var Z refl) 
+                    (⊢Vec {𝓁 = 0} {cΓ = cΓ , List Nat 𝕢 𝟘 , List Nat 𝕢 𝟘}
+                        (⊢app {cΓ = cΓ , List Nat 𝕢 𝟘 , List Nat 𝕢 𝟘} 
+                            (⊢app (listLengthTyped) (⊢Nat {𝓁 = 0}) {sym +c-rightid0}) 
+                            (⊢var Z refl)
+                            {cong (λ x → x , ((List Nat) 𝕢 𝟘) , (List Nat 𝕢 𝟘)) (sym +c-idempotent)}) 
+                        (⊢Nat {𝓁 = 0})) 
+                    (⊢conv 
+                        (⊢nilv {𝓁 = 0} ⊢Nat) 
+                        lemmaVec＝base) 
+                    (⊢conv 
+                        (⊢∷v 
+                            (⊢var (S (S Z)) refl)
+                            (⊢app {cΓ = cΓ∷} 
+                                (⊢app listLengthTyped (⊢Nat {𝓁 = 0}) {sym +c-rightid0}) 
+                                (⊢var 
+                                    {cΓ = zeroC (Γ , List Nat , Nat , List Nat , Vec𝟘 Nat (listLengthDef ·𝟘 Nat ·ω var 0))} 
+                                    (S Z) 
+                                    refl) 
+                                {cong (λ x → x , List Nat 𝕢 ω , Vec𝟘 Nat (listLengthDef ·𝟘 Nat ·ω var 0) 𝕢 ω) (sym +c-idempotent)})
+                            (⊢var Z refl)) 
+                        lemmaVec＝ind)
+                    {cong (λ x → x , List Nat 𝕢 ω) (sym (trans (cong (λ x → cΓ +c x) +c-idempotent) +c-rightid0))})
+                (⊢List ⊢Nat)
+                where
+                    cΓ∷ = zeroC Γ , List Nat 𝕢 𝟘 , Nat 𝕢 ω , List Nat 𝕢 ω , (Vec𝟘 Nat (listLengthDef ·𝟘 Nat ·ω var 0)) 𝕢 ω
 
         lenAppLemma :  ∀ {xs} →
             cΓ ⊢ A 𝕢 𝟘 ∶ Sett 0 →
@@ -585,4 +810,4 @@ module typeRuleTests where
                     (⊢var {!   !})
                     (⊢s ⊢z))
                 (⊢rpi ~ᵣrefl ⊢Nat ⊢Nat)
-        -}
+        -}               

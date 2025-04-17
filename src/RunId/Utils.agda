@@ -31,31 +31,80 @@ _+q_ : Quantity → Quantity → Quantity
 +q-right-id𝟘 {𝟘} = refl
 +q-right-id𝟘 {ω} = refl
 
-{-# REWRITE +q-right-idω +q-right-id𝟘 #-}
++q-idempotent : σ +q σ ≡ σ
++q-idempotent {𝟘} = refl
++q-idempotent {ω} = refl
+
+{-# REWRITE +q-right-idω +q-right-id𝟘 +q-idempotent #-}
 
 _*q_ : Quantity → Quantity → Quantity
 𝟘 *q q2 = 𝟘
 ω *q q2 = q2
 
+*q-right-idω : σ *q ω ≡ σ
+*q-right-idω {𝟘} = refl
+*q-right-idω {ω} = refl
+
+{-# REWRITE *q-right-idω #-}
+
 -- In our case equivalent to multd
 selectQ : Quantity → Quantity → Quantity
 selectQ π σ = π *q σ
 
-
--- PreContext scaling
-_*c_ : Quantity → Context Γ → Context Γ
-_*c_ π [] = []
-_*c_ π (Γ , x 𝕢 ρ) = _*c_ π Γ , x 𝕢 (π *q ρ)  
-
 zeroC : (Γ : PreContext) → Context Γ
 zeroC [] = []
 zeroC (Γ , a) = zeroC Γ , a 𝕢 𝟘
+
+-- PreContext scaling
+_*c_ : Quantity → Context Γ → Context Γ
+-- 0 reduces everything
+_*c_ {Γ} 𝟘 cΓ = zeroC Γ
+-- ω is identity
+ω *c cΓ = cΓ
+
+
+-- *c-right-idω : ω *c cΓ ≡ cΓ 
+-- *c-right-idω {cΓ = []} = refl
+-- *c-right-idω {cΓ = cΓ , A 𝕢 σ} = cong (λ x → x , A 𝕢 σ) *c-right-idω
+
+-- {-# REWRITE *c-right-idω #-}
 
 -- PreContext addition
 _+c_ : Context Γ → Context Γ → Context Γ 
 ([] +c []) = []
 ((cΓ , a 𝕢 π) +c (cΔ , a 𝕢 σ)) = (cΓ +c cΔ) , a 𝕢 (π +q σ)
 
++c-leftid0 : ∀ {Γ : PreContext} {cΓ : Context Γ} → 
+    (zeroC Γ +c cΓ) ≡ cΓ
++c-leftid0 {[]} {[]} = refl
++c-leftid0 {Γ , x} {cΓ , .x 𝕢 σ} = cong (λ x₁ → x₁ , (x 𝕢 σ)) +c-leftid0
+
++c-rightid0 : ∀ {Γ : PreContext} {cΓ : Context Γ} → 
+    (cΓ +c zeroC Γ) ≡ cΓ
++c-rightid0 {[]} {[]} = refl
++c-rightid0 {Γ , x} {cΓ , .x 𝕢 σ} = cong (λ cΓ' → cΓ' , x 𝕢 σ) +c-rightid0
+
++c-idempotent : cΓ +c cΓ ≡ cΓ
++c-idempotent {cΓ = []} = refl
++c-idempotent {cΓ = cΓ , A 𝕢 σ} = cong (λ x → x , (A 𝕢 σ)) +c-idempotent
+
+
+
+-- open import Data.Unit 
+-- open import Data.Product renaming (_,_ to ⟨_,_⟩)
+
+-- _+c_＝_ : Context Γ → Context Γ → Context Γ → Set
+-- [] +c [] ＝ [] = ⊤
+-- (cΓₗ , A 𝕢 σ) +c cΓᵣ , .A 𝕢 σ₁ ＝ (cΓ , .A 𝕢 σ₂) = (cΓₗ +c cΓᵣ ＝ cΓ) × (σ +q σ₁) ≡ σ₂
+
+
+-- data _+c_＝_ : Context Γ → Context Γ → Context Γ → Set where
+--     instance +c[] : [] +c [] ＝ []
+--     +c, : 
+--         {cΓₗ cΓᵣ cΓ : Context Γ} →
+--         {cΓₗ +c cΓᵣ ＝ cΓ} → 
+--         {(σ +q π) ≡ ρ} →
+--         (cΓₗ , A 𝕢 σ) +c cΓᵣ , A 𝕢 π ＝ (cΓ , A 𝕢 ρ) 
 
 ∋→ℕ : cΓ ∋ (A 𝕢 σ) → ℕ 
 ∋→ℕ Z = 0
@@ -139,4 +188,4 @@ nilvω [ i / a ] = nilvω
 Nat [ i / a ] = Nat
 List b [ i / a ] = List (b [ i / a ])
 Vec b (n 𝕢 σ) [ i / a ] = Vec (b [ i / a ]) (((n [ i / a ])) 𝕢 σ)
-Sett level [ i / a ] = Sett level 
+Sett level [ i / a ] = Sett level  

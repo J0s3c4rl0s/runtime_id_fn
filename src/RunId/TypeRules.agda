@@ -22,7 +22,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 private variable
     Γ Δ Θ : PreContext
-    cΓ cΓ' cΓ'' : Context Γ
+    cΓ cΓ' cΓ'' cΓ''' : Context Γ
     cΔ cΔ' cΔ'' : Context Δ
     cΘ : Context Θ
     σ σ' π π' ρ ρ' ρ'' ρ''' δ : Quantity
@@ -86,10 +86,8 @@ data _⊢_∶_ where
         {eq : cΓ'' ≡ (cΓ +c (π *c cΓ'))} →
         cΓ'' ⊢ (a · b 𝕢 π) 𝕢 σ ∶  (B [ 0 / b ])
     ⊢appᵣ : {cΓ cΓ' cΓ'' : Context Γ} → 
-        cΓ ⊢ a 𝕢 σ ∶ (∶ A 𝕢 ω ⟶ B) →
+        cΓ ⊢ a 𝕢 σ ∶ (r∶ A ⟶ B) →
         cΓ' ⊢ b 𝕢 selectQ ω σ ∶ A →
-        -- Need something to limit substitution according to atkey 
-        -- avoid green slime with eq
         {eq : cΓ'' ≡ (cΓ +c (ω *c cΓ'))} →
         cΓ'' ⊢ (a ·ᵣ b) 𝕢 σ ∶  (B [ 0 /  b ])
 
@@ -130,12 +128,12 @@ data _⊢_∶_ where
         zeroC (Γ , List A) ⊢ P 𝕢 𝟘 ∶ Sett 𝓁 → 
         cΓ' ⊢ nb 𝕢 σ ∶ (P [ 0 / nill ]) → 
         -- I presume list elements must have same erasure as List
-        (((cΓ' , 
+        (((cΓ'' , 
             A 𝕢 σ) , 
             List A 𝕢 σ) , 
             (P [ 0 / var 0 ]) 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P [ 0 / (var 2 ∷l var 1) ]) → 
-        {eq : cΓ'' ≡ (cΓ +c cΓ')} →
-        cΓ'' ⊢ eliml l ty∶ A P∶ P 
+        {eq : cΓ''' ≡ (cΓ +c (cΓ' +c cΓ''))} →
+        cΓ''' ⊢ eliml l ty∶ A P∶ P 
                 nb∶ nb 
                 cb∶ cb 
             𝕢 σ ∶ (P [ 0 / l ])
@@ -555,4 +553,4 @@ data _~ᵣ_ where
             cb∶ cb) 
             ~ᵣ 
         a
-  
+   

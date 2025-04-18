@@ -127,11 +127,23 @@ _↑_≥_ (elimnat t P∶ t₁ zb∶ zb sb∶ sb) i l =
     elimnat (_↑_≥_ t i l) P∶ (_↑_≥_ t₁ i (suc l)) 
             zb∶ (_↑_≥_ zb i l) 
             sb∶ (_↑_≥_ sb i (2 + l))
+_↑_≥_ (elimnatᵣ t P∶ t₁ zb∶ zb sb∶ sb) i l = 
+    elimnatᵣ (_↑_≥_ t i l) P∶ (_↑_≥_ t₁ i (suc l)) 
+            zb∶ (_↑_≥_ zb i l) 
+            sb∶ (_↑_≥_ sb i (2 + l))
 _↑_≥_ (eliml t ty∶ A P∶ t₁ nb∶ t₃ cb∶ t₄) i l = 
     eliml (_↑_≥_ t i l) ty∶ _↑_≥_ A i l P∶ (_↑_≥_ t₁ i (suc l)) 
             nb∶ (_↑_≥_ t₃ i l) 
             cb∶ (_↑_≥_ t₄ i (3 + l))
+_↑_≥_ (elimlᵣ t ty∶ A P∶ t₁ nb∶ t₃ cb∶ t₄) i l = 
+    elimlᵣ (_↑_≥_ t i l) ty∶ _↑_≥_ A i l P∶ (_↑_≥_ t₁ i (suc l)) 
+            nb∶ (_↑_≥_ t₃ i l) 
+            cb∶ (_↑_≥_ t₄ i (3 + l))
 _↑_≥_ (elimv (t 𝕢 σ) ty∶ A P∶ t₁ nb∶ t₄ cb∶ t₅) i l = 
+    elimv ((_↑_≥_ t i l) 𝕢 σ) ty∶ _↑_≥_ A i l P∶ (_↑_≥_ t₁ i (2+ l)) 
+            nb∶ (_↑_≥_ t₄ i l) 
+            cb∶ (_↑_≥_ t₅ i (4 + l))
+_↑_≥_ (elimvᵣ (t 𝕢 σ) ty∶ A P∶ t₁ nb∶ t₄ cb∶ t₅) i l = 
     elimv ((_↑_≥_ t i l) 𝕢 σ) ty∶ _↑_≥_ A i l P∶ (_↑_≥_ t₁ i (2+ l)) 
             nb∶ (_↑_≥_ t₄ i l) 
             cb∶ (_↑_≥_ t₅ i (4 + l))
@@ -177,12 +189,24 @@ nilvω [ i / a ] = nilvω
     elimnat b [ i / a ] P∶ P [ i / a ] 
         zb∶ zb [ i / a ] 
         sb∶ (sb [ i + 2 / _↑_≥_ a 2 0 ])
+(elimnatᵣ b P∶ P zb∶ zb sb∶ sb) [ i / a ] = 
+    elimnat b [ i / a ] P∶ P [ i / a ] 
+        zb∶ zb [ i / a ] 
+        sb∶ (sb [ i + 2 / _↑_≥_ a 2 0 ])
 (eliml b ty∶ A P∶ P nb∶ nb cb∶ cb) [ i / a ] = 
     eliml b [ i / a ] ty∶ A [ i / a ] P∶ P [ i / a ] 
         nb∶ nb [ i / a ] 
         cb∶ (cb [ i + 3 / _↑_≥_ a 3 0 ])
+(elimlᵣ b ty∶ A P∶ P nb∶ nb cb∶ cb) [ i / a ] = 
+    elimlᵣ b [ i / a ] ty∶ A [ i / a ] P∶ P [ i / a ] 
+        nb∶ nb [ i / a ] 
+        cb∶ (cb [ i + 3 / _↑_≥_ a 3 0 ])
 (elimv (b 𝕢 σ) ty∶ A P∶ P nb∶ nb cb∶ cb) [ i / a ] = 
     elimv (b [ i / a ] 𝕢 σ) ty∶ A [ i / a ] P∶ P [ i / a ] 
+        nb∶ nb [ i / a ] 
+        cb∶ (cb [ i + 4 / _↑_≥_ a 4 0 ])
+(elimvᵣ (b 𝕢 σ) ty∶ A P∶ P nb∶ nb cb∶ cb) [ i / a ] = 
+    elimvᵣ (b [ i / a ] 𝕢 σ) ty∶ A [ i / a ] P∶ P [ i / a ] 
         nb∶ nb [ i / a ] 
         cb∶ (cb [ i + 4 / _↑_≥_ a 4 0 ])
 Nat [ i / a ] = Nat

@@ -76,11 +76,14 @@ data Term where
     ---- elims 
     -- Nat
     elimnat_P∶_zb∶_sb∶_ : Term → Term → Term → Term → Term
+    elimnatᵣ_P∶_zb∶_sb∶_ : Term → Term → Term → Term → Term
     -- List
     eliml_ty∶_P∶_nb∶_cb∶_ : (list : Term) → (innerty : Type) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    elimlᵣ_ty∶_P∶_nb∶_cb∶_ : (list : Term) → (innerty : Type) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
     -- vec
     -- Annotation is for if vec has erased index or not
     elimv_ty∶_P∶_nb∶_cb∶_ : Annotation a σ → (innerty : Type) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    elimvᵣ_ty∶_P∶_nb∶_cb∶_ : Annotation a σ → (innerty : Type) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
     
     -- Types
     Nat : Type
@@ -106,3 +109,4 @@ pattern nilv𝟘 = nilv𝕢_ 𝟘
 pattern nilvω = nilv𝕢_ ω
 pattern _∷v_𝕟𝟘_ a as n = _∷v_𝕟_𝕢_ a as n 𝟘
 pattern _∷v_𝕟ω_ a as n = _∷v_𝕟_𝕢_ a as n ω
+ 

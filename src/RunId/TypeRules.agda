@@ -59,7 +59,7 @@ data _⊢_∶_ where
         zeroC Γ ⊢ (∶ A 𝕢 π ⟶ B ) 𝕢 𝟘 ∶ Sett 𝓁 
     -- Add special rules!!
     ⊢rpi : 
-        (A ↑ 1 ≥ 0) ~ᵣ B →
+        -- (A ↑ 1 ≥ 0) ~ᵣ B →
         -- Not sure if this should be 0 usage for : Sett ? 
         zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁  →
         (zeroC Γ , A 𝕢 𝟘) ⊢ B 𝕢 𝟘 ∶ Sett 𝓁  →
@@ -107,12 +107,29 @@ data _⊢_∶_ where
         -- enforces that argument to forming this type are erased
         zeroC (Γ , Nat) ⊢ P 𝕢 𝟘 ∶ Sett 𝓁 →
         cΓ' ⊢ zb 𝕢 σ ∶ (P [ 0 / z ]) →
-        ((cΓ' , Nat 𝕢 ρ) , (P [ 0 / var 0 ]) 𝕢 ρ' ) ⊢ sb 𝕢 σ ∶ (P [ 0 / s (var 1) ]) →
-        {eq : cΓ'' ≡ (cΓ +c cΓ')} →
+        (cΓ' , Nat 𝕢 ρ , P [ 0 / var 0 ] 𝕢 ρ' ) ⊢ sb 𝕢 σ ∶ (P [ 0 / s (var 1) ]) →
+        {eq : cΓ'' ≡ cΓ +c cΓ'} →
         cΓ'' ⊢ elimnat n P∶ P 
                 zb∶ zb 
                 sb∶ sb 
             𝕢 σ ∶ (P [ 0 / n ])
+    ⊢natelᵣ : ∀ {zb sb} →
+        cΓ ⊢ var i 𝕢 σ ∶ Nat →
+        zeroC (Γ , Nat) ⊢ P 𝕢 𝟘 ∶ Sett 𝓁 →
+        -- check type? Depends on n?
+        Nat ~ᵣ P →
+        cΓ' ⊢ zb 𝕢 σ ∶ (P [ 0 / z ]) →
+        (zb [ i / z ]) ~ᵣ z →
+        (cΓ' , Nat 𝕢 ρ , P [ 0 / var 0 ] 𝕢 ρ' ) ⊢ sb 𝕢 σ ∶ (P [ 0 / s (var 1) ]) →
+        -- Cons branch is runid, first is acc second is subrec
+        (sb [ i / s (var 0) ]) ~ᵣ (s (var 0)) ⊎ 
+            (sb [ i / (s (var 1)) ]) ~ᵣ (s (var 1)) →
+        {eq : cΓ'' ≡ (cΓ +c cΓ')} →
+        cΓ'' ⊢ elimnatᵣ var i P∶ P 
+                zb∶ zb 
+                sb∶ sb 
+            𝕢 σ ∶ (P [ 0 / n ])
+    
     -- Lists
     ⊢List : 
         zeroC Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁  →
@@ -128,15 +145,37 @@ data _⊢_∶_ where
         zeroC (Γ , List A) ⊢ P 𝕢 𝟘 ∶ Sett 𝓁 → 
         cΓ' ⊢ nb 𝕢 σ ∶ (P [ 0 / nill ]) → 
         -- I presume list elements must have same erasure as List
-        (((cΓ'' , 
-            A 𝕢 σ) , 
-            List A 𝕢 σ) , 
-            (P [ 0 / var 0 ]) 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P [ 0 / (var 2 ∷l var 1) ]) → 
-        {eq : cΓ''' ≡ (cΓ +c (cΓ' +c cΓ''))} →
+        (cΓ'' , 
+            A 𝕢 σ , 
+            List A 𝕢 σ , 
+            P [ 0 / var 0 ] 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P [ 0 / (var 2 ∷l var 1) ]) → 
+        {eq : cΓ''' ≡ cΓ +c (cΓ' +c cΓ'')} →
         cΓ''' ⊢ eliml l ty∶ A P∶ P 
                 nb∶ nb 
                 cb∶ cb 
             𝕢 σ ∶ (P [ 0 / l ])
+    ⊢listelᵣ : 
+        (cΓ cΓ' cΓ'' : Context Γ) →
+        cΓ ⊢ var i 𝕢 σ ∶ List A →
+        -- changing it back bc I dont need compiler anymore (maybe)
+        zeroC Γ ⊢ P 𝕢 𝟘 ∶ (∶ List A 𝕢 𝟘 ⟶ Sett 𝓁) → 
+        -- shifts?
+        List A ~ᵣ (P ·𝟘 var 0) →
+        cΓ' ⊢ nb 𝕢 σ ∶ (P ·𝟘 nill ) → 
+        (nb [ i / nill ]) ~ᵣ nill →
+        (cΓ'' , 
+            A 𝕢 σ , 
+            List A 𝕢 σ , 
+            (P ·𝟘 var 0) 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P ·𝟘  (var 2 ∷l var 1)) → 
+        -- IH through choice, left acc right subtail
+        (cb [ 3 + i / var 2 ∷l var 0 ]) ~ᵣ (var 2 ∷l var 0) ⊎ 
+            (cb [ 3 + i / var 2 ∷l var 1 ]) ~ᵣ (var 2 ∷l var 1) →
+        {eq : cΓ''' ≡ (cΓ +c (cΓ' +c cΓ''))} →
+        cΓ''' ⊢ elimlᵣ var i ty∶ A P∶ P 
+                nb∶ nb 
+                cb∶ cb 
+            𝕢 σ ∶ (P ·𝟘 var i)
+    
     -- Vecs
     ⊢Vec : {cΓ : Context Γ} →
         cΓ ⊢ n 𝕢 σ ∶ Nat  →
@@ -153,19 +192,41 @@ data _⊢_∶_ where
     ⊢vecel : {cΓ cΓ' cΓ'' : Context Γ} → 
         cΓ ⊢ b 𝕢 σ ∶ Vec A (n 𝕢 δ) →
         -- I enforce that P is only compile time? should I?
-        zeroC ((Γ , Nat) , Vec A (var 0 𝕢 δ)) ⊢ P 𝕢 𝟘 ∶ Sett 𝓁 →
-        cΓ' ⊢ nb 𝕢 σ ∶ (P [ 0 / z ] [ 1 / (nilv𝕢 δ) ]) → 
-        {eq : cΓ'' ≡ (cΓ +c cΓ')} →
+        zeroC (Γ , Nat , Vec A (var 0 𝕢 δ)) ⊢ P 𝕢 𝟘 ∶ Sett 𝓁 →
+        cΓ' ⊢ nb 𝕢 σ ∶ (P [ 0 / z ] [ 1 / nilv𝕢 δ ]) → 
+        {eq : cΓ'' ≡ cΓ +c cΓ'} →
         -- assuming that the constructors are not heterogenous, I think they might need to be rho
-        ((((cΓ' , 
-            Nat 𝕢 π) , 
-            A 𝕢 σ) , 
-            Vec A (var 1 𝕢 δ) 𝕢  σ) , 
-            (P [ 0 / var 0 ] [ 1 / var 2 ]) 𝕢 σ) ⊢ cb 𝕢 σ ∶ ((((((P [ 0 / var 3 ]) [ 1 / (var 2 ∷v var 1 𝕟 var 3 𝕢 δ) ]))))) →
+        (cΓ' , 
+            Nat 𝕢 π , 
+            A 𝕢 σ , 
+            Vec A (var 1 𝕢 δ) 𝕢  σ , 
+            P [ 0 / var 0 ] [ 1 / var 2 ] 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P [ 0 / var 3 ] [ 1 / var 2 ∷v var 1 𝕟 var 3 𝕢 δ ]) →
         cΓ'' ⊢ elimv (b 𝕢 δ) ty∶ A P∶ P 
                 nb∶ nb 
                 cb∶ cb 
-            𝕢 σ ∶ ((P [ 0 / n ]) [ 1 / b ])
+            𝕢 σ ∶ (P [ 0 / n ] [ 1 / b ])
+    ⊢vecelᵣ : {cΓ cΓ' cΓ'' : Context Γ} → 
+        cΓ ⊢ var i 𝕢 σ ∶ Vec A (n 𝕢 δ) →
+        -- I enforce that P is only compile time? should I?
+        zeroC (Γ , Nat , Vec A (var 0 𝕢 δ)) ⊢ P 𝕢 𝟘 ∶ Sett 𝓁 →
+        -- how to connect index in P and index in type?
+        -- cant substitute for 1 in here
+        (Vec (A ↑ 2 ≥ 0) (n ↑ 2 ≥ 0 𝕢 δ)) ~ᵣ (P [ 0 / n ↑ 2 ≥ 0 ]) → 
+        cΓ' ⊢ nb 𝕢 σ ∶ (P [ 0 / z ] [ 1 / nilv𝕢 δ ]) → 
+        (nb [ i / nilv𝕢 σ ]) ~ᵣ (nilv𝕢 σ) → 
+        (cΓ' , 
+            Nat 𝕢 π , 
+            A 𝕢 σ , 
+            Vec A (var 1 𝕢 δ) 𝕢  σ , 
+            P [ 0 / var 0 ] [ 1 / var 2 ] 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P [ 0 / var 3 ] [ 1 / var 2 ∷v var 1 𝕟 var 3 𝕢 δ ]) →
+        -- IH through choice, left acc right tail
+        (cb [ 4 + i / var 2 ∷v var 0 𝕟 var 3 𝕢 σ ]) ~ᵣ (var 2 ∷v var 0 𝕟 var 3 𝕢 σ) ⊎ 
+            (cb [ 4 + i / var 2 ∷v var 1 𝕟 var 3 𝕢 σ ]) ~ᵣ (var 2 ∷v var 1 𝕟 var 3 𝕢 σ) → 
+        {eq : cΓ'' ≡ cΓ +c cΓ'} →
+        cΓ'' ⊢ elimv (var i 𝕢 δ) ty∶ A P∶ P 
+                nb∶ nb 
+                cb∶ cb 
+            𝕢 σ ∶ (P [ 0 / n ] [ 1 / b ])
     
     ⊢Sett : 
         zeroC Γ ⊢ Sett 𝓁 𝕢 𝟘 ∶ Sett (suc 𝓁) 
@@ -504,6 +565,9 @@ data _~ᵣ_ where
         as ~ᵣ cs →
         (a ∷v as 𝕟𝟘 n) ~ᵣ (c ∷l cs)
     
+    -- List 
+    
+    
     -- eta rules
     ~ᵣηlist :
         (nb 
@@ -553,4 +617,12 @@ data _~ᵣ_ where
             cb∶ cb) 
             ~ᵣ 
         a
-   
+
+
+    ---- New rule ideas
+    ~ᵣelimlᵣ : 
+        (elimlᵣ var i ty∶ A P∶ P nb∶ nb cb∶ cb) ~ᵣ var i 
+    ~ᵣbeta𝟘 : 
+        b ~ᵣ (c ↑ 1 ≥ 0) →
+        ((ƛ𝟘∶ A ♭ b) ·𝟘 a) ~ᵣ c
+     

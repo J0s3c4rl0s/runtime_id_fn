@@ -2,16 +2,6 @@ module RunId.TypeRules where
 
 open import RunId.Syntax
 open import RunId.Utils
-import STLC.TypeRules as T
-open T using () 
-    renaming (
-        _⟶_ to _T⟶_;
-        _·_ to _T·_;
-        _∷l_ to _T∷l_;
-        _∷v_𝕟_ to _T∷v_T𝕟_;
-        _,_ to _T,_;
-        _⊢_∶_ to _T⊢_T∶_
-    )
 
 open import Data.Product using (_×_) renaming (_,_ to _,'_)
 open import Data.Nat using (ℕ; zero; suc; _+_; _≤ᵇ_)
@@ -32,10 +22,6 @@ private variable
     nb cb zb sb : Term
     
     i j 𝓁 𝓁₁ 𝓁₂ : ℕ
-    
-    Γᵣ : T.Context
-    Aᵣ Bᵣ Cᵣ : T.Type
-    aᵣ bᵣ cᵣ : T.Term
 
 
 data _＝_ : Term → Term → Set
@@ -393,6 +379,7 @@ infix 30 _~ᵣ_
 -- Should I only define this 
 -- Could add types 
 data _~ᵣ_ where
+    ------ Equiv rules
     ~ᵣrefl :
         A ~ᵣ A
     ~ᵣsym :
@@ -402,79 +389,40 @@ data _~ᵣ_ where
         A ~ᵣ B →
         B ~ᵣ C →
         A ~ᵣ C
+
+    ------ Types
+    ---- Functions
+    ~ᵣpiω : 
+        A ~ᵣ C  →
+        B ~ᵣ D →
+        (∶ A 𝕢 ω ⟶ B) ~ᵣ (∶ C 𝕢 ω ⟶ D) 
+    ~ᵣpi𝟘 : 
+        B ~ᵣ( D ↑ 1 ≥ 0) →
+        (∶ A 𝕢 𝟘 ⟶ B) ~ᵣ D 
+    ~ᵣpir : 
+        A ~ᵣ B →
+        (r∶ A ⟶ B) ~ᵣ (r∶ A ⟶ A) 
+    ---- Vec
+    ~ᵣvecω : 
+        n ~ᵣ m →
+        A ~ᵣ B →
+        Vec A (n 𝕢 ω) ~ᵣ Vec B (m 𝕢 ω)
+    ~ᵣvec𝟘 :
+        A ~ᵣ B →
+        Vec A (n 𝕢 𝟘) ~ᵣ List B
     
-    ---- eliminators 
-    -- nats
-    {-
-    ~ᵣnatelz :
-        m ~ᵣ z →
-        (elimnat m P∶ P 
-            zb∶ zb 
-            sb∶ sb) 
-            ~ᵣ 
-            zb
-    ~ᵣnatels :
-        n ~ᵣ s n →
-        (elimnat n P∶ P 
-                zb∶ zb 
-                sb∶ sb) 
-            ~ᵣ 
-            a →
-        (elimnat m P∶ P 
-                zb∶ zb 
-                sb∶ sb) 
-            ~ᵣ 
-            ((sb [ 1 / n ]) [ 0 / a ])
-    -}
-    -- list
-    {-
-    ~ᵣlisteln :
-        cs ~ᵣ nill →
-        (eliml cs ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb )
-            ~ᵣ 
-            nb
-    ~ᵣlistelc :     
-        cs ~ᵣ (a ∷l as) →
-        (eliml as ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb )
-            ~ᵣ 
-            b →
-        (eliml cs ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb )
-            ~ᵣ 
-            (((cb [ 2 / a ]) [ 1 / as ]) [ 0 / b ])
-            -- (((cb · a) · as) ·  b)
-    -}
-    -- vec
-    {-
-    ~ᵣveceln :
-        -- generic computation rules
-        cs ~ᵣ (nilv𝕢 σ) →
-        (elimv (cs 𝕢 σ) ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb )
-            ~ᵣ 
-            nb
-    ~ᵣvecelc :
-        cs ~ᵣ (a ∷v as 𝕟 n 𝕢 σ) → 
-        (elimv ((nilv𝕢 σ) 𝕢 σ) ty∶ A P∶ P
-                nb∶ nb 
-                cb∶ cb )
-            ~ᵣ 
-            b →
-        (elimv (cs 𝕢 σ) ty∶ A P∶ P
-                nb∶ nb 
-                cb∶ cb )
-            ~ᵣ 
-            -- Might be worthwhile to change n to fit the structure of ∷v
-            ((((cb [ 3 / n ]) [ 2 / a ]) [ 1 / as ]) [ 0 / b ])
-            -- ((((cb · n) · a) · as) · b)
-    -}
-    ---- Cong rules for datatypes 
+    ------ Terms
+    
+    ---- Constructors 
+    -- Functions
+    ~ᵣlamω :
+        b ~ᵣ c →
+        (ƛ∶ A 𝕢 ω ♭ b)  ~ᵣ (ƛ∶ A 𝕢 ω ♭ c)
+    ~ᵣlam𝟘 :
+        b ~ᵣ (c ↑ 1 ≥ 0) →
+        (ƛ∶ A 𝕢 𝟘 ♭ b)  ~ᵣ c
+    ~ᵣlamr : 
+        (ƛr∶ A ♭ b) ~ᵣ (ƛr∶ A ♭ var 0)
     -- Nat
     ~ᵣs : 
         n ~ᵣ m →
@@ -487,70 +435,7 @@ data _~ᵣ_ where
         a ~ᵣ c →
         as ~ᵣ cs →
         (a ∷l as) ~ᵣ (c ∷l cs)    
-
-    ------ interesting rules-- Do I need two rules depending on usage and then like ignore argument 
-    -- or just pass it along?
-    ~ᵣpiω : 
-        A ~ᵣ C  →
-        -- Which of the two should I extend it with? Does it matter? 
-        -- Must I "pass along" proof of equiv or maybe substitution? 
-        -- Does subst even work?
-        -- Must I shift the indiceses here?
-        B ~ᵣ D →
-        (∶ A 𝕢 ω ⟶ B) ~ᵣ (∶ C 𝕢 ω ⟶ D) 
-    -- does this make sense  
-    ~ᵣpi𝟘 : 
-        -- shift em, wait maybe shift B??
-        B ~ᵣ( D ↑ 1 ≥ 0) →
-        (∶ A 𝕢 𝟘 ⟶ B) ~ᵣ D 
-    -- should it be runid equiv to a fun?
-    ~ᵣpir : 
-        A ~ᵣ B →
-        (r∶ A ⟶ B) ~ᵣ (r∶ A ⟶ A) 
-    -- must I add some for the A being different or nah?
-    -- distinguish between usages?
-    ~ᵣlamω :
-        -- I guess this implicitly checks that the targ et types match
-        b ~ᵣ c →
-        (ƛ∶ A 𝕢 ω ♭ b)  ~ᵣ (ƛ∶ A 𝕢 ω ♭ c)
-    ~ᵣlam𝟘 :
-        -- I guess this implicitly checks that the target types match
-        b ~ᵣ (c ↑ 1 ≥ 0) →
-        -- This feels like it wont play well with prev rule
-        (ƛ∶ A 𝕢 𝟘 ♭ b)  ~ᵣ c
-    ~ᵣlamr : 
-        (ƛr∶ A ♭ b) ~ᵣ (ƛr∶ A ♭ var 0)
-    -- I need distinguish between applications of erased or unerased functions? 
-    -- maybe distinguish erased and unerased application in syntax (or parametrize)
-    ~ᵣappω : 
-        b ~ᵣ d →
-        a ~ᵣ c →
-        (b ·ω a) ~ᵣ (d ·ω c)
-    ~ᵣapp𝟘 : 
-        b ~ᵣ d →
-        (b ·𝟘 a) ~ᵣ d
-    ~ᵣappr : 
-        (b ·ᵣ a) ~ᵣ a
-    -- Any case where id accept ·𝟘?
-    ~ᵣbetaω : ((ƛ∶ A 𝕢 ω ♭ b) ·ω a) ~ᵣ (b [ 0 / a ])
-    -- Done by appr?
-    -- ~ᵣbetar : ((ƛr∶ A ♭ b) ·ᵣ a) ~ᵣ a
-    -- isnt this covered by app0?
-    {-
-    -- ???? This feels very wrong, maybe it is even unnecessary
-    ~ᵣbeta𝟘 : (ƛ∶ A 𝕢 𝟘 ♭ b) · a ~ᵣ b
-    -}
-
-    -- Vec
-    ~ᵣvecω : 
-        n ~ᵣ m →
-        A ~ᵣ B →
-        Vec A (n 𝕢 ω) ~ᵣ Vec B (m 𝕢 ω)
-    ~ᵣvec𝟘 :
-        A ~ᵣ B →
-        Vec A (n 𝕢 𝟘) ~ᵣ List B
-    
-    -- redundant with refl
+    -- Vec 
     ~ᵣnilvω :
         nilvω ~ᵣ nilvω
     ~ᵣnilv𝟘 :
@@ -564,65 +449,19 @@ data _~ᵣ_ where
         a ~ᵣ c →
         as ~ᵣ cs →
         (a ∷v as 𝕟𝟘 n) ~ᵣ (c ∷l cs)
-    
+
+    ---- Eliminators
+    -- Functions
+    ~ᵣappω : 
+        b ~ᵣ d →
+        a ~ᵣ c →
+        (b ·ω a) ~ᵣ (d ·ω c)
+    ~ᵣapp𝟘 : 
+        b ~ᵣ d →
+        (b ·𝟘 a) ~ᵣ d
+    ~ᵣappr : 
+        a ~ᵣ c →
+        (b ·ᵣ a) ~ᵣ c
     -- List 
-    
-    
-    -- eta rules
-    ~ᵣηlist :
-        (nb 
-            -- Replace scrutinee with destructor
-            [ i / nill ])
-            ~ᵣ 
-        (a 
-            -- Replace scrutinee with destructor
-            [ i / nill ]) →
-        -- Context has been weakened so update RHS to new context through shifting
-        (cb 
-            -- Replace scrutinee with destructor
-            [ (3 + i) / var 2 ∷l var 1 ]
-            -- Replace tail with acc
-            [ 0 / var 1 ]) 
-            ~ᵣ  
-        ((a ↑ 3 ≥ 0)
-            -- Replace scrutinee with destructor
-            [ (3 + i) / var 2 ∷l var 1 ]) →
-        -- May not be necessary, subst acc for tail should suffice
-        -- Add two options, either acc or tail, prev solution works bad with proof
-        -- cb ~ᵣ ((a [ i / var 2 ∷l var 0 ])) ⊎ cb ~ᵣ ((a [ i / var 2 ∷l var 1 ])) →
-        (eliml var i ty∶ A P∶ P 
-            nb∶ nb 
-            cb∶ cb) 
-            ~ᵣ 
-        a
-    ~ᵣηvec :
-        (nb
-            -- Replace scrutinee with destructor
-            [ i / nilv𝕢 σ ]) 
-            ~ᵣ 
-        (a 
-            -- Replace scrutinee with destructor
-            [ i / nilv𝕢 σ ]) →
-        (cb 
-            -- Replace scrutinee with destructor
-            [ (4 + i) / var 2 ∷v var 1 𝕟 var 3 𝕢 σ ]
-            -- Replace acc with tail 
-            [ 0 / var 1 ]) 
-            ~ᵣ 
-        ((a ↑ 4 ≥ 0) 
-            -- Replace scrutinee with destructor
-            [ (4 + i) / var 2 ∷v var 1 𝕟 var 3 𝕢 σ ]) →
-        (elimv (var i 𝕢 σ) ty∶ A P∶ P
-            nb∶ nb 
-            cb∶ cb) 
-            ~ᵣ 
-        a
-
-
-    ---- New rule ideas
     ~ᵣelimlᵣ : 
         (elimlᵣ var i ty∶ A P∶ P nb∶ nb cb∶ cb) ~ᵣ var i 
-    ~ᵣbeta𝟘 : 
-        b ~ᵣ (c ↑ 1 ≥ 0) →
-        ((ƛ𝟘∶ A ♭ b) ·𝟘 a) ~ᵣ c
-     

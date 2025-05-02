@@ -314,6 +314,62 @@ module typeRuleTests where
             module eliminators where
                 -- test : {!   !} ⊢ {!   !} 𝕢 {!   !} ∶ {!   !}
                 -- test = {!   !}
+    module mapHOF where
+        idNatDef : Term
+        idNatDef = ƛr∶ Nat ♭ var 0
+
+        idNatTyped : cΓ ⊢ idNatDef 𝕢 ω ∶ (r∶ Nat ⟶ Nat)
+        idNatTyped = 
+            {!   !}
+
+        mapType : Type
+        mapType = 
+            -- A
+            ∶ Sett 0 𝕢 𝟘 ⟶
+            -- B 
+            ∶ Sett 0 𝕢 𝟘 ⟶ 
+            -- (f : A ->r B)
+            ∶ r∶ var 1 ⟶ var 1 𝕢 ω ⟶ 
+            r∶ List (var 2) ⟶ List (var 2)
+
+        mapDef : Term 
+        mapDef = 
+            ƛ𝟘∶ Sett 0 ♭ ƛ𝟘∶ Sett 0 ♭
+                ƛω∶ r∶ var 1 ⟶ var 1 ♭ 
+                    ƛr∶  List (var 2) ♭ 
+                        elimlᵣ var 0 ty∶ var 3 P∶ ƛ𝟘∶ (List (var 3)) ♭ (List (var 4)) 
+                            nb∶ nill 
+                            cb∶ ((var 4 ·ᵣ var 2) ∷l var 0)
+        
+        mapTyped : cΓ ⊢ mapDef 𝕢 σ ∶ mapType
+        mapTyped {cΓ = cΓ} = 
+            ⊢lam 
+                (⊢lam 
+                    (⊢lam 
+                        (⊢rlam 
+                            ~ᵣelimlᵣ 
+                            (⊢conv 
+                                (⊢listelᵣ 
+                                    {!   !} {!   !} {!   !} 
+                                    (⊢var Z refl) 
+                                    {!   !} 
+                                    (~ᵣsym (~ᵣbeta𝟘 ~ᵣrefl)) 
+                                    {!   !} 
+                                    ~ᵣrefl 
+                                    (⊢conv 
+                                        (⊢∷l 
+                                            (⊢appᵣ 
+                                                (⊢var (S (S (S (S Z)))) refl) 
+                                                (⊢var (S (S Z)) refl)) 
+                                            (⊢conv (⊢var Z refl) {!   !})) 
+                                        {!   !}) 
+                                    (inj₁ (~ᵣ∷l ~ᵣappr ~ᵣrefl))) 
+                                {!   !})
+                            {!   !})
+                        -- stuck because cant compare types
+                        (⊢rpi (⊢var (S Z) refl) (⊢var (S Z) refl))) 
+                    ⊢Sett) 
+                ⊢Sett
 
     module mapHOFBeta where
         liftHOF : ℕ → Term → Term
@@ -414,7 +470,7 @@ module typeRuleTests where
                                 --  
                               (⊢List ⊢Nat))
                             -- ? ⊢ Nat ->r Nat : Set 
-                            (⊢rpi ~ᵣrefl ⊢Nat ⊢Nat))
+                            {!   !}) -- (⊢rpi ⊢Nat ⊢Nat))
                         -- ? ⊢ idNat : Nat ->r Nat  
                         idNatTyped
                         {refl}) 
@@ -422,7 +478,7 @@ module typeRuleTests where
                     (⊢var Z refl)
                     {refl})
                 -- List Nat : Set 
-                (⊢List ⊢Nat) 
+                {!   !} -- (⊢List ⊢Nat) 
                 
         -- cant do this
         -- Which itself is not a type rule that can organically happen, I dont have point free programming
@@ -432,7 +488,7 @@ module typeRuleTests where
                 (⊢lam
                     -- (contFun , List Nat 𝕢 ω) ⊢ (eliml var 0 ty∶ Nat P∶ List Nat nb∶ nill cb∶ ((var 4 ·ᵣ var 2) ∷l var 0)) 
                     {!  ⊢lam ?  ?!}
-                    (⊢rpi ~ᵣrefl ⊢Nat ⊢Nat)) 
+                    (⊢rpi ⊢Nat ⊢Nat)) 
                 idNatTyped
                 where
                     contFun = {!   !}
@@ -451,7 +507,7 @@ module typeRuleTests where
                             (⊢lam 
                                 {!   !} 
                                 {!   !}) 
-                            (⊢rpi ~ᵣrefl ⊢Nat ⊢Nat)) 
+                            (⊢rpi ⊢Nat ⊢Nat)) 
                         idNatTyped) 
                     -- A -> B = A ->r B no bueno
                     {!   !}) 
@@ -503,7 +559,7 @@ module typeRuleTests where
                                                 (⊢var Z refl))
                                         {refl}) 
                                 (⊢List ⊢Nat))) 
-                        (⊢rpi ~ᵣrefl ⊢Nat ⊢Nat)) 
+                        (⊢rpi ⊢Nat ⊢Nat)) 
                     idNatTyped
                     {refl}) 
                 (⊢var Z refl)
@@ -561,6 +617,38 @@ module typeRuleTests where
                     ＝beta
                     ＝beta)
                 (＝listelc ＝refl (＝listeln ＝refl))
+
+        module Anned where 
+            listToVecTy : Term 
+            listToVecTy = r∶ List Nat ⟶ Vec𝟘 Nat (listLengthDef ·𝟘 Nat ·ω var 0)
+
+            listToVecDef : Term
+            listToVecDef = 
+                ƛr∶ List Nat ♭ 
+                    elimlᵣ var 0 ty∶ Nat P∶ Vec𝟘 Nat (listLengthDef ·𝟘 Nat ·ω var 0) 
+                        nb∶ nilv𝟘 
+                        -- Too lazy to just fetch it directly from the vector 
+                        cb∶ (var 2 ∷v var 0 𝕟𝟘 (listLengthDef ·𝟘 Nat ·ω var 1))  
+            listToVecTyped : cΓ ⊢ listToVecDef 𝕢 ω ∶ listToVecTy 
+            -- listToVecTyped {Γ} {cΓ = cΓ} = 
+            --     ⊢rlam 
+            --         ~ᵣelimlᵣ 
+            --         (let 
+            --             contScr = {!   !} 
+            --             contNil = {!   !} 
+            --             contCons = {!   !}
+            --         in 
+            --             ⊢listelᵣ
+            --                 contScr contNil contCons 
+            --                 (⊢var Z refl) 
+            --                 {!   !} 
+            --                 (~ᵣsym (~ᵣvec𝟘 ~ᵣrefl)) 
+            --                 {!   !} 
+            --                 ~ᵣnilv𝟘 
+            --                 {!   !} 
+            --                 (inj₁ (~ᵣ∷v𝟘 ~ᵣrefl ~ᵣrefl))) 
+            --         (⊢List ⊢Nat)
+            
 
 
         listToVecTy : Term 
@@ -702,7 +790,7 @@ module typeRuleTests where
                             (⊢List (⊢var (S (S Z)) refl))) 
                         -- Cant prove this since its var 2 ~ var 1, I dont know yet that they will 
                         -- I would rather like to assume it
-                        (⊢rpi {!   !} (⊢var (S Z) refl) (⊢var (S Z) refl))) 
+                        (⊢rpi (⊢var (S Z) refl) (⊢var (S Z) refl))) 
                     ⊢Sett)
                 ⊢Sett
 
@@ -809,5 +897,5 @@ module typeRuleTests where
                 (⊢appᵣ
                     (⊢var {!   !})
                     (⊢s ⊢z))
-                (⊢rpi ~ᵣrefl ⊢Nat ⊢Nat)
-        -}               
+                (⊢rpi ⊢Nat ⊢Nat)
+        -}                      

@@ -77,7 +77,13 @@ data Term where
 
     ---- elims 
     -- Sigma
-    el×<_,_> : Quantity → Quantity → Term → Term → Term → Term
+    el×<_,_>[_,_] : 
+            Quantity → Quantity → 
+            Type → Type → 
+            Term → 
+            Term → 
+            Term → 
+            Term
     -- Nat
     elimnat_P∶_zb∶_sb∶_ : Term → Term → Term → Term → Term
     elimnatᵣ_P∶_zb∶_sb∶_ : Term → Term → Term → Term → Term

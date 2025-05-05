@@ -124,7 +124,9 @@ _↑_≥_ nill i l = nill
 _↑_≥_ (t ∷l t₁) i l = _↑_≥_ t i l ∷l _↑_≥_ t₁ i l
 _↑_≥_ (nilv𝕢 σ) i l = nilv𝕢 σ
 _↑_≥_ (t ∷v t₁ 𝕟 n 𝕢 σ) i l = _↑_≥_ t i l ∷v _↑_≥_ t₁ i l 𝕟 _↑_≥_ n i l 𝕢 σ
-el×< σ , π > a P b ↑ i ≥ l = el×< σ , π > (a ↑ i ≥ l) (P ↑ i ≥ l) (b ↑ i ≥ l)
+el×< σ , π >[ A , B ] a P b ↑ i ≥ l = 
+    el×< σ , π >[ A ↑ i ≥ l , B ↑ i ≥ (suc l) ] (a ↑ i ≥ l) (P ↑ i ≥ l) 
+        (b ↑ i ≥ l)
 _↑_≥_ (elimnat t P∶ t₁ zb∶ zb sb∶ sb) i l = 
     elimnat (_↑_≥_ t i l) P∶ (_↑_≥_ t₁ i (suc l)) 
             zb∶ (_↑_≥_ zb i l) 
@@ -189,7 +191,9 @@ nill [ i / a ] = nill
 nilv𝟘 [ i / a ] = nilv𝟘
 nilvω [ i / a ] = nilvω
 (h ∷v t 𝕟 n 𝕢 σ) [ i / a ] = (h [ i / a ]) ∷v (t [ i / a ]) 𝕟 (n [ i / a ]) 𝕢 σ
-el×< σ , π > c P b [ i / a ] = el×< σ , π > (c [ i / a ]) (P [ suc i / a ↑ 1 ≥ 0 ]) (b [ 2 + i / a ↑ 2 ≥ 0 ])
+el×< σ , π >[ A , B ] c P b [ i / a ] = 
+    el×< σ , π >[ A [ i / a ] , B [ suc i / a ↑ 1 ≥ 0 ] ] (c [ i / a ]) (P [ suc i / a ↑ 1 ≥ 0 ]) 
+        (b [ 2 + i / a ↑ 2 ≥ 0 ])
 (elimnat b P∶ P zb∶ zb sb∶ sb) [ i / a ] = 
     elimnat b [ i / a ] P∶ P [ i / a ] 
         zb∶ zb [ i / a ] 

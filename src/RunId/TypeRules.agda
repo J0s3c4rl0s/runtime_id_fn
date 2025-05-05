@@ -477,9 +477,22 @@ data _~ᵣ_ where
         a ~ᵣ c →
         (b ·ᵣ a) ~ᵣ c
     -- Sigmas 
-    ~ᵣel<𝟘,> : {!   !}
-    ~ᵣel<,𝟘> : {!   !}
-    ~ᵣel<,>ᵣ : ?
+    ~ᵣel<𝟘,> :
+        -- weaken with erased _ : B 
+        b ~ᵣ (c ↑ 1 ≥ 0) → 
+        (el×< 𝟘 , ω >[ A , B ] a P b) ~ᵣ ((ƛω∶ A ♭ c) ·ω a)
+    ~ᵣel<,𝟘> :
+        -- weaken with erased _ : A 
+        b ~ᵣ (c ↑ 1 ≥ 1) → 
+        (el×< 𝟘 , ω >[ A , B ] a P b) ~ᵣ ((ƛω∶ B ♭ c) ·ω a)
+    -- Should this rule only exist for variables?
+    ~ᵣel<,>ᵣ : 
+        el×< σ , π >[ A , B ] (var i) P b ~ᵣ var i
+    -- Nat 
+    ~ᵣelℕᵣ :
+        (elimnatᵣ var i P∶ P zb∶ b sb∶ c) ~ᵣ var i 
     -- List 
+    -- Should this rule only exist for variables?
     ~ᵣelimlᵣ : 
         (elimlᵣ var i ty∶ A P∶ P nb∶ nb cb∶ cb) ~ᵣ var i 
+        

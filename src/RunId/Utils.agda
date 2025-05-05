@@ -144,14 +144,14 @@ el＋ᵣ< σ , π >[ A , B ] a P b c ↑ i ≥ l =
     el＋ᵣ< σ , π >[ A ↑ i ≥ l , B ↑ i ≥ l ] (a ↑ i ≥ l) (P ↑ i ≥ (suc l)) 
         (b ↑ i ≥ (suc l))
         (c ↑ i ≥ (suc l))
-_↑_≥_ (elimnat t P∶ t₁ zb∶ zb sb∶ sb) i l = 
-    elimnat (_↑_≥_ t i l) P∶ (_↑_≥_ t₁ i (suc l)) 
-            zb∶ (_↑_≥_ zb i l) 
-            sb∶ (_↑_≥_ sb i (2 + l))
-_↑_≥_ (elimnatᵣ t P∶ t₁ zb∶ zb sb∶ sb) i l = 
-    elimnatᵣ (_↑_≥_ t i l) P∶ (_↑_≥_ t₁ i (suc l)) 
-            zb∶ (_↑_≥_ zb i l) 
-            sb∶ (_↑_≥_ sb i (2 + l))
+_↑_≥_ (elNat t t₁ zb sb) i l = 
+    elNat (_↑_≥_ t i l) (_↑_≥_ t₁ i (suc l)) 
+            (_↑_≥_ zb i l) 
+            (_↑_≥_ sb i (2 + l))
+_↑_≥_ (elNatᵣ t t₁ zb sb) i l = 
+    elNatᵣ (_↑_≥_ t i l) (_↑_≥_ t₁ i (suc l)) 
+            (_↑_≥_ zb i l) 
+            (_↑_≥_ sb i (2 + l))
 _↑_≥_ (eliml t ty∶ A P∶ t₁ nb∶ t₃ cb∶ t₄) i l = 
     eliml (_↑_≥_ t i l) ty∶ _↑_≥_ A i l P∶ (_↑_≥_ t₁ i (suc l)) 
             nb∶ (_↑_≥_ t₃ i l) 
@@ -225,14 +225,14 @@ el＋ᵣ< σ , π >[ A , B ] c P b d [ i / a ] =
     el＋ᵣ< σ , π >[ A [ i / a ] , B [ i / a ] ] (c [ i / a ]) (P [ suc i / a ↑ 1 ≥ 0 ]) 
         (b [ suc i / a ↑ 1 ≥ 0 ]) 
         (d [ suc i / a ↑ 1 ≥ 0 ])
-(elimnat b P∶ P zb∶ zb sb∶ sb) [ i / a ] = 
-    elimnat b [ i / a ] P∶ P [ i / a ] 
-        zb∶ zb [ i / a ] 
-        sb∶ (sb [ i + 2 / _↑_≥_ a 2 0 ])
-(elimnatᵣ b P∶ P zb∶ zb sb∶ sb) [ i / a ] = 
-    elimnat b [ i / a ] P∶ P [ i / a ] 
-        zb∶ zb [ i / a ] 
-        sb∶ (sb [ i + 2 / _↑_≥_ a 2 0 ])
+(elNat b P zb sb) [ i / a ] = 
+    elNat (b [ i / a ]) (P [ i / a ] )
+        (zb [ i / a ]) 
+        (sb [ i + 2 / _↑_≥_ a 2 0 ])
+(elNatᵣ b P zb sb) [ i / a ] = 
+    elNat (b [ i / a ]) (P [ i / a ]) 
+        (zb [ i / a ]) 
+        (sb [ i + 2 / _↑_≥_ a 2 0 ])
 (eliml b ty∶ A P∶ P nb∶ nb cb∶ cb) [ i / a ] = 
     eliml b [ i / a ] ty∶ A [ i / a ] P∶ P [ i / a ] 
         nb∶ nb [ i / a ] 

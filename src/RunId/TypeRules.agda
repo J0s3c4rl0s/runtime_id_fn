@@ -95,9 +95,9 @@ data _⊢_∶_ where
         cΓ' ⊢ zb 𝕢 σ ∶ (P [ 0 / z ]) →
         (cΓ' , Nat 𝕢 ρ , P [ 0 / var 0 ] 𝕢 ρ' ) ⊢ sb 𝕢 σ ∶ (P [ 0 / s (var 1) ]) →
         {eq : cΓ'' ≡ cΓ +c cΓ'} →
-        cΓ'' ⊢ elimnat n P∶ P 
-                zb∶ zb 
-                sb∶ sb 
+        cΓ'' ⊢ elNat n P 
+                zb 
+                sb 
             𝕢 σ ∶ (P [ 0 / n ])
     ⊢natelᵣ : ∀ {zb sb} →
         cΓ ⊢ var i 𝕢 σ ∶ Nat →
@@ -111,9 +111,9 @@ data _⊢_∶_ where
         (sb [ i / s (var 0) ]) ~ᵣ (s (var 0)) ⊎ 
             (sb [ i / (s (var 1)) ]) ~ᵣ (s (var 1)) →
         {eq : cΓ'' ≡ (cΓ +c cΓ')} →
-        cΓ'' ⊢ elimnatᵣ var i P∶ P 
-                zb∶ zb 
-                sb∶ sb 
+        cΓ'' ⊢ elNatᵣ (var i) P 
+                zb 
+                sb 
             𝕢 σ ∶ (P [ 0 / n ])
     
     -- Lists
@@ -283,21 +283,21 @@ data _＝_ where
     -- nats
     ＝natelz :
         m ＝ z →
-        (elimnat m P∶ P 
-            zb∶ zb 
-            sb∶ sb) 
+        (elNat m P 
+            zb 
+            sb) 
             ＝ 
             zb
     ＝natels :
         n ＝ s n →
-        (elimnat n P∶ P 
-                zb∶ zb 
-                sb∶ sb) 
+        (elNat n P 
+                zb 
+                sb) 
             ＝ 
             a →
-        (elimnat m P∶ P 
-                zb∶ zb 
-                sb∶ sb) 
+        (elNat m P 
+                zb 
+                sb) 
             ＝ 
             ((sb [ 1 / n ]) [ 0 / a ])
     -- list
@@ -511,9 +511,11 @@ data _~ᵣ_ where
         a ~ᵣ a' →
         b ~ᵣ d → 
         (el＋< ω , 𝟘 >[ A , B ] a P b c) ~ᵣ ((ƛω∶ A ♭ d) ·ω a')
+    ~ᵣel＋ᵣ : 
+        (el＋< ω , 𝟘 >[ A , B ] (var i) P b c) ~ᵣ var i
     -- Nat 
     ~ᵣelℕᵣ :
-        (elimnatᵣ var i P∶ P zb∶ b sb∶ c) ~ᵣ var i 
+        (elNatᵣ (var i) P b c) ~ᵣ var i 
     -- List 
     -- Should this rule only exist for variables?
     ~ᵣelimlᵣ : 

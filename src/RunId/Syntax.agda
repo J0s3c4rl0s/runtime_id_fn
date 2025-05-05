@@ -126,8 +126,8 @@ data Term where
         Term →  
         Term   
     -- Nat
-    elimnat_P∶_zb∶_sb∶_ : Term → Term → Term → Term → Term
-    elimnatᵣ_P∶_zb∶_sb∶_ : Term → Term → Term → Term → Term
+    elNat : Term → Term → Term → Term → Term
+    elNatᵣ : Term → Term → Term → Term → Term
     -- List
     eliml_ty∶_P∶_nb∶_cb∶_ : (list : Term) → (innerty : Type) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
     elimlᵣ_ty∶_P∶_nb∶_cb∶_ : (list : Term) → (innerty : Type) → (P : Term) → (nilB : Term) → (∷B : Term) → Term

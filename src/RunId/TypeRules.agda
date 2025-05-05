@@ -2,16 +2,6 @@ module RunId.TypeRules where
 
 open import RunId.Syntax
 open import RunId.Utils
-import STLC.TypeRules as T
-open T using () 
-    renaming (
-        _⟶_ to _T⟶_;
-        _·_ to _T·_;
-        _∷l_ to _T∷l_;
-        _∷v_𝕟_ to _T∷v_T𝕟_;
-        _,_ to _T,_;
-        _⊢_∶_ to _T⊢_T∶_
-    )
 
 open import Data.Product using (_×_) renaming (_,_ to _,'_)
 open import Data.Nat using (ℕ; zero; suc; _+_; _≤ᵇ_)
@@ -27,15 +17,11 @@ private variable
     cΘ : Context Θ
     σ σ' π π' ρ ρ' ρ'' ρ''' δ : Quantity
     A B C D P : Type
-    a b c d e f g h l m n  : Term
+    a a' b c d e f g h l m n  : Term
     as cs : Term
     nb cb zb sb : Term
     
     i j 𝓁 𝓁₁ 𝓁₂ : ℕ
-    
-    Γᵣ : T.Context
-    Aᵣ Bᵣ Cᵣ : T.Type
-    aᵣ bᵣ cᵣ : T.Term
 
 
 data _＝_ : Term → Term → Set
@@ -109,9 +95,9 @@ data _⊢_∶_ where
         cΓ' ⊢ zb 𝕢 σ ∶ (P [ 0 / z ]) →
         (cΓ' , Nat 𝕢 ρ , P [ 0 / var 0 ] 𝕢 ρ' ) ⊢ sb 𝕢 σ ∶ (P [ 0 / s (var 1) ]) →
         {eq : cΓ'' ≡ cΓ +c cΓ'} →
-        cΓ'' ⊢ elimnat n P∶ P 
-                zb∶ zb 
-                sb∶ sb 
+        cΓ'' ⊢ elNat n P 
+                zb 
+                sb 
             𝕢 σ ∶ (P [ 0 / n ])
     ⊢natelᵣ : ∀ {zb sb} →
         cΓ ⊢ var i 𝕢 σ ∶ Nat →
@@ -125,9 +111,9 @@ data _⊢_∶_ where
         (sb [ i / s (var 0) ]) ~ᵣ (s (var 0)) ⊎ 
             (sb [ i / (s (var 1)) ]) ~ᵣ (s (var 1)) →
         {eq : cΓ'' ≡ (cΓ +c cΓ')} →
-        cΓ'' ⊢ elimnatᵣ var i P∶ P 
-                zb∶ zb 
-                sb∶ sb 
+        cΓ'' ⊢ elNatᵣ (var i) P 
+                zb 
+                sb 
             𝕢 σ ∶ (P [ 0 / n ])
     
     -- Lists
@@ -150,9 +136,9 @@ data _⊢_∶_ where
             List A 𝕢 σ , 
             P [ 0 / var 0 ] 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P [ 0 / (var 2 ∷l var 1) ]) → 
         {eq : cΓ''' ≡ cΓ +c (cΓ' +c cΓ'')} →
-        cΓ''' ⊢ eliml l ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb 
+        cΓ''' ⊢ elList[ A ] l P 
+                nb 
+                cb 
             𝕢 σ ∶ (P [ 0 / l ])
     ⊢listelᵣ : 
         (cΓ cΓ' cΓ'' : Context Γ) →
@@ -171,9 +157,9 @@ data _⊢_∶_ where
         (cb [ 3 + i / var 2 ∷l var 0 ]) ~ᵣ (var 2 ∷l var 0) ⊎ 
             (cb [ 3 + i / var 2 ∷l var 1 ]) ~ᵣ (var 2 ∷l var 1) →
         {eq : cΓ''' ≡ (cΓ +c (cΓ' +c cΓ''))} →
-        cΓ''' ⊢ elimlᵣ var i ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb 
+        cΓ''' ⊢ elListᵣ[ A ] (var i) P 
+                nb 
+                cb 
             𝕢 σ ∶ (P ·𝟘 var i)
     
     -- Vecs
@@ -201,9 +187,9 @@ data _⊢_∶_ where
             A 𝕢 σ , 
             Vec A (var 1 𝕢 δ) 𝕢  σ , 
             P [ 0 / var 0 ] [ 1 / var 2 ] 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P [ 0 / var 3 ] [ 1 / var 2 ∷v var 1 𝕟 var 3 𝕢 δ ]) →
-        cΓ'' ⊢ elimv (b 𝕢 δ) ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb 
+        cΓ'' ⊢ elVec[ A ]< δ > b P 
+                nb 
+                cb 
             𝕢 σ ∶ (P [ 0 / n ] [ 1 / b ])
     ⊢vecelᵣ : {cΓ cΓ' cΓ'' : Context Γ} → 
         cΓ ⊢ var i 𝕢 σ ∶ Vec A (n 𝕢 δ) →
@@ -223,9 +209,9 @@ data _⊢_∶_ where
         (cb [ 4 + i / var 2 ∷v var 0 𝕟 var 3 𝕢 σ ]) ~ᵣ (var 2 ∷v var 0 𝕟 var 3 𝕢 σ) ⊎ 
             (cb [ 4 + i / var 2 ∷v var 1 𝕟 var 3 𝕢 σ ]) ~ᵣ (var 2 ∷v var 1 𝕟 var 3 𝕢 σ) → 
         {eq : cΓ'' ≡ cΓ +c cΓ'} →
-        cΓ'' ⊢ elimv (var i 𝕢 δ) ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb 
+        cΓ'' ⊢ elVecᵣ[ A ]< δ > (var i) P 
+                nb 
+                cb 
             𝕢 σ ∶ (P [ 0 / n ] [ 1 / b ])
     
     ⊢Sett : 
@@ -297,62 +283,62 @@ data _＝_ where
     -- nats
     ＝natelz :
         m ＝ z →
-        (elimnat m P∶ P 
-            zb∶ zb 
-            sb∶ sb) 
+        (elNat m P 
+            zb 
+            sb) 
             ＝ 
             zb
     ＝natels :
         n ＝ s n →
-        (elimnat n P∶ P 
-                zb∶ zb 
-                sb∶ sb) 
+        (elNat n P 
+                zb 
+                sb) 
             ＝ 
             a →
-        (elimnat m P∶ P 
-                zb∶ zb 
-                sb∶ sb) 
+        (elNat m P 
+                zb 
+                sb) 
             ＝ 
             ((sb [ 1 / n ]) [ 0 / a ])
     -- list
     ＝listeln :
         cs ＝ nill →
-        (eliml cs ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb) 
+        (elList[ A ] cs P 
+                nb 
+                cb) 
             ＝ 
             nb
     ＝listelc :     
         cs ＝ (a ∷l as) →
-        (eliml as ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb) 
+        (elList[ A ] as P 
+                nb 
+                cb) 
             ＝ 
             b →
-        (eliml cs ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb) 
+        (elList[ A ] cs P 
+                nb 
+                cb) 
             ＝ 
             (((cb [ 2 / a ]) [ 1 / as ]) [ 0 / b ])
             
     -- vec
     ＝veceln :
         cs ＝ (nilv𝕢 σ) →
-        (elimv (cs 𝕢 σ) ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb) 
+        (elVec[ A ]< σ > cs P 
+                nb 
+                cb) 
             ＝ 
             nb
     ＝vecelc :
         cs ＝ (a ∷v as 𝕟 n 𝕢 σ) → 
-        (elimv ((nilv𝕢 σ) 𝕢 σ) ty∶ A P∶ P
-                nb∶ nb 
-                cb∶ cb) 
+        (elVec[ A ]< σ > (nilv𝕢 σ) P
+                nb 
+                cb) 
             ＝ 
             b →
-        (elimv (cs 𝕢 σ) ty∶ A P∶ P
-                nb∶ nb 
-                cb∶ cb) 
+        (elVec[ A ]< σ > cs P
+                nb 
+                cb) 
             ＝ 
             -- Might be worthwhile to change n to fit the structure of ∷v
             ((((cb [ 3 / n ]) [ 2 / a ]) [ 1 / as ]) [ 0 / b ])
@@ -393,6 +379,7 @@ infix 30 _~ᵣ_
 -- Should I only define this 
 -- Could add types 
 data _~ᵣ_ where
+    ------ Equiv rules
     ~ᵣrefl :
         A ~ᵣ A
     ~ᵣsym :
@@ -402,79 +389,68 @@ data _~ᵣ_ where
         A ~ᵣ B →
         B ~ᵣ C →
         A ~ᵣ C
+
+    ------ Types
+    ---- Functions
+    ~ᵣpiω : 
+        A ~ᵣ C  →
+        B ~ᵣ D →
+        (∶ A 𝕢 ω ⟶ B) ~ᵣ (∶ C 𝕢 ω ⟶ D) 
+    ~ᵣpi𝟘 : 
+        B ~ᵣ( D ↑ 1 ≥ 0) →
+        (∶ A 𝕢 𝟘 ⟶ B) ~ᵣ D 
+    ~ᵣpir : 
+        A ~ᵣ B →
+        (r∶ A ⟶ B) ~ᵣ (r∶ A ⟶ A) 
+    ---- Sigma 
+    ~ᵣ×𝟘₁ :
+        B ~ᵣ (C ↑ 1 ≥ 0) → 
+        (∶ (A 𝕢 𝟘) ×∶ (B 𝕢 ω)) ~ᵣ C
+    ~ᵣ×𝟘₂ :
+        A ~ᵣ C → 
+        (∶ (A 𝕢 ω) ×∶ (B 𝕢 𝟘)) ~ᵣ C
+    ---- Sum 
+    ~ᵣ＋𝟘₁ : 
+        A ~ᵣ C →
+        ((A 𝕢 𝟘) ＋ (B 𝕢 ω)) ~ᵣ C
+    ~ᵣ＋𝟘₂ : 
+        B ~ᵣ C →
+        ((A 𝕢 ω) ＋ (B 𝕢 𝟘)) ~ᵣ C
+    ---- Vec
+    ~ᵣvecω : 
+        n ~ᵣ m →
+        A ~ᵣ B →
+        Vec A (n 𝕢 ω) ~ᵣ Vec B (m 𝕢 ω)
+    ~ᵣvec𝟘 :
+        A ~ᵣ B →
+        Vec A (n 𝕢 𝟘) ~ᵣ List B
     
-    ---- eliminators 
-    -- nats
-    {-
-    ~ᵣnatelz :
-        m ~ᵣ z →
-        (elimnat m P∶ P 
-            zb∶ zb 
-            sb∶ sb) 
-            ~ᵣ 
-            zb
-    ~ᵣnatels :
-        n ~ᵣ s n →
-        (elimnat n P∶ P 
-                zb∶ zb 
-                sb∶ sb) 
-            ~ᵣ 
-            a →
-        (elimnat m P∶ P 
-                zb∶ zb 
-                sb∶ sb) 
-            ~ᵣ 
-            ((sb [ 1 / n ]) [ 0 / a ])
-    -}
-    -- list
-    {-
-    ~ᵣlisteln :
-        cs ~ᵣ nill →
-        (eliml cs ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb )
-            ~ᵣ 
-            nb
-    ~ᵣlistelc :     
-        cs ~ᵣ (a ∷l as) →
-        (eliml as ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb )
-            ~ᵣ 
-            b →
-        (eliml cs ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb )
-            ~ᵣ 
-            (((cb [ 2 / a ]) [ 1 / as ]) [ 0 / b ])
-            -- (((cb · a) · as) ·  b)
-    -}
-    -- vec
-    {-
-    ~ᵣveceln :
-        -- generic computation rules
-        cs ~ᵣ (nilv𝕢 σ) →
-        (elimv (cs 𝕢 σ) ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb )
-            ~ᵣ 
-            nb
-    ~ᵣvecelc :
-        cs ~ᵣ (a ∷v as 𝕟 n 𝕢 σ) → 
-        (elimv ((nilv𝕢 σ) 𝕢 σ) ty∶ A P∶ P
-                nb∶ nb 
-                cb∶ cb )
-            ~ᵣ 
-            b →
-        (elimv (cs 𝕢 σ) ty∶ A P∶ P
-                nb∶ nb 
-                cb∶ cb )
-            ~ᵣ 
-            -- Might be worthwhile to change n to fit the structure of ∷v
-            ((((cb [ 3 / n ]) [ 2 / a ]) [ 1 / as ]) [ 0 / b ])
-            -- ((((cb · n) · a) · as) · b)
-    -}
-    ---- Cong rules for datatypes 
+    ------ Terms
+    
+    ---- Constructors 
+    -- Functions
+    ~ᵣlamω :
+        b ~ᵣ c →
+        (ƛ∶ A 𝕢 ω ♭ b)  ~ᵣ (ƛ∶ A 𝕢 ω ♭ c)
+    ~ᵣlam𝟘 :
+        b ~ᵣ (c ↑ 1 ≥ 0) →
+        (ƛ∶ A 𝕢 𝟘 ♭ b)  ~ᵣ c
+    ~ᵣlamr : 
+        (ƛr∶ A ♭ b) ~ᵣ (ƛr∶ A ♭ var 0)
+    -- Sigma 
+    ~ᵣ⟨,𝟘⟩ : 
+        a ~ᵣ c → 
+        ⟨ a 𝕢 ω , b 𝕢 𝟘 ⟩ ~ᵣ c 
+    ~ᵣ⟨𝟘,⟩ : 
+        b ~ᵣ (c ↑ 1 ≥ 0) → 
+        ⟨ a 𝕢 𝟘 , b 𝕢 ω ⟩ ~ᵣ c 
+    -- Sum 
+    ~ᵣinl<,𝟘> :
+        a ~ᵣ c →
+        (inl< ω , 𝟘 > a) ~ᵣ c
+    ~ᵣinr<𝟘,> :
+        b ~ᵣ c →
+        (inr< 𝟘 , ω > b) ~ᵣ c 
     -- Nat
     ~ᵣs : 
         n ~ᵣ m →
@@ -487,70 +463,7 @@ data _~ᵣ_ where
         a ~ᵣ c →
         as ~ᵣ cs →
         (a ∷l as) ~ᵣ (c ∷l cs)    
-
-    ------ interesting rules-- Do I need two rules depending on usage and then like ignore argument 
-    -- or just pass it along?
-    ~ᵣpiω : 
-        A ~ᵣ C  →
-        -- Which of the two should I extend it with? Does it matter? 
-        -- Must I "pass along" proof of equiv or maybe substitution? 
-        -- Does subst even work?
-        -- Must I shift the indiceses here?
-        B ~ᵣ D →
-        (∶ A 𝕢 ω ⟶ B) ~ᵣ (∶ C 𝕢 ω ⟶ D) 
-    -- does this make sense  
-    ~ᵣpi𝟘 : 
-        -- shift em, wait maybe shift B??
-        B ~ᵣ( D ↑ 1 ≥ 0) →
-        (∶ A 𝕢 𝟘 ⟶ B) ~ᵣ D 
-    -- should it be runid equiv to a fun?
-    ~ᵣpir : 
-        A ~ᵣ B →
-        (r∶ A ⟶ B) ~ᵣ (r∶ A ⟶ A) 
-    -- must I add some for the A being different or nah?
-    -- distinguish between usages?
-    ~ᵣlamω :
-        -- I guess this implicitly checks that the targ et types match
-        b ~ᵣ c →
-        (ƛ∶ A 𝕢 ω ♭ b)  ~ᵣ (ƛ∶ A 𝕢 ω ♭ c)
-    ~ᵣlam𝟘 :
-        -- I guess this implicitly checks that the target types match
-        b ~ᵣ (c ↑ 1 ≥ 0) →
-        -- This feels like it wont play well with prev rule
-        (ƛ∶ A 𝕢 𝟘 ♭ b)  ~ᵣ c
-    ~ᵣlamr : 
-        (ƛr∶ A ♭ b) ~ᵣ (ƛr∶ A ♭ var 0)
-    -- I need distinguish between applications of erased or unerased functions? 
-    -- maybe distinguish erased and unerased application in syntax (or parametrize)
-    ~ᵣappω : 
-        b ~ᵣ d →
-        a ~ᵣ c →
-        (b ·ω a) ~ᵣ (d ·ω c)
-    ~ᵣapp𝟘 : 
-        b ~ᵣ d →
-        (b ·𝟘 a) ~ᵣ d
-    ~ᵣappr : 
-        (b ·ᵣ a) ~ᵣ a
-    -- Any case where id accept ·𝟘?
-    ~ᵣbetaω : ((ƛ∶ A 𝕢 ω ♭ b) ·ω a) ~ᵣ (b [ 0 / a ])
-    -- Done by appr?
-    -- ~ᵣbetar : ((ƛr∶ A ♭ b) ·ᵣ a) ~ᵣ a
-    -- isnt this covered by app0?
-    {-
-    -- ???? This feels very wrong, maybe it is even unnecessary
-    ~ᵣbeta𝟘 : (ƛ∶ A 𝕢 𝟘 ♭ b) · a ~ᵣ b
-    -}
-
-    -- Vec
-    ~ᵣvecω : 
-        n ~ᵣ m →
-        A ~ᵣ B →
-        Vec A (n 𝕢 ω) ~ᵣ Vec B (m 𝕢 ω)
-    ~ᵣvec𝟘 :
-        A ~ᵣ B →
-        Vec A (n 𝕢 𝟘) ~ᵣ List B
-    
-    -- redundant with refl
+    -- Vec 
     ~ᵣnilvω :
         nilvω ~ᵣ nilvω
     ~ᵣnilv𝟘 :
@@ -564,65 +477,47 @@ data _~ᵣ_ where
         a ~ᵣ c →
         as ~ᵣ cs →
         (a ∷v as 𝕟𝟘 n) ~ᵣ (c ∷l cs)
-    
+
+    ---- Eliminators
+    -- Functions
+    ~ᵣappω : 
+        b ~ᵣ d →
+        a ~ᵣ c →
+        (b ·ω a) ~ᵣ (d ·ω c)
+    ~ᵣapp𝟘 : 
+        b ~ᵣ d →
+        (b ·𝟘 a) ~ᵣ d
+    ~ᵣappr : 
+        a ~ᵣ c →
+        (b ·ᵣ a) ~ᵣ c
+    -- Sigmas 
+    ~ᵣel<𝟘,> :
+        -- weaken with erased _ : B 
+        b ~ᵣ (c ↑ 1 ≥ 0) → 
+        (el×< 𝟘 , ω >[ A , B ] a P b) ~ᵣ ((ƛω∶ A ♭ c) ·ω a)
+    ~ᵣel<,𝟘> :
+        -- weaken with erased _ : A 
+        b ~ᵣ (c ↑ 1 ≥ 1) → 
+        (el×< 𝟘 , ω >[ A , B ] a P b) ~ᵣ ((ƛω∶ B ♭ c) ·ω a)
+    -- Should this rule only exist for variables?
+    ~ᵣel<,>ᵣ : 
+        el×ᵣ< σ , π >[ A , B ] (var i) P b ~ᵣ var i
+    -- Sum 
+    ~ᵣel＋<𝟘,> : 
+        a ~ᵣ a' →
+        c ~ᵣ d → 
+        (el＋< 𝟘 , ω >[ A , B ] a P b c) ~ᵣ ((ƛω∶ B ♭ d) ·ω a')
+    ~ᵣel＋<,𝟘> : 
+        a ~ᵣ a' →
+        b ~ᵣ d → 
+        (el＋< ω , 𝟘 >[ A , B ] a P b c) ~ᵣ ((ƛω∶ A ♭ d) ·ω a')
+    ~ᵣel＋ᵣ : 
+        (el＋< ω , 𝟘 >[ A , B ] (var i) P b c) ~ᵣ var i
+    -- Nat 
+    ~ᵣelℕᵣ :
+        (elNatᵣ (var i) P b c) ~ᵣ var i 
     -- List 
-    
-    
-    -- eta rules
-    ~ᵣηlist :
-        (nb 
-            -- Replace scrutinee with destructor
-            [ i / nill ])
-            ~ᵣ 
-        (a 
-            -- Replace scrutinee with destructor
-            [ i / nill ]) →
-        -- Context has been weakened so update RHS to new context through shifting
-        (cb 
-            -- Replace scrutinee with destructor
-            [ (3 + i) / var 2 ∷l var 1 ]
-            -- Replace tail with acc
-            [ 0 / var 1 ]) 
-            ~ᵣ  
-        ((a ↑ 3 ≥ 0)
-            -- Replace scrutinee with destructor
-            [ (3 + i) / var 2 ∷l var 1 ]) →
-        -- May not be necessary, subst acc for tail should suffice
-        -- Add two options, either acc or tail, prev solution works bad with proof
-        -- cb ~ᵣ ((a [ i / var 2 ∷l var 0 ])) ⊎ cb ~ᵣ ((a [ i / var 2 ∷l var 1 ])) →
-        (eliml var i ty∶ A P∶ P 
-            nb∶ nb 
-            cb∶ cb) 
-            ~ᵣ 
-        a
-    ~ᵣηvec :
-        (nb
-            -- Replace scrutinee with destructor
-            [ i / nilv𝕢 σ ]) 
-            ~ᵣ 
-        (a 
-            -- Replace scrutinee with destructor
-            [ i / nilv𝕢 σ ]) →
-        (cb 
-            -- Replace scrutinee with destructor
-            [ (4 + i) / var 2 ∷v var 1 𝕟 var 3 𝕢 σ ]
-            -- Replace acc with tail 
-            [ 0 / var 1 ]) 
-            ~ᵣ 
-        ((a ↑ 4 ≥ 0) 
-            -- Replace scrutinee with destructor
-            [ (4 + i) / var 2 ∷v var 1 𝕟 var 3 𝕢 σ ]) →
-        (elimv (var i 𝕢 σ) ty∶ A P∶ P
-            nb∶ nb 
-            cb∶ cb) 
-            ~ᵣ 
-        a
-
-
-    ---- New rule ideas
-    ~ᵣelimlᵣ : 
-        (elimlᵣ var i ty∶ A P∶ P nb∶ nb cb∶ cb) ~ᵣ var i 
-    ~ᵣbeta𝟘 : 
-        b ~ᵣ (c ↑ 1 ≥ 0) →
-        ((ƛ𝟘∶ A ♭ b) ·𝟘 a) ~ᵣ c
-     
+    -- Should this rule only exist for variables?
+    ~ᵣelListᵣ : 
+        (elListᵣ[ A ] (var i) P nb cb) ~ᵣ var i 
+        

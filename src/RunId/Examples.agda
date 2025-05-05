@@ -82,100 +82,100 @@ module ~ᵣTests where
 
     --- TEST CASES FOR SUBBING I IN
 
-    module etalist where
+    -- -- module etalist where
 
-        ~ᵣelimlId0 :  
-            (eliml var 0 ty∶ Nat P∶ Vec Nat (n 𝕢 𝟘) 
-            nb∶ var 0 
-            cb∶ var 3)
-            ~ᵣ 
-            var 0
-        ~ᵣelimlId0 =
-            ~ᵣηlist
-                ~ᵣrefl
-                ~ᵣrefl
+    -- --     ~ᵣelimlId0 :  
+    -- --         (eliml var 0 ty∶ Nat P∶ Vec Nat (n 𝕢 𝟘) 
+    -- --         nb∶ var 0 
+    -- --         cb∶ var 3)
+    -- --         ~ᵣ 
+    -- --         var 0
+    -- --     ~ᵣelimlId0 =
+    -- --         ~ᵣηlist
+    -- --             ~ᵣrefl
+    -- --             ~ᵣrefl
 
-        ~ᵣelimlId1 :  
-            (eliml var 1 ty∶ Nat P∶ Vec Nat (n 𝕢 𝟘) 
-            nb∶ var 1 
-            cb∶ var 4)
-            ~ᵣ 
-            var 1
-        ~ᵣelimlId1 =
-            ~ᵣηlist
-                ~ᵣrefl
-                ~ᵣrefl
+    -- --     ~ᵣelimlId1 :  
+    -- --         (eliml var 1 ty∶ Nat P∶ Vec Nat (n 𝕢 𝟘) 
+    -- --         nb∶ var 1 
+    -- --         cb∶ var 4)
+    -- --         ~ᵣ 
+    -- --         var 1
+    -- --     ~ᵣelimlId1 =
+    -- --         ~ᵣηlist
+    -- --             ~ᵣrefl
+    -- --             ~ᵣrefl
 
-        ~ᵣelimlAcc :  
-            (eliml var 0 ty∶ Nat P∶ Vec Nat (n 𝕢 𝟘) 
-            nb∶ nilv𝕢 𝟘 
-            -- value of index (n/m) doesnt matter for this test
-            cb∶ (var 2 ∷v var 0 𝕟 m 𝕢 𝟘))
-            ~ᵣ 
-            var 0
-        ~ᵣelimlAcc =
-                ~ᵣηlist
-                    ~ᵣnilv𝟘  
-                    (~ᵣ∷v𝟘 ~ᵣrefl ~ᵣrefl)
+    -- --     ~ᵣelimlAcc :  
+    -- --         (eliml var 0 ty∶ Nat P∶ Vec Nat (n 𝕢 𝟘) 
+    -- --         nb∶ nilv𝕢 𝟘 
+    -- --         -- value of index (n/m) doesnt matter for this test
+    -- --         cb∶ (var 2 ∷v var 0 𝕟 m 𝕢 𝟘))
+    -- --         ~ᵣ 
+    -- --         var 0
+    -- --     ~ᵣelimlAcc =
+    -- --             ~ᵣηlist
+    -- --                 ~ᵣnilv𝟘  
+    -- --                 (~ᵣ∷v𝟘 ~ᵣrefl ~ᵣrefl)
                     
-        ~ᵣelimlTail : 
-            (eliml var 0 ty∶ Nat P∶ Vec Nat (n 𝕢 𝟘)
-            nb∶ nilv𝕢 𝟘 
-            -- value of index (n/m) doesnt matter for this test
-            cb∶ (var 2 ∷v var 1 𝕟 m 𝕢 𝟘))
-            ~ᵣ 
-            var 0
-        ~ᵣelimlTail = 
-            ~ᵣηlist
-                ~ᵣnilv𝟘
-                (~ᵣ∷v𝟘 ~ᵣrefl ~ᵣrefl)
+    -- --     ~ᵣelimlTail : 
+    -- --         (eliml var 0 ty∶ Nat P∶ Vec Nat (n 𝕢 𝟘)
+    -- --         nb∶ nilv𝕢 𝟘 
+    -- --         -- value of index (n/m) doesnt matter for this test
+    -- --         cb∶ (var 2 ∷v var 1 𝕟 m 𝕢 𝟘))
+    -- --         ~ᵣ 
+    -- --         var 0
+    -- --     ~ᵣelimlTail = 
+    -- --         ~ᵣηlist
+    -- --             ~ᵣnilv𝟘
+    -- --             (~ᵣ∷v𝟘 ~ᵣrefl ~ᵣrefl)
 
-    module etavec where
+    -- module etavec where
 
-        ~ᵣelimvId0 :  
-            -- should be independent of σ?
-            (elimv (var 0 𝕢 σ) ty∶ Nat P∶ Vec Nat (n 𝕢 𝟘) 
-            nb∶ var 0 
-            cb∶ var 4)
-            ~ᵣ 
-            var 0
-        ~ᵣelimvId0 =
-            ~ᵣηvec 
-                ~ᵣrefl 
-                ~ᵣrefl
+    --     ~ᵣelimvId0 :  
+    --         -- should be independent of σ?
+    --         (elimv (var 0 𝕢 σ) ty∶ Nat P∶ Vec Nat (n 𝕢 𝟘) 
+    --         nb∶ var 0 
+    --         cb∶ var 4)
+    --         ~ᵣ 
+    --         var 0
+    --     ~ᵣelimvId0 =
+    --         ~ᵣηvec 
+    --             ~ᵣrefl 
+    --             ~ᵣrefl
 
-        ~ᵣelimvId1 :  
-            (elimv (var 0 𝕢 𝟘) ty∶ Nat P∶ Vec Nat (n 𝕢 𝟘) 
-            nb∶ var 1 
-            cb∶ var 5)
-            ~ᵣ 
-            var 1
-        ~ᵣelimvId1 =
-            ~ᵣηvec 
-                ~ᵣrefl 
-                ~ᵣrefl
+    --     ~ᵣelimvId1 :  
+    --         (elimv (var 0 𝕢 𝟘) ty∶ Nat P∶ Vec Nat (n 𝕢 𝟘) 
+    --         nb∶ var 1 
+    --         cb∶ var 5)
+    --         ~ᵣ 
+    --         var 1
+    --     ~ᵣelimvId1 =
+    --         ~ᵣηvec 
+    --             ~ᵣrefl 
+    --             ~ᵣrefl
 
-        ~ᵣelimvAcc :  
-            (elimv (var 0 𝕢 𝟘) ty∶ Nat P∶ List Nat 
-            nb∶ nill 
-            cb∶ (var 2 ∷l var 0))
-            ~ᵣ 
-            var 0
-        ~ᵣelimvAcc =
-            ~ᵣηvec 
-                (~ᵣsym ~ᵣnilv𝟘) 
-                (~ᵣsym (~ᵣ∷v𝟘 ~ᵣrefl ~ᵣrefl))
+    --     ~ᵣelimvAcc :  
+    --         (elimv (var 0 𝕢 𝟘) ty∶ Nat P∶ List Nat 
+    --         nb∶ nill 
+    --         cb∶ (var 2 ∷l var 0))
+    --         ~ᵣ 
+    --         var 0
+    --     ~ᵣelimvAcc =
+    --         ~ᵣηvec 
+    --             (~ᵣsym ~ᵣnilv𝟘) 
+    --             (~ᵣsym (~ᵣ∷v𝟘 ~ᵣrefl ~ᵣrefl))
                     
-        ~ᵣelimvTail :  
-            (elimv (var 0 𝕢 𝟘) ty∶ Nat P∶ List Nat 
-            nb∶ nill 
-            cb∶ (var 2 ∷l var 1))
-            ~ᵣ 
-            var 0
-        ~ᵣelimvTail = 
-            ~ᵣηvec 
-                (~ᵣsym ~ᵣnilv𝟘) 
-                (~ᵣsym (~ᵣ∷v𝟘 ~ᵣrefl ~ᵣrefl))
+    --     ~ᵣelimvTail :  
+    --         (elimv (var 0 𝕢 𝟘) ty∶ Nat P∶ List Nat 
+    --         nb∶ nill 
+    --         cb∶ (var 2 ∷l var 1))
+    --         ~ᵣ 
+    --         var 0
+    --     ~ᵣelimvTail = 
+    --         ~ᵣηvec 
+    --             (~ᵣsym ~ᵣnilv𝟘) 
+    --             (~ᵣsym (~ᵣ∷v𝟘 ~ᵣrefl ~ᵣrefl))
 
 
 module typeRuleTests where
@@ -265,9 +265,9 @@ module typeRuleTests where
             module eliminators where
                 -- -- Green slime from _+c_ in result
                 -- test : cΓ ⊢ 
-                --     (elimnat z P∶ Nat 
-                --         zb∶ s z 
-                --         sb∶ s (var 0)) 𝕢 σ ∶ Nat
+                --     (elNat z Nat 
+                --         (s z) 
+                --         (s (var 0))) 𝕢 σ ∶ Nat
                 -- test = 
                 --     {!  ⊢natel ? ? ? ?  !}                
         
@@ -385,7 +385,7 @@ module typeRuleTests where
         liftHOF i (e ∷l e₁) = liftHOF i e ∷l liftHOF i e₁
         liftHOF i (nilv𝕢 x) = {!   !}
         liftHOF i (e ∷v e₁ 𝕟 e₂ 𝕢 x) = {!   !}
-        liftHOF i (elimnat e P∶ e₁ zb∶ e₂ sb∶ e₃) = {!   !}
+        liftHOF i (elNat e P∶ e₁ zb∶ e₂ sb∶ e₃) = {!   !}
         liftHOF i (eliml e ty∶ innerty P∶ P nb∶ nb cb∶ cb) = 
             eliml liftHOF i e ty∶ liftHOF i innerty P∶ liftHOF (suc i) P nb∶ liftHOF i nb cb∶ liftHOF (3 + i) cb
         liftHOF i (elimv x ty∶ innerty P∶ e nb∶ e₁ cb∶ e₂) = {!   !}

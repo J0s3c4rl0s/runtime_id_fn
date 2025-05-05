@@ -62,8 +62,19 @@ data Term where
     _·_𝕢_ : Term → Term → Quantity → Term
     _·ᵣ_ : Term → Term → Term
 
-    -- data cons
-    ---- Nats
+    ---- data cons
+    -- Sigma 
+    ⟨_,_⟩ : Annotation A σ → Annotation B π → Type
+    -- Sum 
+    inl<_,_> : 
+        Quantity → Quantity → 
+        Term → 
+        Term
+    inr<_,_> : 
+        Quantity → Quantity → 
+        Term → 
+        Term
+    -- Nats
     z : Term
     s : Term → Term 
     -- list 
@@ -74,16 +85,56 @@ data Term where
     _∷v_𝕟_𝕢_ : Term → Term → Term → Quantity → Term 
 
     ---- elims 
+    -- Sigma
+    el×<_,_>[_,_] : 
+        Quantity → Quantity → 
+        Type → Type → 
+        Term → 
+        Term → 
+        Term → 
+        Term
+    el×ᵣ<_,_>[_,_] : 
+        Quantity → Quantity → 
+        Type → Type → 
+        Term → 
+        Term → 
+        Term → 
+        Term
+    -- Sum 
+    el＋<_,_>[_,_] : 
+        Quantity → Quantity →
+        Type → Type → 
+        -- a
+        Term →  
+        -- P
+        Term →  
+        -- b
+        Term →
+        -- c 
+        Term →  
+        Term   
+    el＋ᵣ<_,_>[_,_] : 
+        Quantity → Quantity →
+        Type → Type → 
+        -- a
+        Term →  
+        -- P
+        Term →  
+        -- b
+        Term →
+        -- c 
+        Term →  
+        Term   
     -- Nat
-    elimnat_P∶_zb∶_sb∶_ : Term → Term → Term → Term → Term
-    elimnatᵣ_P∶_zb∶_sb∶_ : Term → Term → Term → Term → Term
+    elNat : Term → Term → Term → Term → Term
+    elNatᵣ : Term → Term → Term → Term → Term
     -- List
-    eliml_ty∶_P∶_nb∶_cb∶_ : (list : Term) → (innerty : Type) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
-    elimlᵣ_ty∶_P∶_nb∶_cb∶_ : (list : Term) → (innerty : Type) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    elList[_] : (innerty : Type) → (list : Term) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    elListᵣ[_] : (innerty : Type) → (list : Term) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
     -- vec
     -- Annotation is for if vec has erased index or not
-    elimv_ty∶_P∶_nb∶_cb∶_ : Annotation a σ → (innerty : Type) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
-    elimvᵣ_ty∶_P∶_nb∶_cb∶_ : Annotation a σ → (innerty : Type) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    elVec[_]<_> : (innerty : Type) → Quantity → Term → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    elVecᵣ[_]<_> : (innerty : Type) → Quantity → Term → (P : Term) → (nilB : Term) → (∷B : Term) → Term
     
     -- Types
     Nat : Type
@@ -91,6 +142,8 @@ data Term where
     Vec : Type → Annotation n σ → Type
     ∶_⟶_ : Annotation A σ → Type → Type -- Pi type
     r∶_⟶_ : Type → Type → Type -- Runtime Pi type
+    ∶_×∶_ : Annotation A σ → Annotation B π → Type 
+    _＋_ : Annotation A σ → Annotation B π → Type
     Sett : ℕ → Type -- Universe 
 
 infixr 9 ∶_⟶_

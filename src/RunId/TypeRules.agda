@@ -17,7 +17,7 @@ private variable
     cΘ : Context Θ
     σ σ' π π' ρ ρ' ρ'' ρ''' δ : Quantity
     A B C D P : Type
-    a b c d e f g h l m n  : Term
+    a a' b c d e f g h l m n  : Term
     as cs : Term
     nb cb zb sb : Term
     
@@ -409,6 +409,13 @@ data _~ᵣ_ where
     ~ᵣ×𝟘₂ :
         A ~ᵣ C → 
         (∶ (A 𝕢 ω) ×∶ (B 𝕢 𝟘)) ~ᵣ C
+    ---- Sum 
+    ~ᵣ＋𝟘₁ : 
+        A ~ᵣ C →
+        ((A 𝕢 𝟘) ＋ (B 𝕢 ω)) ~ᵣ C
+    ~ᵣ＋𝟘₂ : 
+        B ~ᵣ C →
+        ((A 𝕢 ω) ＋ (B 𝕢 𝟘)) ~ᵣ C
     ---- Vec
     ~ᵣvecω : 
         n ~ᵣ m →
@@ -437,6 +444,13 @@ data _~ᵣ_ where
     ~ᵣ⟨𝟘,⟩ : 
         b ~ᵣ (c ↑ 1 ≥ 0) → 
         ⟨ a 𝕢 𝟘 , b 𝕢 ω ⟩ ~ᵣ c 
+    -- Sum 
+    ~ᵣinl<,𝟘> :
+        a ~ᵣ c →
+        (inl< ω , 𝟘 > a) ~ᵣ c
+    ~ᵣinr<𝟘,> :
+        b ~ᵣ c →
+        (inr< 𝟘 , ω > b) ~ᵣ c 
     -- Nat
     ~ᵣs : 
         n ~ᵣ m →
@@ -487,7 +501,16 @@ data _~ᵣ_ where
         (el×< 𝟘 , ω >[ A , B ] a P b) ~ᵣ ((ƛω∶ B ♭ c) ·ω a)
     -- Should this rule only exist for variables?
     ~ᵣel<,>ᵣ : 
-        el×< σ , π >[ A , B ] (var i) P b ~ᵣ var i
+        el×ᵣ< σ , π >[ A , B ] (var i) P b ~ᵣ var i
+    -- Sum 
+    ~ᵣel＋<𝟘,> : 
+        a ~ᵣ a' →
+        c ~ᵣ d → 
+        (el＋< 𝟘 , ω >[ A , B ] a P b c) ~ᵣ ((ƛω∶ B ♭ d) ·ω a')
+    ~ᵣel＋<,𝟘> : 
+        a ~ᵣ a' →
+        b ~ᵣ d → 
+        (el＋< ω , 𝟘 >[ A , B ] a P b c) ~ᵣ ((ƛω∶ A ♭ d) ·ω a')
     -- Nat 
     ~ᵣelℕᵣ :
         (elimnatᵣ var i P∶ P zb∶ b sb∶ c) ~ᵣ var i 

@@ -65,6 +65,15 @@ data Term where
     ---- data cons
     -- Sigma 
     ⟨_,_⟩ : Annotation A σ → Annotation B π → Type
+    -- Sum 
+    inl<_,_> : 
+        Quantity → Quantity → 
+        Term → 
+        Term
+    inr<_,_> : 
+        Quantity → Quantity → 
+        Term → 
+        Term
     -- Nats
     z : Term
     s : Term → Term 
@@ -78,12 +87,44 @@ data Term where
     ---- elims 
     -- Sigma
     el×<_,_>[_,_] : 
-            Quantity → Quantity → 
-            Type → Type → 
-            Term → 
-            Term → 
-            Term → 
-            Term
+        Quantity → Quantity → 
+        Type → Type → 
+        Term → 
+        Term → 
+        Term → 
+        Term
+    el×ᵣ<_,_>[_,_] : 
+        Quantity → Quantity → 
+        Type → Type → 
+        Term → 
+        Term → 
+        Term → 
+        Term
+    -- Sum 
+    el＋<_,_>[_,_] : 
+        Quantity → Quantity →
+        Type → Type → 
+        -- a
+        Term →  
+        -- P
+        Term →  
+        -- b
+        Term →
+        -- c 
+        Term →  
+        Term   
+    el＋ᵣ<_,_>[_,_] : 
+        Quantity → Quantity →
+        Type → Type → 
+        -- a
+        Term →  
+        -- P
+        Term →  
+        -- b
+        Term →
+        -- c 
+        Term →  
+        Term   
     -- Nat
     elimnat_P∶_zb∶_sb∶_ : Term → Term → Term → Term → Term
     elimnatᵣ_P∶_zb∶_sb∶_ : Term → Term → Term → Term → Term
@@ -102,6 +143,7 @@ data Term where
     ∶_⟶_ : Annotation A σ → Type → Type -- Pi type
     r∶_⟶_ : Type → Type → Type -- Runtime Pi type
     ∶_×∶_ : Annotation A σ → Annotation B π → Type 
+    _＋_ : Annotation A σ → Annotation B π → Type
     Sett : ℕ → Type -- Universe 
 
 infixr 9 ∶_⟶_

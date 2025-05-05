@@ -129,12 +129,12 @@ data Term where
     elNat : Term → Term → Term → Term → Term
     elNatᵣ : Term → Term → Term → Term → Term
     -- List
-    eliml_ty∶_P∶_nb∶_cb∶_ : (list : Term) → (innerty : Type) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
-    elimlᵣ_ty∶_P∶_nb∶_cb∶_ : (list : Term) → (innerty : Type) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    elList[_] : (innerty : Type) → (list : Term) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    elListᵣ[_] : (innerty : Type) → (list : Term) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
     -- vec
     -- Annotation is for if vec has erased index or not
-    elimv_ty∶_P∶_nb∶_cb∶_ : Annotation a σ → (innerty : Type) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
-    elimvᵣ_ty∶_P∶_nb∶_cb∶_ : Annotation a σ → (innerty : Type) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    elVec[_]<_> : (innerty : Type) → Quantity → Term → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    elVecᵣ[_]<_> : (innerty : Type) → Quantity → Term → (P : Term) → (nilB : Term) → (∷B : Term) → Term
     
     -- Types
     Nat : Type

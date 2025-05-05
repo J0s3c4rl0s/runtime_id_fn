@@ -136,9 +136,9 @@ data _⊢_∶_ where
             List A 𝕢 σ , 
             P [ 0 / var 0 ] 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P [ 0 / (var 2 ∷l var 1) ]) → 
         {eq : cΓ''' ≡ cΓ +c (cΓ' +c cΓ'')} →
-        cΓ''' ⊢ eliml l ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb 
+        cΓ''' ⊢ elList[ A ] l P 
+                nb 
+                cb 
             𝕢 σ ∶ (P [ 0 / l ])
     ⊢listelᵣ : 
         (cΓ cΓ' cΓ'' : Context Γ) →
@@ -157,9 +157,9 @@ data _⊢_∶_ where
         (cb [ 3 + i / var 2 ∷l var 0 ]) ~ᵣ (var 2 ∷l var 0) ⊎ 
             (cb [ 3 + i / var 2 ∷l var 1 ]) ~ᵣ (var 2 ∷l var 1) →
         {eq : cΓ''' ≡ (cΓ +c (cΓ' +c cΓ''))} →
-        cΓ''' ⊢ elimlᵣ var i ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb 
+        cΓ''' ⊢ elListᵣ[ A ] (var i) P 
+                nb 
+                cb 
             𝕢 σ ∶ (P ·𝟘 var i)
     
     -- Vecs
@@ -187,9 +187,9 @@ data _⊢_∶_ where
             A 𝕢 σ , 
             Vec A (var 1 𝕢 δ) 𝕢  σ , 
             P [ 0 / var 0 ] [ 1 / var 2 ] 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P [ 0 / var 3 ] [ 1 / var 2 ∷v var 1 𝕟 var 3 𝕢 δ ]) →
-        cΓ'' ⊢ elimv (b 𝕢 δ) ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb 
+        cΓ'' ⊢ elVec[ A ]< δ > b P 
+                nb 
+                cb 
             𝕢 σ ∶ (P [ 0 / n ] [ 1 / b ])
     ⊢vecelᵣ : {cΓ cΓ' cΓ'' : Context Γ} → 
         cΓ ⊢ var i 𝕢 σ ∶ Vec A (n 𝕢 δ) →
@@ -209,9 +209,9 @@ data _⊢_∶_ where
         (cb [ 4 + i / var 2 ∷v var 0 𝕟 var 3 𝕢 σ ]) ~ᵣ (var 2 ∷v var 0 𝕟 var 3 𝕢 σ) ⊎ 
             (cb [ 4 + i / var 2 ∷v var 1 𝕟 var 3 𝕢 σ ]) ~ᵣ (var 2 ∷v var 1 𝕟 var 3 𝕢 σ) → 
         {eq : cΓ'' ≡ cΓ +c cΓ'} →
-        cΓ'' ⊢ elimv (var i 𝕢 δ) ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb 
+        cΓ'' ⊢ elVecᵣ[ A ]< δ > (var i) P 
+                nb 
+                cb 
             𝕢 σ ∶ (P [ 0 / n ] [ 1 / b ])
     
     ⊢Sett : 
@@ -303,42 +303,42 @@ data _＝_ where
     -- list
     ＝listeln :
         cs ＝ nill →
-        (eliml cs ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb) 
+        (elList[ A ] cs P 
+                nb 
+                cb) 
             ＝ 
             nb
     ＝listelc :     
         cs ＝ (a ∷l as) →
-        (eliml as ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb) 
+        (elList[ A ] as P 
+                nb 
+                cb) 
             ＝ 
             b →
-        (eliml cs ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb) 
+        (elList[ A ] cs P 
+                nb 
+                cb) 
             ＝ 
             (((cb [ 2 / a ]) [ 1 / as ]) [ 0 / b ])
             
     -- vec
     ＝veceln :
         cs ＝ (nilv𝕢 σ) →
-        (elimv (cs 𝕢 σ) ty∶ A P∶ P 
-                nb∶ nb 
-                cb∶ cb) 
+        (elVec[ A ]< σ > cs P 
+                nb 
+                cb) 
             ＝ 
             nb
     ＝vecelc :
         cs ＝ (a ∷v as 𝕟 n 𝕢 σ) → 
-        (elimv ((nilv𝕢 σ) 𝕢 σ) ty∶ A P∶ P
-                nb∶ nb 
-                cb∶ cb) 
+        (elVec[ A ]< σ > (nilv𝕢 σ) P
+                nb 
+                cb) 
             ＝ 
             b →
-        (elimv (cs 𝕢 σ) ty∶ A P∶ P
-                nb∶ nb 
-                cb∶ cb) 
+        (elVec[ A ]< σ > cs P
+                nb 
+                cb) 
             ＝ 
             -- Might be worthwhile to change n to fit the structure of ∷v
             ((((cb [ 3 / n ]) [ 2 / a ]) [ 1 / as ]) [ 0 / b ])
@@ -518,6 +518,6 @@ data _~ᵣ_ where
         (elNatᵣ (var i) P b c) ~ᵣ var i 
     -- List 
     -- Should this rule only exist for variables?
-    ~ᵣelimlᵣ : 
-        (elimlᵣ var i ty∶ A P∶ P nb∶ nb cb∶ cb) ~ᵣ var i 
+    ~ᵣelListᵣ : 
+        (elListᵣ[ A ] (var i) P nb cb) ~ᵣ var i 
         

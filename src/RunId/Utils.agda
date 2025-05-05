@@ -152,25 +152,25 @@ _↑_≥_ (elNatᵣ t t₁ zb sb) i l =
     elNatᵣ (_↑_≥_ t i l) (_↑_≥_ t₁ i (suc l)) 
             (_↑_≥_ zb i l) 
             (_↑_≥_ sb i (2 + l))
-_↑_≥_ (eliml t ty∶ A P∶ t₁ nb∶ t₃ cb∶ t₄) i l = 
-    eliml (_↑_≥_ t i l) ty∶ _↑_≥_ A i l P∶ (_↑_≥_ t₁ i (suc l)) 
-            nb∶ (_↑_≥_ t₃ i l) 
-            cb∶ (_↑_≥_ t₄ i (3 + l))
-_↑_≥_ (elimlᵣ t ty∶ A P∶ t₁ nb∶ t₃ cb∶ t₄) i l = 
-    elimlᵣ (_↑_≥_ t i l) ty∶ _↑_≥_ A i l P∶ (_↑_≥_ t₁ i (suc l)) 
-            nb∶ (_↑_≥_ t₃ i l) 
-            cb∶ (_↑_≥_ t₄ i (3 + l))
-_↑_≥_ (elimv (t 𝕢 σ) ty∶ A P∶ t₁ nb∶ t₄ cb∶ t₅) i l = 
-    elimv ((_↑_≥_ t i l) 𝕢 σ) ty∶ _↑_≥_ A i l P∶ (_↑_≥_ t₁ i (2+ l)) 
-            nb∶ (_↑_≥_ t₄ i l) 
-            cb∶ (_↑_≥_ t₅ i (4 + l))
-_↑_≥_ (elimvᵣ (t 𝕢 σ) ty∶ A P∶ t₁ nb∶ t₄ cb∶ t₅) i l = 
-    elimv ((_↑_≥_ t i l) 𝕢 σ) ty∶ _↑_≥_ A i l P∶ (_↑_≥_ t₁ i (2+ l)) 
-            nb∶ (_↑_≥_ t₄ i l) 
-            cb∶ (_↑_≥_ t₅ i (4 + l))
+_↑_≥_ (elList[ A ] t t₁ t₃ t₄) i l = 
+    elList[  (_↑_≥_ A i l) ] (_↑_≥_ t i l) (_↑_≥_ t₁ i (suc l)) 
+            (_↑_≥_ t₃ i l) 
+            (_↑_≥_ t₄ i (3 + l))
+_↑_≥_ (elListᵣ[ A ]  t t₁ t₃  t₄) i l = 
+    elListᵣ[  (_↑_≥_ A i l) ] (_↑_≥_ t i l) (_↑_≥_ t₁ i (suc l)) 
+            (_↑_≥_ t₃ i l) 
+             (_↑_≥_ t₄ i (3 + l))
+_↑_≥_ (elVec[ A ]< σ >  t t₁ t₄ t₅) i l = 
+    elVec[ (_↑_≥_ A i l) ]< σ > (_↑_≥_ t i l) (_↑_≥_ t₁ i (2+ l)) 
+            (_↑_≥_ t₄ i l) 
+             (_↑_≥_ t₅ i (4 + l))
+_↑_≥_ (elVecᵣ[ A ]< σ >  t t₁ t₄  t₅) i l = 
+    elVecᵣ[ (_↑_≥_ A i l) ]< σ > (_↑_≥_ t i l) (_↑_≥_ t₁ i (2+ l)) 
+            (_↑_≥_ t₄ i l) 
+             (_↑_≥_ t₅ i (4 + l))
 _↑_≥_ Nat i l = Nat
 _↑_≥_ (List t) i l = List (_↑_≥_ t i l)
-_↑_≥_ (Vec t₁ (A 𝕢 σ)) i l = Vec (_↑_≥_ t₁ i l) (_↑_≥_ A i l 𝕢 σ)
+_↑_≥_ (Vec t₁ (A 𝕢 σ)) i l = Vec (_↑_≥_ t₁ i l) ((_↑_≥_ A i l) 𝕢 σ)
 (∶ A 𝕢 σ ×∶ (B 𝕢 π)) ↑ i ≥ l = ∶ ((A ↑ i ≥ l) 𝕢 σ) ×∶ ((B ↑ i ≥ (suc l)) 𝕢 π)
 _↑_≥_ (∶ t 𝕢 σ ⟶ t₁) i l = ∶ _↑_≥_ t i l 𝕢 σ ⟶ _↑_≥_ t₁ i (suc l)
 _↑_≥_ (r∶ t ⟶ t₁) i l = r∶ _↑_≥_ t i l ⟶ _↑_≥_ t₁ i (suc l)
@@ -195,65 +195,65 @@ insertType (cΓ , B 𝕢 ρ) (suc i) (s≤s p) A σ = insertType cΓ i p A σ , 
 _[_/_]  : Term → ℕ → Term → Term
 var j [  i / a ] = if i ≡ᵇ j then a else var j 
 (ƛ∶ bₜ 𝕢 σ ♭ b) [ i / a ] = ƛ∶ bₜ [ i / a ]  𝕢 σ ♭ (b [ suc i / _↑_≥_ a 1 0 ])
-(ƛr∶ b ♭ b₁) [ i / a ] = (ƛr∶ b [ i / a ] ♭ (b₁ [ suc i / _↑_≥_ a 1 0 ]))
+(ƛr∶ b ♭ b₁) [ i / a ] = (ƛr∶ (b [ i / a ]) ♭ (b₁ [ suc i / _↑_≥_ a 1 0 ]))
 ⟨ c 𝕢 σ , b 𝕢 π ⟩ [ i / a ] = ⟨ ((c [ i / a ]) 𝕢 σ) , ((b [ (suc i) / (a ↑ 1 ≥ 0) ]) 𝕢 π) ⟩
-inl< σ , π > b [ i / a ] = inl< σ , π > (b [ i / a ])
-inr< σ , π > b [ i / a ] = inr< σ , π > (b [ i / a ])
+inl< σ , π > b [ i / a ] = inl< σ , π > ((b [ i / a ]))
+inr< σ , π > b [ i / a ] = inr< σ , π > ((b [ i / a ]))
 z [ i / a ] = z
-s b [ i / a ] = s (b [ i / a ]) 
+s b [ i / a ] = s ((b [ i / a ])) 
 nill [ i / a ] = nill
 (h ∷l t) [ i / a ] = (h [ i / a ]) ∷l (t [ i / a ])
 nilv𝟘 [ i / a ] = nilv𝟘
 nilvω [ i / a ] = nilvω
 (h ∷v t 𝕟 n 𝕢 σ) [ i / a ] = (h [ i / a ]) ∷v (t [ i / a ]) 𝕟 (n [ i / a ]) 𝕢 σ
-(b ·𝟘 c) [ i / a ] = (b [ i / a ]) ·𝟘 (c [ i / a ])
-(b ·ω c) [ i / a ] = (b [ i / a ]) ·ω (c [ i / a ])
-(f ·ᵣ b) [ i / a ] = (f [ i / a ]) ·ᵣ (b [ i / a ])
+(b ·𝟘 c) [ i / a ] = ((b [ i / a ])) ·𝟘 (c [ i / a ])
+(b ·ω c) [ i / a ] = ((b [ i / a ])) ·ω (c [ i / a ])
+(f ·ᵣ b) [ i / a ] = (f [ i / a ]) ·ᵣ ((b [ i / a ]))
 el×< σ , π >[ A , B ] c P b [ i / a ] = 
-    el×< σ , π >[ A [ i / a ] , B [ suc i / a ↑ 1 ≥ 0 ] ] (c [ i / a ]) (P [ suc i / a ↑ 1 ≥ 0 ]) 
+    el×< σ , π >[ (A [ i / a ]) , B [ suc i / a ↑ 1 ≥ 0 ] ] (c [ i / a ]) (P [ suc i / a ↑ 1 ≥ 0 ]) 
         (b [ 2 + i / a ↑ 2 ≥ 0 ])
 el×ᵣ< σ , π >[ A , B ] c P b [ i / a ] = 
-    el×ᵣ< σ , π >[ A [ i / a ] , B [ suc i / a ↑ 1 ≥ 0 ] ] (c [ i / a ]) (P [ suc i / a ↑ 1 ≥ 0 ]) 
+    el×ᵣ< σ , π >[ (A [ i / a ]) , B [ suc i / a ↑ 1 ≥ 0 ] ] (c [ i / a ]) (P [ suc i / a ↑ 1 ≥ 0 ]) 
         (b [ 2 + i / a ↑ 2 ≥ 0 ])
 el＋< σ , π >[ A , B ] c P b d [ i / a ] = 
     -- motive is wrong?
-    el＋< σ , π >[ A [ i / a ] , B [ i / a ] ] (c [ i / a ]) (P [ suc i / a ↑ 1 ≥ 0 ]) 
+    el＋< σ , π >[ (A [ i / a ]) , B [ i / a ] ] (c [ i / a ]) (P [ suc i / a ↑ 1 ≥ 0 ]) 
         (b [ suc i / a ↑ 1 ≥ 0 ]) 
         (d [ suc i / a ↑ 1 ≥ 0 ])
 el＋ᵣ< σ , π >[ A , B ] c P b d [ i / a ] =  
     -- motive is wrong?
-    el＋ᵣ< σ , π >[ A [ i / a ] , B [ i / a ] ] (c [ i / a ]) (P [ suc i / a ↑ 1 ≥ 0 ]) 
+    el＋ᵣ< σ , π >[ (A [ i / a ]) , B [ i / a ] ] (c [ i / a ]) (P [ suc i / a ↑ 1 ≥ 0 ]) 
         (b [ suc i / a ↑ 1 ≥ 0 ]) 
         (d [ suc i / a ↑ 1 ≥ 0 ])
 (elNat b P zb sb) [ i / a ] = 
-    elNat (b [ i / a ]) (P [ i / a ] )
+    elNat ((b [ i / a ])) ((P [ i / a ]) )
         (zb [ i / a ]) 
         (sb [ i + 2 / _↑_≥_ a 2 0 ])
 (elNatᵣ b P zb sb) [ i / a ] = 
-    elNat (b [ i / a ]) (P [ i / a ]) 
+    elNat ((b [ i / a ])) ((P [ i / a ])) 
         (zb [ i / a ]) 
         (sb [ i + 2 / _↑_≥_ a 2 0 ])
-(eliml b ty∶ A P∶ P nb∶ nb cb∶ cb) [ i / a ] = 
-    eliml b [ i / a ] ty∶ A [ i / a ] P∶ P [ i / a ] 
-        nb∶ nb [ i / a ] 
-        cb∶ (cb [ i + 3 / _↑_≥_ a 3 0 ])
-(elimlᵣ b ty∶ A P∶ P nb∶ nb cb∶ cb) [ i / a ] = 
-    elimlᵣ b [ i / a ] ty∶ A [ i / a ] P∶ P [ i / a ] 
-        nb∶ nb [ i / a ] 
-        cb∶ (cb [ i + 3 / _↑_≥_ a 3 0 ])
-(elimv (b 𝕢 σ) ty∶ A P∶ P nb∶ nb cb∶ cb) [ i / a ] = 
-    elimv (b [ i / a ] 𝕢 σ) ty∶ A [ i / a ] P∶ P [ i / a ] 
-        nb∶ nb [ i / a ] 
-        cb∶ (cb [ i + 4 / _↑_≥_ a 4 0 ])
-(elimvᵣ (b 𝕢 σ) ty∶ A P∶ P nb∶ nb cb∶ cb) [ i / a ] = 
-    elimvᵣ (b [ i / a ] 𝕢 σ) ty∶ A [ i / a ] P∶ P [ i / a ] 
-        nb∶ nb [ i / a ] 
-        cb∶ (cb [ i + 4 / _↑_≥_ a 4 0 ])
-(∶ b 𝕢 σ ⟶ c) [ i / a ] = ∶ b [ i / a ] 𝕢 σ ⟶ (c [ suc i / _↑_≥_ a 1 0 ]) 
-(r∶ b ⟶ c) [ i / a ] = r∶ b [ i / a ] ⟶ (c [ suc i / _↑_≥_ a 1 0 ]) 
-(∶ A 𝕢 σ ×∶ (B 𝕢 π)) [ i / a ] = ∶ (A [ i / a ]) 𝕢 σ ×∶ ((B [ i + 1 / (B ↑ 1 ≥ 0) ]) 𝕢 π)
-((A 𝕢 σ) ＋ (B 𝕢 π)) [ i / a ] = ((A [ i / a ]) 𝕢 σ) ＋ ((B [ i / a ]) 𝕢 π)
+(elList[ A ] b P nb  cb) [ i / a ] = 
+    elList[ (A [ i / a ]) ] (b [ i / a ]) (P [ i / a ]) 
+        ((nb [ i / a ])) 
+        (cb [ i + 3 / _↑_≥_ a 3 0 ])
+(elListᵣ[ A ]  b P nb  cb) [ i / a ] = 
+    elListᵣ[ (A [ i / a ]) ] (b [ i / a ]) (P [ i / a ]) 
+        (nb [ i / a ]) 
+        (cb [ i + 3 / _↑_≥_ a 3 0 ])
+(elVec[ A ]< σ >  b P nb  cb) [ i / a ] = 
+    elVec[ (A [ i / a ]) ]< σ > (b [ i / a ]) (P [ i / a ]) 
+        (nb [ i / a ]) 
+         (cb [ i + 4 / _↑_≥_ a 4 0 ])
+(elVecᵣ[ A ]< σ >  b P nb  cb) [ i / a ] = 
+    elVecᵣ[ (A [ i / a ]) ]< σ > (b [ i / a ]) (P [ i / a ]) 
+        (nb [ i / a ]) 
+         (cb [ i + 4 / _↑_≥_ a 4 0 ])
+(∶ b 𝕢 σ ⟶ c) [ i / a ] = ∶ (b [ i / a ]) 𝕢 σ ⟶ (c [ suc i / _↑_≥_ a 1 0 ]) 
+(r∶ b ⟶ c) [ i / a ] = r∶ (b [ i / a ]) ⟶ (c [ suc i / _↑_≥_ a 1 0 ]) 
+(∶ A 𝕢 σ ×∶ (B 𝕢 π)) [ i / a ] = ∶ ((A [ i / a ])) 𝕢 σ ×∶ ((B [ i + 1 / (B ↑ 1 ≥ 0) ]) 𝕢 π)
+((A 𝕢 σ) ＋ (B 𝕢 π)) [ i / a ] = (((A [ i / a ])) 𝕢 σ) ＋ ((B [ i / a ]) 𝕢 π)
 Nat [ i / a ] = Nat
-List b [ i / a ] = List (b [ i / a ])
-Vec b (n 𝕢 σ) [ i / a ] = Vec (b [ i / a ]) (((n [ i / a ])) 𝕢 σ)
-Sett level [ i / a ] = Sett level  
+List b [ i / a ] = List ((b [ i / a ]))
+Vec b (n 𝕢 σ) [ i / a ] = Vec ((b [ i / a ])) (((n [ i / a ])) 𝕢 σ)
+Sett level [ i / a ] = Sett level   

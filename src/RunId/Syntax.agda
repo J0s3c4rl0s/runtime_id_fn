@@ -3,8 +3,7 @@ module RunId.Syntax where
 open import Data.Nat using (ℕ; zero; suc; _+_; _≤ᵇ_)
 
 
-data PreContext : Set
-data Context : PreContext → Set
+data Context : Set
 data Term : Set 
 
 data Quantity : Set where 
@@ -15,10 +14,7 @@ data Quantity : Set where
 Type = Term
 
 private variable
-    Γ Δ Θ : PreContext
-    cΓ cΓ' cΓ'' : Context Γ
-    cΔ cΔ' cΔ'' : Context Δ
-    cΘ : Context Θ
+    Γ : Context
     σ σ' π π' ρ ρ' ρ'' ρ''' δ : Quantity
     A B C D P : Type
     a b c d e f g h l m n  : Term
@@ -30,26 +26,22 @@ private variable
 data Annotation : Type → Quantity → Set where
     _𝕢_ : (A : Type) → (σ : Quantity) → Annotation A σ
 
-data PreContext where
-    [] : PreContext
-    _,_ : (Γ : PreContext) → Type → PreContext
-
 data Context where
-    [] : Context []
-    _,_ : Context Γ → Annotation A σ → Context (Γ , A)
+    [] : Context
+    _,_ : Context → Annotation A σ → Context
 
 infixl 10 _,_
 infix 12 _𝕢_
 infix 8 _∋_
 
-data _∋_ : Context Γ → Annotation A σ → Set where
-  Z : ∀ {cΓ : Context Γ}
-    →  (cΓ , (A 𝕢 σ)) ∋ (A 𝕢 σ)
+data _∋_ : Context → Annotation A σ → Set where
+  Z : ∀ {Γ : Context}
+    →  (Γ , (A 𝕢 σ)) ∋ (A 𝕢 σ)
 
-  S : ∀ {A} {B} {cΓ : Context Γ}
+  S : ∀ {A} {B} {Γ : Context}
     -- Ensure there is a lookup judgement in submodule
-    → cΓ ∋ A 𝕢 σ
-    →  (cΓ , B 𝕢 π) ∋ A 𝕢 σ
+    → Γ ∋ A 𝕢 σ
+    →  (Γ , B 𝕢 π) ∋ A 𝕢 σ
 
 data Term where
     var :  ℕ → Term 

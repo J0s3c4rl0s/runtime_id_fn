@@ -8,15 +8,23 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym)
 open import Agda.Builtin.Equality.Rewrite
 
 private variable
-    Γ Δ Θ : PreContext
-    cΓ cΓ' cΓ'' : Context Γ
-    cΔ cΔ' cΔ'' : Context Δ
-    cΘ : Context Θ
+    Γ : Context
     σ σ' π π' ρ ρ' ρ'' ρ''' δ : Quantity
     A B C D P : Type
     a b c d e f g h l m n  : Term
     as : Term
     nb cb zb sb : Term
+
+open import Data.Unit
+open import Data.Empty
+
+data _≤q_ : Quantity → Quantity → Set where
+   𝟘≤q : 𝟘 ≤q ρ 
+   ω≤qω : ω ≤q ω
+
+≤q-refl : σ ≤q σ 
+≤q-refl {𝟘} = 𝟘≤q
+≤q-refl {ω} = ω≤qω
 
 _+q_ : Quantity → Quantity → Quantity
 𝟘 +q q2 = q2
@@ -47,66 +55,34 @@ _*q_ : Quantity → Quantity → Quantity
 
 {-# REWRITE *q-right-idω #-}
 
--- In our case equivalent to multd
-selectQ : Quantity → Quantity → Quantity
-selectQ π σ = π *q σ
-
-zeroC : (Γ : PreContext) → Context Γ
-zeroC [] = []
-zeroC (Γ , a) = zeroC Γ , a 𝕢 𝟘
-
--- PreContext scaling
-_*c_ : Quantity → Context Γ → Context Γ
--- 0 reduces everything
-_*c_ {Γ} 𝟘 cΓ = zeroC Γ
--- ω is identity
-ω *c cΓ = cΓ
 
 
--- *c-right-idω : ω *c cΓ ≡ cΓ 
--- *c-right-idω {cΓ = []} = refl
--- *c-right-idω {cΓ = cΓ , A 𝕢 σ} = cong (λ x → x , A 𝕢 σ) *c-right-idω
+-- *c-right-idω : ω *c Γ ≡ Γ 
+-- *c-right-idω {Γ = []} = refl
+-- *c-right-idω {Γ = Γ , A 𝕢 σ} = cong (λ x → x , A 𝕢 σ) *c-right-idω
 
 -- {-# REWRITE *c-right-idω #-}
 
--- PreContext addition
-_+c_ : Context Γ → Context Γ → Context Γ 
-([] +c []) = []
-((cΓ , a 𝕢 π) +c (cΔ , a 𝕢 σ)) = (cΓ +c cΔ) , a 𝕢 (π +q σ)
-
-+c-leftid0 : ∀ {Γ : PreContext} {cΓ : Context Γ} → 
-    (zeroC Γ +c cΓ) ≡ cΓ
-+c-leftid0 {[]} {[]} = refl
-+c-leftid0 {Γ , x} {cΓ , .x 𝕢 σ} = cong (λ x₁ → x₁ , (x 𝕢 σ)) +c-leftid0
-
-+c-rightid0 : ∀ {Γ : PreContext} {cΓ : Context Γ} → 
-    (cΓ +c zeroC Γ) ≡ cΓ
-+c-rightid0 {[]} {[]} = refl
-+c-rightid0 {Γ , x} {cΓ , .x 𝕢 σ} = cong (λ cΓ' → cΓ' , x 𝕢 σ) +c-rightid0
-
-+c-idempotent : cΓ +c cΓ ≡ cΓ
-+c-idempotent {cΓ = []} = refl
-+c-idempotent {cΓ = cΓ , A 𝕢 σ} = cong (λ x → x , (A 𝕢 σ)) +c-idempotent
 
 
 
 -- open import Data.Unit 
 -- open import Data.Product renaming (_,_ to ⟨_,_⟩)
 
--- _+c_＝_ : Context Γ → Context Γ → Context Γ → Set
+-- _+c_＝_ : Context → Context → Context → Set
 -- [] +c [] ＝ [] = ⊤
--- (cΓₗ , A 𝕢 σ) +c cΓᵣ , .A 𝕢 σ₁ ＝ (cΓ , .A 𝕢 σ₂) = (cΓₗ +c cΓᵣ ＝ cΓ) × (σ +q σ₁) ≡ σ₂
+-- (Γₗ , A 𝕢 σ) +c Γᵣ , .A 𝕢 σ₁ ＝ (Γ , .A 𝕢 σ₂) = (Γₗ +c Γᵣ ＝ Γ) × (σ +q σ₁) ≡ σ₂
 
 
--- data _+c_＝_ : Context Γ → Context Γ → Context Γ → Set where
+-- data _+c_＝_ : Context → Context → Context → Set where
 --     instance +c[] : [] +c [] ＝ []
 --     +c, : 
---         {cΓₗ cΓᵣ cΓ : Context Γ} →
---         {cΓₗ +c cΓᵣ ＝ cΓ} → 
+--         {Γₗ Γᵣ Γ : Context} →
+--         {Γₗ +c Γᵣ ＝ Γ} → 
 --         {(σ +q π) ≡ ρ} →
---         (cΓₗ , A 𝕢 σ) +c cΓᵣ , A 𝕢 π ＝ (cΓ , A 𝕢 ρ) 
+--         (Γₗ , A 𝕢 σ) +c Γᵣ , A 𝕢 π ＝ (Γ , A 𝕢 ρ) 
 
-∋→ℕ : cΓ ∋ (A 𝕢 σ) → ℕ 
+∋→ℕ : Γ ∋ (A 𝕢 σ) → ℕ 
 ∋→ℕ Z = 0
 ∋→ℕ (S i) = suc (∋→ℕ i)
 
@@ -178,18 +154,18 @@ _↑_≥_ (Sett level) i l = Sett level
 ((A 𝕢 σ) ＋ (B 𝕢 π)) ↑ i ≥ l = ((A ↑ i ≥ l) 𝕢 σ) ＋ ((B ↑ i ≥ l) 𝕢 π)
 
 
-conLen : PreContext → ℕ
-conLen [] = 0
-conLen (Γ , x) = suc (conLen Γ) 
+-- conLen : PreContext → ℕ
+-- conLen [] = 0
+-- conLen (Γ , x) = suc (conLen Γ) 
 
-insertTypePre : (Γ : PreContext) → (i : ℕ) → (p : i ≤ conLen Γ) → Type → PreContext 
-insertTypePre Γ 0 p A = Γ , A
-insertTypePre (Γ , B) (suc i) (s≤s p) A = insertTypePre Γ i p A , _↑_≥_ B 1 i
+-- insertTypePre : (Γ : PreContext) → (i : ℕ) → (p : i ≤ conLen Γ) → Type → PreContext 
+-- insertTypePre Γ 0 p A = Γ , A
+-- insertTypePre (Γ , B) (suc i) (s≤s p) A = insertTypePre Γ i p A , _↑_≥_ B 1 i
 
--- use Annotation instead?
-insertType : Context Γ → (i : ℕ) → (p : i ≤ conLen Γ)  → (A : Type) → Quantity → Context (insertTypePre Γ i p A)
-insertType cΓ 0 z≤n A σ = cΓ , A 𝕢 σ
-insertType (cΓ , B 𝕢 ρ) (suc i) (s≤s p) A σ = insertType cΓ i p A σ , _↑_≥_ B 1 i 𝕢 ρ 
+-- -- use Annotation instead?
+-- insertType : Context → (i : ℕ) → (p : i ≤ conLen Γ)  → (A : Type) → Quantity → Context (insertTypePre Γ i p A)
+-- insertType Γ 0 z≤n A σ = Γ , A 𝕢 σ
+-- insertType (Γ , B 𝕢 ρ) (suc i) (s≤s p) A σ = insertType Γ i p A σ , _↑_≥_ B 1 i 𝕢 ρ 
 
 -- There are some hijinks around when substitution is admissible, dont think quants change
 _[_/_]  : Term → ℕ → Term → Term

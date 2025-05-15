@@ -3,8 +3,7 @@ module RunId.Syntax where
 open import Data.Nat using (ℕ; zero; suc; _+_; _≤ᵇ_)
 
 
-data PreContext : Set
-data Context : PreContext → Set
+data Context : Set
 data Term : Set 
 
 data Quantity : Set where 
@@ -15,10 +14,7 @@ data Quantity : Set where
 Type = Term
 
 private variable
-    Γ Δ Θ : PreContext
-    cΓ cΓ' cΓ'' : Context Γ
-    cΔ cΔ' cΔ'' : Context Δ
-    cΘ : Context Θ
+    Γ : Context
     σ σ' π π' ρ ρ' ρ'' ρ''' δ : Quantity
     A B C D P : Type
     a b c d e f g h l m n  : Term
@@ -30,26 +26,22 @@ private variable
 data Annotation : Type → Quantity → Set where
     _𝕢_ : (A : Type) → (σ : Quantity) → Annotation A σ
 
-data PreContext where
-    [] : PreContext
-    _,_ : (Γ : PreContext) → Type → PreContext
-
 data Context where
-    [] : Context []
-    _,_ : Context Γ → Annotation A σ → Context (Γ , A)
+    [] : Context
+    _,_ : Context → Annotation A σ → Context
 
 infixl 10 _,_
 infix 12 _𝕢_
 infix 8 _∋_
 
-data _∋_ : Context Γ → Annotation A σ → Set where
-  Z : ∀ {cΓ : Context Γ}
-    →  (cΓ , (A 𝕢 σ)) ∋ (A 𝕢 σ)
+data _∋_ : Context → Annotation A σ → Set where
+  Z : ∀ {Γ : Context}
+    →  (Γ , (A 𝕢 σ)) ∋ (A 𝕢 σ)
 
-  S : ∀ {A} {B} {cΓ : Context Γ}
+  S : ∀ {A} {B} {Γ : Context}
     -- Ensure there is a lookup judgement in submodule
-    → cΓ ∋ A 𝕢 σ
-    →  (cΓ , B 𝕢 π) ∋ A 𝕢 σ
+    → Γ ∋ A 𝕢 σ
+    →  (Γ , B 𝕢 π) ∋ A 𝕢 σ
 
 data Term where
     var :  ℕ → Term 
@@ -62,8 +54,19 @@ data Term where
     _·_𝕢_ : Term → Term → Quantity → Term
     _·ᵣ_ : Term → Term → Term
 
-    -- data cons
-    ---- Nats
+    ---- data cons
+    -- Sigma 
+    ⟨_,_⟩ : Annotation A σ → Annotation B π → Type
+    -- Sum 
+    inl<_,_> : 
+        Quantity → Quantity → 
+        Term → 
+        Term
+    inr<_,_> : 
+        Quantity → Quantity → 
+        Term → 
+        Term
+    -- Nats
     z : Term
     s : Term → Term 
     -- list 
@@ -72,18 +75,62 @@ data Term where
     -- vec
     nilv𝕢_ : Quantity → Term 
     _∷v_𝕟_𝕢_ : Term → Term → Term → Quantity → Term 
+    -- prop equal 
+    rfl : Term
 
     ---- elims 
+    -- Sigma
+    el×<_,_>[_,_] : 
+        Quantity → Quantity → 
+        Type → Type → 
+        Term → 
+        Term → 
+        Term → 
+        Term
+    el×ᵣ<_,_>[_,_] : 
+        Quantity → Quantity → 
+        Type → Type → 
+        Term → 
+        Term → 
+        Term → 
+        Term
+    -- Sum 
+    el＋<_,_>[_,_] : 
+        Quantity → Quantity →
+        Type → Type → 
+        -- a
+        Term →  
+        -- P
+        Term →  
+        -- b
+        Term →
+        -- c 
+        Term →  
+        Term   
+    el＋ᵣ<_,_>[_,_] : 
+        Quantity → Quantity →
+        Type → Type → 
+        -- a
+        Term →  
+        -- P
+        Term →  
+        -- b
+        Term →
+        -- c 
+        Term →  
+        Term   
     -- Nat
-    elimnat_P∶_zb∶_sb∶_ : Term → Term → Term → Term → Term
-    elimnatᵣ_P∶_zb∶_sb∶_ : Term → Term → Term → Term → Term
+    elNat : Term → Term → Term → Term → Term
+    elNatᵣ : Term → Term → Term → Term → Term
     -- List
-    eliml_ty∶_P∶_nb∶_cb∶_ : (list : Term) → (innerty : Type) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
-    elimlᵣ_ty∶_P∶_nb∶_cb∶_ : (list : Term) → (innerty : Type) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    elList[_] : (innerty : Type) → (list : Term) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    elListᵣ[_] : (innerty : Type) → (list : Term) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
     -- vec
     -- Annotation is for if vec has erased index or not
-    elimv_ty∶_P∶_nb∶_cb∶_ : Annotation a σ → (innerty : Type) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
-    elimvᵣ_ty∶_P∶_nb∶_cb∶_ : Annotation a σ → (innerty : Type) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    elVec[_]<_> : (innerty : Type) → Quantity → Term → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    elVecᵣ[_]<_> : (innerty : Type) → Quantity → Term → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    -- Prop equal 
+    subst_by_ : Term → Annotation a σ → Term
     
     -- Types
     Nat : Type
@@ -91,6 +138,9 @@ data Term where
     Vec : Type → Annotation n σ → Type
     ∶_⟶_ : Annotation A σ → Type → Type -- Pi type
     r∶_⟶_ : Type → Type → Type -- Runtime Pi type
+    ∶_×∶_ : Annotation A σ → Annotation B π → Type 
+    _＋_ : Annotation A σ → Annotation B π → Type
+    _≃_ : Term → Term → Term
     Sett : ℕ → Type -- Universe 
 
 infixr 9 ∶_⟶_
@@ -110,3 +160,5 @@ pattern nilvω = nilv𝕢_ ω
 pattern _∷v_𝕟𝟘_ a as n = _∷v_𝕟_𝕢_ a as n 𝟘
 pattern _∷v_𝕟ω_ a as n = _∷v_𝕟_𝕢_ a as n ω
  
+pattern subst_by𝟘_ a b = subst_by_ a (b 𝕢 𝟘)
+pattern subst_byω_ a b = subst_by_ a (b 𝕢 ω)

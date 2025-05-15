@@ -89,11 +89,10 @@ _*q_ : Quantity → Quantity → Quantity
 -- Dont think this should change Quantity
 _↑_≥_ : Term → ℕ → ℕ → Term -- Only do this for free variables, lower and upper bound
 _↑_≥_ (var x) i l = if l ≤ᵇ x then var (x + i) else var x 
+-- constructors
 _↑_≥_ (ƛ∶ t 𝕢 σ ♭ t₁) i l = ƛ∶ _↑_≥_ t i l 𝕢 σ ♭ _↑_≥_ t₁ i (suc l)
 _↑_≥_ (ƛr∶ t ♭ t₁) i l = (ƛr∶ _↑_≥_ t i l ♭ _↑_≥_ t₁ i (suc l))
 ⟨ a 𝕢 σ , b 𝕢 π ⟩ ↑ i ≥ l = ⟨ ((a ↑ i ≥ l) 𝕢 σ) , (b ↑ i ≥ (suc l) 𝕢 π) ⟩
-_↑_≥_ (t · t₁ 𝕢 σ) i l = _↑_≥_ t i l · _↑_≥_ t₁ i l 𝕢 σ
-_↑_≥_ (f ·ᵣ a) i l = _↑_≥_ f i l ·ᵣ _↑_≥_ a i l
 inl< σ , π > a ↑ i ≥ l = 
     inl< σ , π > (a ↑ i ≥ l)
 inr< σ , π > a ↑ i ≥ l = 
@@ -104,6 +103,10 @@ _↑_≥_ nill i l = nill
 _↑_≥_ (t ∷l t₁) i l = _↑_≥_ t i l ∷l _↑_≥_ t₁ i l
 _↑_≥_ (nilv𝕢 σ) i l = nilv𝕢 σ
 _↑_≥_ (t ∷v t₁ 𝕟 n 𝕢 σ) i l = _↑_≥_ t i l ∷v _↑_≥_ t₁ i l 𝕟 _↑_≥_ n i l 𝕢 σ
+rfl ↑ i ≥ l = rfl
+-- eliminators
+_↑_≥_ (t · t₁ 𝕢 σ) i l = _↑_≥_ t i l · _↑_≥_ t₁ i l 𝕢 σ
+_↑_≥_ (f ·ᵣ a) i l = _↑_≥_ f i l ·ᵣ _↑_≥_ a i l
 el×< σ , π >[ A , B ] a P b ↑ i ≥ l = 
     -- Motive isnt correct
     el×< σ , π >[ A ↑ i ≥ l , B ↑ i ≥ (suc l) ] (a ↑ i ≥ l) (P ↑ i ≥ l) 
@@ -144,6 +147,9 @@ _↑_≥_ (elVecᵣ[ A ]< σ >  t t₁ t₄  t₅) i l =
     elVecᵣ[ (_↑_≥_ A i l) ]< σ > (_↑_≥_ t i l) (_↑_≥_ t₁ i (2+ l)) 
             (_↑_≥_ t₄ i l) 
              (_↑_≥_ t₅ i (4 + l))
+(subst a by (b 𝕢 σ)) ↑ i ≥ l = 
+    subst a ↑ i ≥ l by ((b ↑ i ≥ l) 𝕢 σ)
+-- Types
 _↑_≥_ Nat i l = Nat
 _↑_≥_ (List t) i l = List (_↑_≥_ t i l)
 _↑_≥_ (Vec t₁ (A 𝕢 σ)) i l = Vec (_↑_≥_ t₁ i l) ((_↑_≥_ A i l) 𝕢 σ)
@@ -152,7 +158,7 @@ _↑_≥_ (∶ t 𝕢 σ ⟶ t₁) i l = ∶ _↑_≥_ t i l 𝕢 σ ⟶ _↑_�
 _↑_≥_ (r∶ t ⟶ t₁) i l = r∶ _↑_≥_ t i l ⟶ _↑_≥_ t₁ i (suc l)
 _↑_≥_ (Sett level) i l = Sett level
 ((A 𝕢 σ) ＋ (B 𝕢 π)) ↑ i ≥ l = ((A ↑ i ≥ l) 𝕢 σ) ＋ ((B ↑ i ≥ l) 𝕢 π)
-
+(a ≃ b) ↑ i ≥ l = (a ↑ i ≥ l) ≃ (b ↑ i ≥ l)
 
 -- conLen : PreContext → ℕ
 -- conLen [] = 0
@@ -170,6 +176,7 @@ _↑_≥_ (Sett level) i l = Sett level
 -- There are some hijinks around when substitution is admissible, dont think quants change
 _[_/_]  : Term → ℕ → Term → Term
 var j [  i / a ] = if i ≡ᵇ j then a else var j 
+-- Constructors
 (ƛ∶ bₜ 𝕢 σ ♭ b) [ i / a ] = ƛ∶ bₜ [ i / a ]  𝕢 σ ♭ (b [ suc i / _↑_≥_ a 1 0 ])
 (ƛr∶ b ♭ b₁) [ i / a ] = (ƛr∶ (b [ i / a ]) ♭ (b₁ [ suc i / _↑_≥_ a 1 0 ]))
 ⟨ c 𝕢 σ , b 𝕢 π ⟩ [ i / a ] = ⟨ ((c [ i / a ]) 𝕢 σ) , ((b [ (suc i) / (a ↑ 1 ≥ 0) ]) 𝕢 π) ⟩
@@ -182,6 +189,8 @@ nill [ i / a ] = nill
 nilv𝟘 [ i / a ] = nilv𝟘
 nilvω [ i / a ] = nilvω
 (h ∷v t 𝕟 n 𝕢 σ) [ i / a ] = (h [ i / a ]) ∷v (t [ i / a ]) 𝕟 (n [ i / a ]) 𝕢 σ
+rfl [ i / a ] = rfl
+-- Eliminators
 (b ·𝟘 c) [ i / a ] = ((b [ i / a ])) ·𝟘 (c [ i / a ])
 (b ·ω c) [ i / a ] = ((b [ i / a ])) ·ω (c [ i / a ])
 (f ·ᵣ b) [ i / a ] = (f [ i / a ]) ·ᵣ ((b [ i / a ]))
@@ -225,6 +234,8 @@ el＋ᵣ< σ , π >[ A , B ] c P b d [ i / a ] =
     elVecᵣ[ (A [ i / a ]) ]< σ > (b [ i / a ]) (P [ i / a ]) 
         (nb [ i / a ]) 
          (cb [ i + 4 / _↑_≥_ a 4 0 ])
+(subst b by (eq 𝕢 σ)) [ i / a ] = subst (b [ i / a ]) by ((eq [ i / a ]) 𝕢 σ)
+-- Types
 (∶ b 𝕢 σ ⟶ c) [ i / a ] = ∶ (b [ i / a ]) 𝕢 σ ⟶ (c [ suc i / _↑_≥_ a 1 0 ]) 
 (r∶ b ⟶ c) [ i / a ] = r∶ (b [ i / a ]) ⟶ (c [ suc i / _↑_≥_ a 1 0 ]) 
 (∶ A 𝕢 σ ×∶ (B 𝕢 π)) [ i / a ] = ∶ ((A [ i / a ])) 𝕢 σ ×∶ ((B [ i + 1 / (B ↑ 1 ≥ 0) ]) 𝕢 π)
@@ -232,4 +243,5 @@ el＋ᵣ< σ , π >[ A , B ] c P b d [ i / a ] =
 Nat [ i / a ] = Nat
 List b [ i / a ] = List ((b [ i / a ]))
 Vec b (n 𝕢 σ) [ i / a ] = Vec ((b [ i / a ])) (((n [ i / a ])) 𝕢 σ)
-Sett level [ i / a ] = Sett level   
+(l ≃ r) [ i / a ] = (l [ i / a ]) ≃ (r [ i / a ])
+Sett level [ i / a ] = Sett level    

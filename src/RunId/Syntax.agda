@@ -75,6 +75,8 @@ data Term where
     -- vec
     nilv𝕢_ : Quantity → Term 
     _∷v_𝕟_𝕢_ : Term → Term → Term → Quantity → Term 
+    -- prop equal 
+    rfl : Term
 
     ---- elims 
     -- Sigma
@@ -127,6 +129,8 @@ data Term where
     -- Annotation is for if vec has erased index or not
     elVec[_]<_> : (innerty : Type) → Quantity → Term → (P : Term) → (nilB : Term) → (∷B : Term) → Term
     elVecᵣ[_]<_> : (innerty : Type) → Quantity → Term → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    -- Prop equal 
+    subst_by_ : Term → Annotation a σ → Term
     
     -- Types
     Nat : Type
@@ -136,6 +140,7 @@ data Term where
     r∶_⟶_ : Type → Type → Type -- Runtime Pi type
     ∶_×∶_ : Annotation A σ → Annotation B π → Type 
     _＋_ : Annotation A σ → Annotation B π → Type
+    _≃_ : Term → Term → Term
     Sett : ℕ → Type -- Universe 
 
 infixr 9 ∶_⟶_
@@ -155,3 +160,5 @@ pattern nilvω = nilv𝕢_ ω
 pattern _∷v_𝕟𝟘_ a as n = _∷v_𝕟_𝕢_ a as n 𝟘
 pattern _∷v_𝕟ω_ a as n = _∷v_𝕟_𝕢_ a as n ω
  
+pattern subst_by𝟘_ a b = subst_by_ a (b 𝕢 𝟘)
+pattern subst_byω_ a b = subst_by_ a (b 𝕢 ω)

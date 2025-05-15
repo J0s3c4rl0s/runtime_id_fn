@@ -208,11 +208,25 @@ data _⊢_∶_ where
                 cb 
             𝕢 σ ∶ (P [ 0 / n ] [ 1 / b ])
     
+    -- Prop equal
+    ⊢≃ : 
+        Γ ⊢ a 𝕢 𝟘 ∶ A →
+        Γ ⊢ b 𝕢 𝟘 ∶ A → 
+        Γ ⊢ (a ≃ b) 𝕢 𝟘 ∶ Sett 𝓁
+    ⊢rfl : 
+        Γ ⊢ rfl 𝕢 σ ∶ (a ≃ a)
+    ⊢subst : 
+        Γ ⊢ a 𝕢 σ ∶ (A [ i / c ] [ j / rfl ])  → 
+        Γ ⊢ b 𝕢 π ∶ (c ≃ d) → 
+        -- Should I check that i and j are in scope? 
+        -- Is there a different way to define this?
+        Γ ⊢ (subst a by (b 𝕢 π)) 𝕢 σ ∶ ((A [ i / d ]) [ j / b ]) 
+
     ⊢Sett : 
         Γ ⊢ Sett 𝓁 𝕢 𝟘 ∶ Sett (suc 𝓁) 
     ⊢conv : {Γ : Context} → 
         Γ ⊢ a 𝕢 σ ∶ A →
-        A ＝ B →
+        A ＝ B → 
         Γ ⊢ a 𝕢 σ ∶ B
 
     ---- QTT rules 
@@ -230,7 +244,6 @@ data _＝_ where
         (i : Γ ∋ a)  →
         Γ ⊢ var (∋→ℕ i) ＝ a ↑_≥_  (suc (∋→ℕ i)) 0
     -}
-
     ＝pi : 
         A ＝ C → 
         B ＝ D →

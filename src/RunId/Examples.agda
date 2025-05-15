@@ -64,6 +64,25 @@ listToVecDef =
             nilv𝟘 
             (var 2 ∷v var 0 𝕟𝟘 (listLengthDef ·𝟘 Nat ·ω var 1))
 
+symtyped : 
+    Γ ⊢ 
+        (ƛ𝟘∶ a ≃ b ♭ (subst rfl by𝟘 (var 0))) 𝕢 ω ∶ 
+        (∶ (a ≃ b 𝕢 𝟘) ⟶ 
+        (b ≃ a))
+symtyped = 
+    ⊢lam 
+        -- missing A, i, j from this derivation...
+        (⊢subst 
+            ⊢rfl 
+            (⊢var Z 𝟘≤q refl)) 
+        (⊢≃ {!   !} {!   !})
+
+-- do an example with erased eq 
+erasedEqType : Type
+erasedEqType = 
+    ∶ ({!  Na !} 𝕢 ω) ⟶ 
+    {!   !}
+
 -- module utilsTests where
 
 --     module weaken where

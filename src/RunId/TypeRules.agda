@@ -72,7 +72,58 @@ data _⊢_∶_ where
         Γ ⊢ b 𝕢 ω *q σ ∶ A →
         Γ ⊢ (a ·ᵣ b) 𝕢 σ ∶  (B [ 0 /  b ])
 
-    -- ⊢prod : 
+    -- Products
+    -- Fix universe levels 
+    -- Exclude having both sides erased?
+    ⊢× : 
+        Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁 →
+        (Γ , A 𝕢 π) ⊢ B 𝕢 𝟘 ∶ Sett 𝓁 →
+        Γ ⊢ (A 𝕢 π) × (B 𝕢 ρ) 𝕢 𝟘 ∶ Sett 𝓁
+    ⊢⟨,⟩ : 
+        Γ ⊢ a 𝕢 σ *q π ∶ A → 
+        (Γ , A 𝕢 π) ⊢ b 𝕢 σ *q ρ ∶ B → 
+        Γ ⊢ ⟨(a 𝕢 π) , (b 𝕢 ρ)⟩ 𝕢 σ ∶ ((A 𝕢 π) × (B 𝕢 ρ))
+    -- finish this 
+    ⊢el× :  
+        Γ ⊢ c 𝕢 σ ∶ ((A 𝕢 π) × (B 𝕢 ρ)) → 
+        Γ ⊢ P 𝕢 𝟘 ∶ ((A 𝕢 π) × (B 𝕢 ρ) 𝕢 σ ⟶ Sett 𝓁) → 
+        (Γ , A 𝕢 π , B 𝕢 ρ) ⊢ d 𝕢 σ ∶ (P · ⟨ (A 𝕢 π) , (B 𝕢 ρ) ⟩ 𝕢 σ) →
+        Γ ⊢ el×< π , ρ >[ A , B ] c P d 𝕢 σ ∶ (P · c 𝕢 σ)
+    ⊢elᵣ× : 
+        Γ ⊢ var i 𝕢 σ ∶ ((A 𝕢 π) × (B 𝕢 ρ)) → 
+        Γ ⊢ P 𝕢 𝟘 ∶ ((A 𝕢 π) × (B 𝕢 ρ) 𝕢 σ ⟶ Sett 𝓁) → 
+        (Γ , A 𝕢 π , B 𝕢 ρ) ⊢ d 𝕢 σ ∶ (P · ⟨ (A 𝕢 π) , (B 𝕢 ρ) ⟩ 𝕢 σ) →
+        (d [ i / ⟨ (var 1 𝕢 π) , (var 0 𝕢 ρ) ⟩ ]) ~ᵣ ⟨ (var 1 𝕢 π) , (var 0 𝕢 ρ) ⟩ → 
+        Γ ⊢ elᵣ×< π , ρ >[ A , B ] (var i) P d 𝕢 σ ∶ (P · ⟨ (A 𝕢 π) , (B 𝕢 ρ) ⟩ 𝕢 σ)
+
+    -- Sums
+    -- Exclude having both sides erased?
+    ⊢＋ : 
+        -- Fix universe levels, should differ and join
+        Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁 → 
+        Γ ⊢ B 𝕢 𝟘 ∶ Sett 𝓁 → 
+        Γ ⊢ (A 𝕢 π) ＋ (B 𝕢 ρ) 𝕢 𝟘 ∶ Sett 𝓁
+    ⊢inl : 
+        Γ ⊢ a 𝕢 σ *q π ∶ A → 
+        Γ ⊢ (inl< π , ρ > a) 𝕢 σ ∶ ((A 𝕢 π) ＋ (B 𝕢 ρ))
+    ⊢inr : 
+        Γ ⊢ a 𝕢 σ *q ρ ∶ B → 
+        Γ ⊢ (inr< π , ρ > a) 𝕢 σ ∶ ((A 𝕢 π) ＋ (B 𝕢 ρ))
+    ⊢el＋ : ∀ {bₗ bᵣ} →
+        Γ ⊢ c 𝕢 σ ∶ ((A 𝕢 π) ＋ (B 𝕢 ρ)) → 
+        Γ ⊢ P 𝕢 𝟘 ∶ ((A 𝕢 π) ＋ (B 𝕢 ρ) 𝕢 σ ⟶ Sett 𝓁) → 
+        (Γ , A 𝕢 π) ⊢ bₗ 𝕢 σ *q π ∶ (P · inl< π , ρ > (var 0) 𝕢 σ) → 
+        (Γ , B 𝕢 ρ) ⊢ bᵣ 𝕢 σ *q ρ ∶ (P · inr< π , ρ > (var 0) 𝕢 σ) →
+        Γ ⊢ el＋< π , ρ >[ A , B ] c P bₗ bᵣ 𝕢 σ ∶ (P · c 𝕢 σ) 
+    ⊢elᵣ＋ : ∀ {bₗ bᵣ} →
+        Γ ⊢ var i 𝕢 σ ∶ ((A 𝕢 π) ＋ (B 𝕢 ρ)) → 
+        Γ ⊢ P 𝕢 𝟘 ∶ ((A 𝕢 π) ＋ (B 𝕢 ρ) 𝕢 σ ⟶ Sett 𝓁) → 
+        (Γ , A 𝕢 π) ⊢ bₗ 𝕢 σ *q π ∶ (P · inl< π , ρ > (var 0) 𝕢 σ) → 
+        (Γ , B 𝕢 ρ) ⊢ bᵣ 𝕢 σ *q ρ ∶ (P · inr< π , ρ > (var 0) 𝕢 σ) →
+        (bₗ [ i / inl< π , ρ > (var 0) ]) ~ᵣ inl< π , ρ > (var 0) → 
+        (bᵣ [ i / inr< π , ρ > (var 0) ]) ~ᵣ inr< π , ρ > (var 0) → 
+        Γ ⊢ elᵣ＋< π , ρ >[ A , B ] (var i) P bₗ bᵣ 𝕢 σ ∶ (P · var i 𝕢 σ)  
+
 
 
     -- Nats
@@ -107,7 +158,7 @@ data _⊢_∶_ where
         -- Cons branch is runid, first is acc second is subrec
         (sb [ i / s (var 0) ]) ~ᵣ (s (var 0)) ⊎ 
             (sb [ i / (s (var 1)) ]) ~ᵣ (s (var 1)) →
-        Γ ⊢ elNatᵣ (var i) P 
+        Γ ⊢ elᵣNat (var i) P 
                 zb 
                 sb 
             𝕢 σ ∶ (P [ 0 / n ])
@@ -151,7 +202,7 @@ data _⊢_∶_ where
         -- IH through choice, left acc right subtail
         (cb [ 3 + i / var 2 ∷l var 0 ]) ~ᵣ (var 2 ∷l var 0) ⊎ 
             (cb [ 3 + i / var 2 ∷l var 1 ]) ~ᵣ (var 2 ∷l var 1) →
-        Γ ⊢ elListᵣ[ A ] (var i) P 
+        Γ ⊢ elᵣList[ A ] (var i) P 
                 nb 
                 cb 
             𝕢 σ ∶ (P ·𝟘 var i)
@@ -200,7 +251,7 @@ data _⊢_∶_ where
         -- IH through choice, left acc right tail
         (cb [ 4 + i / var 2 ∷v var 0 𝕟 var 3 𝕢 σ ]) ~ᵣ (var 2 ∷v var 0 𝕟 var 3 𝕢 σ) ⊎ 
             (cb [ 4 + i / var 2 ∷v var 1 𝕟 var 3 𝕢 σ ]) ~ᵣ (var 2 ∷v var 1 𝕟 var 3 𝕢 σ) → 
-        Γ ⊢ elVecᵣ[ A ]< δ > (var i) P 
+        Γ ⊢ elᵣVec[ A ]< δ > (var i) P 
                 nb 
                 cb 
             𝕢 σ ∶ (P [ 0 / n ] [ 1 / b ])
@@ -507,7 +558,7 @@ data _~ᵣ_ where
         (el×< 𝟘 , ω >[ A , B ] a P b) ~ᵣ ((ƛω∶ B ♭ c) ·ω a)
     -- Should this rule only exist for variables?
     ~ᵣel<,>ᵣ : 
-        el×ᵣ< σ , π >[ A , B ] (var i) P b ~ᵣ var i
+        elᵣ×< σ , π >[ A , B ] (var i) P b ~ᵣ var i
     -- Sum 
     ~ᵣel＋<𝟘,> : 
         a ~ᵣ a' →
@@ -517,13 +568,13 @@ data _~ᵣ_ where
         a ~ᵣ a' →
         b ~ᵣ d → 
         (el＋< ω , 𝟘 >[ A , B ] a P b c) ~ᵣ ((ƛω∶ A ♭ d) ·ω a')
-    ~ᵣel＋ᵣ : 
+    ~ᵣelᵣ＋ : 
         (el＋< ω , 𝟘 >[ A , B ] (var i) P b c) ~ᵣ var i
     -- Nat 
     ~ᵣelℕᵣ :
-        (elNatᵣ (var i) P b c) ~ᵣ var i 
+        (elᵣNat (var i) P b c) ~ᵣ var i 
     -- List 
     -- Should this rule only exist for variables?
-    ~ᵣelListᵣ : 
-        (elListᵣ[ A ] (var i) P nb cb) ~ᵣ var i 
+    ~ᵣelᵣList : 
+        (elᵣList[ A ] (var i) P nb cb) ~ᵣ var i 
         

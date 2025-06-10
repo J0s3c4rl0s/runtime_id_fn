@@ -87,7 +87,7 @@ data Term where
         Term → 
         Term → 
         Term
-    el×ᵣ<_,_>[_,_] : 
+    elᵣ×<_,_>[_,_] : 
         Quantity → Quantity → 
         Type → Type → 
         Term → 
@@ -107,7 +107,7 @@ data Term where
         -- c 
         Term →  
         Term   
-    el＋ᵣ<_,_>[_,_] : 
+    elᵣ＋<_,_>[_,_] : 
         Quantity → Quantity →
         Type → Type → 
         -- a
@@ -121,14 +121,14 @@ data Term where
         Term   
     -- Nat
     elNat : Term → Term → Term → Term → Term
-    elNatᵣ : Term → Term → Term → Term → Term
+    elᵣNat : Term → Term → Term → Term → Term
     -- List
     elList[_] : (innerty : Type) → (list : Term) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
-    elListᵣ[_] : (innerty : Type) → (list : Term) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    elᵣList[_] : (innerty : Type) → (list : Term) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
     -- vec
     -- Annotation is for if vec has erased index or not
     elVec[_]<_> : (innerty : Type) → Quantity → Term → (P : Term) → (nilB : Term) → (∷B : Term) → Term
-    elVecᵣ[_]<_> : (innerty : Type) → Quantity → Term → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    elᵣVec[_]<_> : (innerty : Type) → Quantity → Term → (P : Term) → (nilB : Term) → (∷B : Term) → Term
     -- Prop equal 
     subst_by_ : Term → Annotation a σ → Term
     

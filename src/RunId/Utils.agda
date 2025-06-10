@@ -111,7 +111,7 @@ el×< σ , π >[ A , B ] a P b ↑ i ≥ l =
     -- Motive isnt correct
     el×< σ , π >[ A ↑ i ≥ l , B ↑ i ≥ (suc l) ] (a ↑ i ≥ l) (P ↑ i ≥ l) 
         (b ↑ i ≥ l)
-el×ᵣ< σ , π >[ A , B ] a P b ↑ i ≥ l =  
+elᵣ×< σ , π >[ A , B ] a P b ↑ i ≥ l =  
     -- Motive isnt correct
     el×< σ , π >[ A ↑ i ≥ l , B ↑ i ≥ (suc l) ] (a ↑ i ≥ l) (P ↑ i ≥ l) 
         (b ↑ i ≥ (2 + l))
@@ -119,32 +119,32 @@ el＋< σ , π >[ A , B ] a P b c ↑ i ≥ l =
     el＋< σ , π >[ A ↑ i ≥ l , B ↑ i ≥ l ] (a ↑ i ≥ l) (P ↑ i ≥ (suc l)) 
         (b ↑ i ≥ (suc l))
         (c ↑ i ≥ (suc l))
-el＋ᵣ< σ , π >[ A , B ] a P b c ↑ i ≥ l = 
-    el＋ᵣ< σ , π >[ A ↑ i ≥ l , B ↑ i ≥ l ] (a ↑ i ≥ l) (P ↑ i ≥ (suc l)) 
+elᵣ＋< σ , π >[ A , B ] a P b c ↑ i ≥ l = 
+    elᵣ＋< σ , π >[ A ↑ i ≥ l , B ↑ i ≥ l ] (a ↑ i ≥ l) (P ↑ i ≥ (suc l)) 
         (b ↑ i ≥ (suc l))
         (c ↑ i ≥ (suc l))
 _↑_≥_ (elNat t t₁ zb sb) i l = 
     elNat (_↑_≥_ t i l) (_↑_≥_ t₁ i (suc l)) 
             (_↑_≥_ zb i l) 
             (_↑_≥_ sb i (2 + l))
-_↑_≥_ (elNatᵣ t t₁ zb sb) i l = 
-    elNatᵣ (_↑_≥_ t i l) (_↑_≥_ t₁ i (suc l)) 
+_↑_≥_ (elᵣNat t t₁ zb sb) i l = 
+    elᵣNat (_↑_≥_ t i l) (_↑_≥_ t₁ i (suc l)) 
             (_↑_≥_ zb i l) 
             (_↑_≥_ sb i (2 + l))
 _↑_≥_ (elList[ A ] t t₁ t₃ t₄) i l = 
     elList[  (_↑_≥_ A i l) ] (_↑_≥_ t i l) (_↑_≥_ t₁ i (suc l)) 
             (_↑_≥_ t₃ i l) 
             (_↑_≥_ t₄ i (3 + l))
-_↑_≥_ (elListᵣ[ A ]  t t₁ t₃  t₄) i l = 
-    elListᵣ[  (_↑_≥_ A i l) ] (_↑_≥_ t i l) (_↑_≥_ t₁ i (suc l)) 
+_↑_≥_ (elᵣList[ A ]  t t₁ t₃  t₄) i l = 
+    elᵣList[  (_↑_≥_ A i l) ] (_↑_≥_ t i l) (_↑_≥_ t₁ i (suc l)) 
             (_↑_≥_ t₃ i l) 
              (_↑_≥_ t₄ i (3 + l))
 _↑_≥_ (elVec[ A ]< σ >  t t₁ t₄ t₅) i l = 
     elVec[ (_↑_≥_ A i l) ]< σ > (_↑_≥_ t i l) (_↑_≥_ t₁ i (2+ l)) 
             (_↑_≥_ t₄ i l) 
              (_↑_≥_ t₅ i (4 + l))
-_↑_≥_ (elVecᵣ[ A ]< σ >  t t₁ t₄  t₅) i l = 
-    elVecᵣ[ (_↑_≥_ A i l) ]< σ > (_↑_≥_ t i l) (_↑_≥_ t₁ i (2+ l)) 
+_↑_≥_ (elᵣVec[ A ]< σ >  t t₁ t₄  t₅) i l = 
+    elᵣVec[ (_↑_≥_ A i l) ]< σ > (_↑_≥_ t i l) (_↑_≥_ t₁ i (2+ l)) 
             (_↑_≥_ t₄ i l) 
              (_↑_≥_ t₅ i (4 + l))
 (subst a by (b 𝕢 σ)) ↑ i ≥ l = 
@@ -197,24 +197,24 @@ rfl [ i / a ] = rfl
 el×< σ , π >[ A , B ] c P b [ i / a ] = 
     el×< σ , π >[ (A [ i / a ]) , B [ suc i / a ↑ 1 ≥ 0 ] ] (c [ i / a ]) (P [ suc i / a ↑ 1 ≥ 0 ]) 
         (b [ 2 + i / a ↑ 2 ≥ 0 ])
-el×ᵣ< σ , π >[ A , B ] c P b [ i / a ] = 
-    el×ᵣ< σ , π >[ (A [ i / a ]) , B [ suc i / a ↑ 1 ≥ 0 ] ] (c [ i / a ]) (P [ suc i / a ↑ 1 ≥ 0 ]) 
+elᵣ×< σ , π >[ A , B ] c P b [ i / a ] = 
+    elᵣ×< σ , π >[ (A [ i / a ]) , B [ suc i / a ↑ 1 ≥ 0 ] ] (c [ i / a ]) (P [ suc i / a ↑ 1 ≥ 0 ]) 
         (b [ 2 + i / a ↑ 2 ≥ 0 ])
 el＋< σ , π >[ A , B ] c P b d [ i / a ] = 
     -- motive is wrong?
     el＋< σ , π >[ (A [ i / a ]) , B [ i / a ] ] (c [ i / a ]) (P [ suc i / a ↑ 1 ≥ 0 ]) 
         (b [ suc i / a ↑ 1 ≥ 0 ]) 
         (d [ suc i / a ↑ 1 ≥ 0 ])
-el＋ᵣ< σ , π >[ A , B ] c P b d [ i / a ] =  
+elᵣ＋< σ , π >[ A , B ] c P b d [ i / a ] =  
     -- motive is wrong?
-    el＋ᵣ< σ , π >[ (A [ i / a ]) , B [ i / a ] ] (c [ i / a ]) (P [ suc i / a ↑ 1 ≥ 0 ]) 
+    elᵣ＋< σ , π >[ (A [ i / a ]) , B [ i / a ] ] (c [ i / a ]) (P [ suc i / a ↑ 1 ≥ 0 ]) 
         (b [ suc i / a ↑ 1 ≥ 0 ]) 
         (d [ suc i / a ↑ 1 ≥ 0 ])
 (elNat b P zb sb) [ i / a ] = 
     elNat ((b [ i / a ])) ((P [ i / a ]) )
         (zb [ i / a ]) 
         (sb [ i + 2 / _↑_≥_ a 2 0 ])
-(elNatᵣ b P zb sb) [ i / a ] = 
+(elᵣNat b P zb sb) [ i / a ] = 
     elNat ((b [ i / a ])) ((P [ i / a ])) 
         (zb [ i / a ]) 
         (sb [ i + 2 / _↑_≥_ a 2 0 ])
@@ -222,16 +222,16 @@ el＋ᵣ< σ , π >[ A , B ] c P b d [ i / a ] =
     elList[ (A [ i / a ]) ] (b [ i / a ]) (P [ i / a ]) 
         ((nb [ i / a ])) 
         (cb [ i + 3 / _↑_≥_ a 3 0 ])
-(elListᵣ[ A ]  b P nb  cb) [ i / a ] = 
-    elListᵣ[ (A [ i / a ]) ] (b [ i / a ]) (P [ i / a ]) 
+(elᵣList[ A ]  b P nb  cb) [ i / a ] = 
+    elᵣList[ (A [ i / a ]) ] (b [ i / a ]) (P [ i / a ]) 
         (nb [ i / a ]) 
         (cb [ i + 3 / _↑_≥_ a 3 0 ])
 (elVec[ A ]< σ >  b P nb  cb) [ i / a ] = 
     elVec[ (A [ i / a ]) ]< σ > (b [ i / a ]) (P [ i / a ]) 
         (nb [ i / a ]) 
          (cb [ i + 4 / _↑_≥_ a 4 0 ])
-(elVecᵣ[ A ]< σ >  b P nb  cb) [ i / a ] = 
-    elVecᵣ[ (A [ i / a ]) ]< σ > (b [ i / a ]) (P [ i / a ]) 
+(elᵣVec[ A ]< σ >  b P nb  cb) [ i / a ] = 
+    elᵣVec[ (A [ i / a ]) ]< σ > (b [ i / a ]) (P [ i / a ]) 
         (nb [ i / a ]) 
          (cb [ i + 4 / _↑_≥_ a 4 0 ])
 (subst b by (eq 𝕢 σ)) [ i / a ] = subst (b [ i / a ]) by ((eq [ i / a ]) 𝕢 σ)

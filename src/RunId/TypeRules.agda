@@ -3,7 +3,7 @@ module RunId.TypeRules where
 open import RunId.Syntax
 open import RunId.Utils
 
-open import Data.Product using (_×_) renaming (_,_ to _,'_)
+-- open import Data.Product using (_×_) renaming (_,_ to _,'_)
 open import Data.Nat using (ℕ; zero; suc; _+_; _≤ᵇ_)
 open import Data.Bool using (if_then_else_)
 open import Data.Maybe
@@ -27,13 +27,6 @@ data _~ᵣ_ : Term → Term → Set
 
 -- For now it can be an annotation bc quants are only 0 or 1
 data _⊢_∶_ where
-    -- ⊢var :
-    --     (i : Γ ∋ (A 𝕢 σ)) →
-    --     -- Avoiding green slime in the easiest way possible
-    --     {num : ℕ} →
-    --     (eq : (∋→ℕ i) ≡ num) →
-    --     Γ ⊢ var num 𝕢 σ ∶ (A ↑ (suc (∋→ℕ i)) ≥ 0)
-    ---- New version
     ⊢var :
         (i : Γ ∋ (A 𝕢 ρ)) →
         σ ≤q ρ →
@@ -41,13 +34,14 @@ data _⊢_∶_ where
         {num : ℕ} →
         (eq : (∋→ℕ i) ≡ num) →
         Γ ⊢ var num 𝕢 σ ∶ (A ↑ (suc (∋→ℕ i)) ≥ 0)
+    
     -- functions
     ⊢pi :
         -- Not sure if this should be 0 usage for : Sett ? 
         Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁  →
         (Γ , A 𝕢 𝟘) ⊢ B 𝕢 𝟘 ∶ Sett 𝓁  →
         -- same universe level?
-        Γ ⊢ (∶ A 𝕢 π ⟶ B ) 𝕢 𝟘 ∶ Sett 𝓁 
+        Γ ⊢ (A 𝕢 π ⟶ B ) 𝕢 𝟘 ∶ Sett 𝓁 
     -- Add special rules!!
     ⊢rpi : 
         -- (A ↑ 1 ≥ 0) ~ᵣ B →
@@ -56,27 +50,30 @@ data _⊢_∶_ where
         (Γ , A 𝕢 𝟘) ⊢ B 𝕢 𝟘 ∶ Sett 𝓁  →
         -- needs to be nonzero arg
         -- same universe level?
-        Γ ⊢ r∶ A ⟶ B 𝕢 𝟘 ∶ Sett 𝓁 
+        Γ ⊢ A ⟶r B 𝕢 𝟘 ∶ Sett 𝓁 
     ⊢lam : ∀ {Γ : Context} →
         -- Are the annotations in Γ arbitrary? 
         (Γ , A 𝕢 (π *q σ)) ⊢ b 𝕢 σ ∶ B →
         Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁  →
-        Γ ⊢ (ƛ∶ A 𝕢 π ♭ b) 𝕢 σ ∶ (∶ A 𝕢 π ⟶ B)
+        Γ ⊢ (ƛ∶ A 𝕢 π ♭ b) 𝕢 σ ∶ (A 𝕢 π ⟶ B)
     ⊢rlam : ∀ {Γ : Context} →
         b ~ᵣ var 0 →
         -- Are the annotations in Γ arbitrary? 
         (Γ , A 𝕢 (ω *q σ)) ⊢ b 𝕢 σ ∶ B →
         -- Is this rule redundant since there is a formation rule
         Γ ⊢ A 𝕢 𝟘 ∶ Sett 𝓁  →
-        Γ ⊢ (ƛr∶ A ♭ b) 𝕢 σ ∶ (r∶ A ⟶ B)
+        Γ ⊢ (ƛr∶ A ♭ b) 𝕢 σ ∶ (A ⟶r B)
     ⊢app : 
-        Γ ⊢ a 𝕢 σ ∶ (∶ A 𝕢 π ⟶ B) →
+        Γ ⊢ a 𝕢 σ ∶ (A 𝕢 π ⟶ B) →
         Γ ⊢ b 𝕢 π *q σ ∶ A →
         Γ ⊢ (a · b 𝕢 π) 𝕢 σ ∶  (B [ 0 / b ])
     ⊢appᵣ : 
-        Γ ⊢ a 𝕢 σ ∶ (r∶ A ⟶ B) →
+        Γ ⊢ a 𝕢 σ ∶ (A ⟶r B) →
         Γ ⊢ b 𝕢 ω *q σ ∶ A →
         Γ ⊢ (a ·ᵣ b) 𝕢 σ ∶  (B [ 0 /  b ])
+
+    -- ⊢prod : 
+
 
     -- Nats
     ⊢Nat : 
@@ -142,7 +139,7 @@ data _⊢_∶_ where
         (Γ Γ Γ : Context) →
         Γ ⊢ var i 𝕢 σ ∶ List A →
         -- changing it back bc I dont need compiler anymore (maybe)
-        Γ ⊢ P 𝕢 𝟘 ∶ (∶ List A 𝕢 𝟘 ⟶ Sett 𝓁) → 
+        Γ ⊢ P 𝕢 𝟘 ∶ (List A 𝕢 𝟘 ⟶ Sett 𝓁) → 
         -- shifts?
         List A ~ᵣ (P ·𝟘 var 0) →
         Γ ⊢ nb 𝕢 σ ∶ (P ·𝟘 nill ) → 
@@ -247,12 +244,12 @@ data _＝_ where
     ＝pi : 
         A ＝ C → 
         B ＝ D →
-        (∶ A 𝕢 σ ⟶ B) ＝ (∶ C 𝕢 σ ⟶ D)
+        (A 𝕢 σ ⟶ B) ＝ (C 𝕢 σ ⟶ D)
 
     ＝piᵣ : 
         A ＝ C → 
         B ＝ D →
-        (r∶ A ⟶ B) ＝ (r∶ C ⟶ D)
+        (A ⟶r B) ＝ (C ⟶r D)
     ＝lam :
         b ＝ c →
         (ƛ∶ A 𝕢 σ ♭ b)  ＝ (ƛ∶ A 𝕢 σ ♭ c)
@@ -335,7 +332,7 @@ data _＝_ where
         (elVec[ A ]< σ > cs P 
                 nb 
                 cb) 
-            ＝ 
+            ＝  
             nb
     ＝vecelc :
         cs ＝ (a ∷v as 𝕟 n 𝕢 σ) → 
@@ -403,20 +400,20 @@ data _~ᵣ_ where
     ~ᵣpiω : 
         A ~ᵣ C  →
         B ~ᵣ D →
-        (∶ A 𝕢 ω ⟶ B) ~ᵣ (∶ C 𝕢 ω ⟶ D) 
+        (A 𝕢 ω ⟶ B) ~ᵣ (C 𝕢 ω ⟶ D) 
     ~ᵣpi𝟘 : 
         B ~ᵣ( D ↑ 1 ≥ 0) →
-        (∶ A 𝕢 𝟘 ⟶ B) ~ᵣ D 
+        (A 𝕢 𝟘 ⟶ B) ~ᵣ D 
     ~ᵣpir : 
         A ~ᵣ B →
-        (r∶ A ⟶ B) ~ᵣ (r∶ A ⟶ A) 
+        (A ⟶r B) ~ᵣ (A ⟶r A) 
     ---- Sigma 
     ~ᵣ×𝟘₁ :
         B ~ᵣ (C ↑ 1 ≥ 0) → 
-        (∶ (A 𝕢 𝟘) ×∶ (B 𝕢 ω)) ~ᵣ C
+        ((A 𝕢 𝟘) × (B 𝕢 ω)) ~ᵣ C
     ~ᵣ×𝟘₂ :
         A ~ᵣ C → 
-        (∶ (A 𝕢 ω) ×∶ (B 𝕢 𝟘)) ~ᵣ C
+        ((A 𝕢 ω) × (B 𝕢 𝟘)) ~ᵣ C
     ---- Sum 
     ~ᵣ＋𝟘₁ : 
         A ~ᵣ C →
@@ -506,6 +503,7 @@ data _~ᵣ_ where
     ~ᵣel<,𝟘> :
         -- weaken with erased _ : A 
         b ~ᵣ (c ↑ 1 ≥ 1) → 
+        -- Need to change B because of strengthening..?
         (el×< 𝟘 , ω >[ A , B ] a P b) ~ᵣ ((ƛω∶ B ♭ c) ·ω a)
     -- Should this rule only exist for variables?
     ~ᵣel<,>ᵣ : 

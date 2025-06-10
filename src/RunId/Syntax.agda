@@ -136,14 +136,14 @@ data Term where
     Nat : Type
     List : Type → Type
     Vec : Type → Annotation n σ → Type
-    ∶_⟶_ : Annotation A σ → Type → Type -- Pi type
-    r∶_⟶_ : Type → Type → Type -- Runtime Pi type
-    ∶_×∶_ : Annotation A σ → Annotation B π → Type 
+    _⟶_ : Annotation A σ → Type → Type -- Pi type
+    _⟶r_ : Type → Type → Type -- Runtime Pi type
+    _×_ : Annotation A σ → Annotation B π → Type 
     _＋_ : Annotation A σ → Annotation B π → Type
     _≃_ : Term → Term → Term
     Sett : ℕ → Type -- Universe 
 
-infixr 9 ∶_⟶_
+infixr 9 _⟶_
 
 pattern ƛ𝟘∶_♭_ A b = ƛ∶_♭_ (A 𝕢 𝟘) b
 pattern ƛω∶_♭_ A b = ƛ∶_♭_ (A 𝕢 ω) b

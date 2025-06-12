@@ -31,7 +31,7 @@ LangCon A = (a : Term) → Term
 
 -- Gives an exhaustive set of substitutions for a context
 FullSubst : Context → Set 
-FullSubst Γ = {!   !}
+FullSubst Γ = (a : Term) → Term
 
 -- Reduction relation
 _⇓_ : Term → Term → Set
@@ -39,14 +39,13 @@ _⇓_ : Term → Term → Set
 lemma : ∀ {a b A vₐ vb} →
     a ~ᵣ b →
     let 
-        aₑ = ⟦ a ⟧ₑ  
-        bₑ = ⟦ b ⟧ₑ  
+        aₒ = ⟦ a ⟧ₒ  
+        bₒ = ⟦ b ⟧ₒ  
         in
     ∀ {C : LangCon ⟦ A ⟧ₑ} {δ : FullSubst Γ} → 
-    -- Its erased optimization
-    aₑ ⇓ vₐ → 
-    -- And its erased + runid optimization
-    bₑ ⇓ vb → 
+    -- Their erasure + optimization
+    C (δ aₒ) ⇓ vₐ → 
+    C (δ bₒ) ⇓ vb → 
     -- Reduce to the same term.
     vₐ ≡ vb
 
@@ -60,31 +59,31 @@ proof : ∀ {vₑ vₒ} →
     -- Then for any valid program context and substitution of terms
     ∀ {C : LangCon ⟦ a ⟧ₑ} {δ : FullSubst Γ} → 
     -- Its erased optimization
-    aₑ ⇓ vₑ → 
+    C (δ aₑ) ⇓ vₑ → 
     -- And its erased + runid optimization
-    aₒ ⇓ vₒ → 
+    C (δ aₒ) ⇓ vₒ → 
     -- Reduce to the same term.
     vₒ ≡ vₑ
-proof (⊢var i x eq) ↓e ↓o = {!   !}
-proof (⊢lam ⊢a ⊢a₁) ↓e ↓o = {!   !}
-proof (⊢rlam x ⊢a ⊢a₁) ↓e ↓o = {!   !}
-proof (⊢app ⊢a ⊢a₁) ↓e ↓o = {!   !}
-proof (⊢appᵣ ⊢a ⊢a₁) ↓e ↓o = {!   !}
-proof ⊢z ↓e ↓o = {!   !}
-proof (⊢s ⊢a) ↓e ↓o = {!   !}
-proof (⊢natel ⊢a ⊢a₁ ⊢a₂ ⊢a₃) ↓e ↓o = {!   !}
-proof (⊢natelᵣ ⊢a ⊢a₁ x ⊢a₂ x₁ ⊢a₃ x₂) ↓e ↓o = {!   !}
-proof ⊢nill ↓e ↓o = {!   !}
-proof (⊢∷l ⊢a ⊢a₁) ↓e ↓o = {!   !}
-proof (⊢listel ⊢a ⊢a₁ ⊢a₂ ⊢a₃) ↓e ↓o = {!   !}
-proof (⊢listelᵣ Γ Γ₁ Γ₂ ⊢a ⊢a₁ x ⊢a₂ x₁ ⊢a₃ x₂) ↓e ↓o = {!   !}
-proof (⊢nilv ⊢a) ↓e ↓o = {!   !}
-proof (⊢∷v ⊢a ⊢a₁ ⊢a₂) ↓e ↓o = {!   !}
-proof (⊢vecel ⊢a ⊢a₁ ⊢a₂ ⊢a₃) ↓e ↓o = {!   !}
-proof (⊢vecelᵣ ⊢a ⊢a₁ x ⊢a₂ x₁ ⊢a₃ x₂) ↓e ↓o = {!   !}
-proof ⊢rfl ↓e ↓o = {!   !}
-proof (⊢subst ⊢a ⊢a₁) ↓e ↓o = {!   !}
-proof (⊢conv ⊢a x) ↓e ↓o = {!   !}
+-- proof (⊢var i x eq) ↓e ↓o = {!   !}
+-- proof (⊢lam ⊢a ⊢a₁) ↓e ↓o = {!   !}
+-- proof (⊢rlam x ⊢a ⊢a₁) ↓e ↓o = {!   !}
+-- proof (⊢app ⊢a ⊢a₁) ↓e ↓o = {!   !}
+-- proof (⊢appᵣ ⊢a ⊢a₁) ↓e ↓o = {!   !}
+-- proof ⊢z ↓e ↓o = {!   !}
+-- proof (⊢s ⊢a) ↓e ↓o = {!   !}
+-- proof (⊢natel ⊢a ⊢a₁ ⊢a₂ ⊢a₃) ↓e ↓o = {!   !}
+-- proof (⊢natelᵣ ⊢a ⊢a₁ x ⊢a₂ x₁ ⊢a₃ x₂) ↓e ↓o = {!   !}
+-- proof ⊢nill ↓e ↓o = {!   !}
+-- proof (⊢∷l ⊢a ⊢a₁) ↓e ↓o = {!   !}
+-- proof (⊢listel ⊢a ⊢a₁ ⊢a₂ ⊢a₃) ↓e ↓o = {!   !}
+-- proof (⊢listelᵣ Γ Γ₁ Γ₂ ⊢a ⊢a₁ x ⊢a₂ x₁ ⊢a₃ x₂) ↓e ↓o = {!   !}
+-- proof (⊢nilv ⊢a) ↓e ↓o = {!   !}
+-- proof (⊢∷v ⊢a ⊢a₁ ⊢a₂) ↓e ↓o = {!   !}
+-- proof (⊢vecel ⊢a ⊢a₁ ⊢a₂ ⊢a₃) ↓e ↓o = {!   !}
+-- proof (⊢vecelᵣ ⊢a ⊢a₁ x ⊢a₂ x₁ ⊢a₃ x₂) ↓e ↓o = {!   !}
+-- proof ⊢rfl ↓e ↓o = {!   !}
+-- proof (⊢subst ⊢a ⊢a₁) ↓e ↓o = {!   !}
+-- proof (⊢conv ⊢a x) ↓e ↓o = {!   !}
 -- eraseTerm : ContextRemap Γ → Term → Term 
 -- eraseTerm rΓ (var x) = {!   !}
 -- eraseTerm rΓ (ƛ𝟘∶ A ♭ a) = eraseTerm (rΓ ,ᵣ A skip) a

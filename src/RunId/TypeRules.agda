@@ -137,31 +137,28 @@ data _⊢_∶_ where
     -- either nothing is erased or everything is (?)
     ⊢natel : ∀ {zb sb} →
         Γ ⊢ n 𝕢 σ ∶ Nat →
-        -- Maybe P and n should match usage (check?) or comes naturally from rule
-        -- Γ ⊢ P 𝕢 𝟘 ∶ (∶ Nat 𝕢 π ⟶ Sett 𝓁 ) →
-        -- enforces that argument to forming this type are erased
-        (Γ , Nat 𝕢 𝟘) ⊢ P 𝕢 𝟘 ∶ Sett 𝓁 →
-        Γ ⊢ zb 𝕢 σ ∶ (P [ 0 / z ]) →
-        (Γ , Nat 𝕢 ρ , P [ 0 / var 0 ] 𝕢 ρ' ) ⊢ sb 𝕢 σ ∶ (P [ 0 / s (var 1) ]) →
+        Γ ⊢ P 𝕢 𝟘 ∶ ((Nat 𝕢 σ) ⟶ (Sett 𝓁)) →
+        Γ ⊢ zb 𝕢 σ ∶ (P · z 𝕢 σ) →
+        (Γ , Nat 𝕢 ρ , (P · var 0 𝕢 σ) 𝕢 ρ' ) ⊢ sb 𝕢 σ ∶ (P · (s (var 1)) 𝕢 σ ) →
         Γ ⊢ elNat n P 
                 zb 
                 sb 
-            𝕢 σ ∶ (P [ 0 / n ])
+            𝕢 σ ∶ (P · n 𝕢 σ)
     ⊢natelᵣ : ∀ {zb sb} →
         Γ ⊢ var i 𝕢 σ ∶ Nat →
-        (Γ , Nat 𝕢 𝟘) ⊢ P 𝕢 𝟘 ∶ Sett 𝓁 →
+        Γ ⊢ P 𝕢 𝟘 ∶ ((Nat 𝕢 σ) ⟶ (Sett 𝓁)) →
         -- check type? Depends on n?
         Nat ~ᵣ P →
-        Γ ⊢ zb 𝕢 σ ∶ (P [ 0 / z ]) →
+        Γ ⊢ zb 𝕢 σ ∶ (P · z 𝕢 σ) →
         (zb [ i / z ]) ~ᵣ z →
-        (Γ , Nat 𝕢 ρ , P [ 0 / var 0 ] 𝕢 ρ' ) ⊢ sb 𝕢 σ ∶ (P [ 0 / s (var 1) ]) →
+        (Γ , Nat 𝕢 ρ , (P · var 0 𝕢 σ) 𝕢 ρ' ) ⊢ sb 𝕢 σ ∶ (P · (s (var 1)) 𝕢 σ ) →
         -- Cons branch is runid, first is acc second is subrec
         (sb [ i / s (var 0) ]) ~ᵣ (s (var 0)) ⊎ 
             (sb [ i / (s (var 1)) ]) ~ᵣ (s (var 1)) →
         Γ ⊢ elᵣNat (var i) P 
                 zb 
                 sb 
-            𝕢 σ ∶ (P [ 0 / n ])
+            𝕢 σ ∶ (P · n 𝕢 σ)
     
     -- Lists
     ⊢List : 
@@ -175,17 +172,17 @@ data _⊢_∶_ where
         Γ ⊢ a ∷l b 𝕢 σ ∶ List A
     ⊢listel : 
         Γ ⊢ l 𝕢 σ ∶ List A →
-        (Γ , List A 𝕢 𝟘) ⊢ P 𝕢 𝟘 ∶ Sett 𝓁 → 
-        Γ ⊢ nb 𝕢 σ ∶ (P [ 0 / nill ]) → 
+        Γ ⊢ P 𝕢 𝟘 ∶ (List A 𝕢 σ ⟶ Sett 𝓁) → 
+        Γ ⊢ nb 𝕢 σ ∶ (P · nill 𝕢 σ) → 
         -- I presume list elements must have same erasure as List
         (Γ , 
             A 𝕢 σ , 
             List A 𝕢 σ , 
-            P [ 0 / var 0 ] 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P [ 0 / (var 2 ∷l var 1) ]) → 
+            (P · (var 0) 𝕢 σ) 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P · (var 2 ∷l var 1) 𝕢 σ) → 
         Γ ⊢ elList[ A ] l P 
                 nb 
                 cb 
-            𝕢 σ ∶ (P [ 0 / l ])
+            𝕢 σ ∶ (P · l 𝕢 σ)
     ⊢listelᵣ : 
         (Γ Γ Γ : Context) →
         Γ ⊢ var i 𝕢 σ ∶ List A →
@@ -223,38 +220,38 @@ data _⊢_∶_ where
     ⊢vecel :  
         Γ ⊢ b 𝕢 σ ∶ Vec A (n 𝕢 δ) →
         -- I enforce that P is only compile time? should I?
-        (Γ , Nat 𝕢 𝟘 , Vec A (var 0 𝕢 δ) 𝕢 𝟘) ⊢ P 𝕢 𝟘 ∶ Sett 𝓁 →
-        Γ ⊢ nb 𝕢 σ ∶ (P [ 0 / z ] [ 1 / nilv𝕢 δ ]) → 
+        Γ ⊢ P 𝕢 𝟘 ∶ (Nat 𝕢 δ ⟶ (Vec A (var 0 𝕢 δ) 𝕢 σ) ⟶ Sett 𝓁) →
+        Γ ⊢ nb 𝕢 σ ∶ ((P · z 𝕢 δ) · nilv𝕢 δ 𝕢 σ) → 
         (Γ , 
             Nat 𝕢 π , 
             A 𝕢 σ , 
             Vec A (var 1 𝕢 δ) 𝕢  σ , 
-            P [ 0 / var 0 ] [ 1 / var 2 ] 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P [ 0 / var 3 ] [ 1 / var 2 ∷v var 1 𝕟 var 3 𝕢 δ ]) →
+            ((P · var 0 𝕢 δ) · var 1 𝕢 σ) 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P [ 0 / var 3 ] [ 1 / var 2 ∷v var 1 𝕟 var 3 𝕢 δ ]) →
         Γ ⊢ elVec[ A ]< δ > b P 
                 nb 
                 cb 
-            𝕢 σ ∶ (P [ 0 / n ] [ 1 / b ])
+            𝕢 σ ∶ ((P · n 𝕢 δ) · b 𝕢 σ)
     ⊢vecelᵣ :  
         Γ ⊢ var i 𝕢 σ ∶ Vec A (n 𝕢 δ) →
         -- I enforce that P is only compile time? should I?
-        (Γ , Nat 𝕢 𝟘 , Vec A (var 0 𝕢 δ) 𝕢 𝟘) ⊢ P 𝕢 𝟘 ∶ Sett 𝓁 →
+        Γ ⊢ P 𝕢 𝟘 ∶ (Nat 𝕢 δ ⟶ (Vec A (var 0 𝕢 δ) 𝕢 σ) ⟶ Sett 𝓁) →
         -- how to connect index in P and index in type?
         -- cant substitute for 1 in here
         (Vec (A ↑ 2 ≥ 0) (n ↑ 2 ≥ 0 𝕢 δ)) ~ᵣ (P [ 0 / n ↑ 2 ≥ 0 ]) → 
-        Γ ⊢ nb 𝕢 σ ∶ (P [ 0 / z ] [ 1 / nilv𝕢 δ ]) → 
+        Γ ⊢ nb 𝕢 σ ∶ ((P · z 𝕢 δ) · nilv𝕢 δ 𝕢 σ) → 
         (nb [ i / nilv𝕢 σ ]) ~ᵣ (nilv𝕢 σ) → 
         (Γ , 
             Nat 𝕢 π , 
             A 𝕢 σ , 
             Vec A (var 1 𝕢 δ) 𝕢  σ , 
-            P [ 0 / var 0 ] [ 1 / var 2 ] 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P [ 0 / var 3 ] [ 1 / var 2 ∷v var 1 𝕟 var 3 𝕢 δ ]) →
+            ((P · var 0 𝕢 δ) · var 1 𝕢 σ) 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P [ 0 / var 3 ] [ 1 / var 2 ∷v var 1 𝕟 var 3 𝕢 δ ]) →
         -- IH through choice, left acc right tail
         (cb [ 4 + i / var 2 ∷v var 0 𝕟 var 3 𝕢 σ ]) ~ᵣ (var 2 ∷v var 0 𝕟 var 3 𝕢 σ) ⊎ 
             (cb [ 4 + i / var 2 ∷v var 1 𝕟 var 3 𝕢 σ ]) ~ᵣ (var 2 ∷v var 1 𝕟 var 3 𝕢 σ) → 
         Γ ⊢ elᵣVec[ A ]< δ > (var i) P 
                 nb 
                 cb 
-            𝕢 σ ∶ (P [ 0 / n ] [ 1 / b ])
+            𝕢 σ ∶ ((P · n 𝕢 δ) · b 𝕢 σ)
     
     -- Prop equal
     ⊢≃ : 

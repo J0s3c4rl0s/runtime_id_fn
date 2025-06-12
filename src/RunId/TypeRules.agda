@@ -261,11 +261,15 @@ data _⊢_∶_ where
     ⊢rfl : 
         Γ ⊢ rfl 𝕢 σ ∶ (a ≃ a)
     ⊢subst : 
-        Γ ⊢ a 𝕢 σ ∶ (A [ i / c ] [ j / rfl ])  → 
+        -- Need to know the type of equality?
+        Γ ⊢ a 𝕢 σ ∶ (A [ i / c ] [ j / rfl ]) →
+        -- where I get A from?
+        -- This seems absurd.... I cant use the given equality without the eliminator...
+        Γ ⊢ P 𝕢 𝟘 ∶ ((A 𝕢 σ) ⟶ ((c ≃ d) 𝕢 π) ⟶ Sett 𝓁) → 
         Γ ⊢ b 𝕢 π ∶ (c ≃ d) → 
         -- Should I check that i and j are in scope? 
         -- Is there a different way to define this?
-        Γ ⊢ (subst a by (b 𝕢 π)) 𝕢 σ ∶ ((A [ i / d ]) [ j / b ]) 
+        Γ ⊢ (subst< π > a P b) 𝕢 σ ∶ ((P · a 𝕢 {!   !}) · b 𝕢 {!   !}) 
 
     ⊢Sett : 
         Γ ⊢ Sett 𝓁 𝕢 𝟘 ∶ Sett (suc 𝓁) 

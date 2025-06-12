@@ -147,8 +147,8 @@ _↑_≥_ (elᵣVec[ A ]< σ > t P t₄ t₅) i l =
     elᵣVec[ (_↑_≥_ A i l) ]< σ > (_↑_≥_ t i l) (P ↑ i ≥ l) 
             (_↑_≥_ t₄ i l) 
              (_↑_≥_ t₅ i (4 + l))
-(subst a by (b 𝕢 σ)) ↑ i ≥ l = 
-    subst a ↑ i ≥ l by ((b ↑ i ≥ l) 𝕢 σ)
+(subst< π > a P b) ↑ i ≥ l =
+    subst< π > (a ↑ i ≥ l) (P ↑ i ≥ l) (b ↑ i ≥ l)
 -- Types
 _↑_≥_ Nat i l = Nat
 _↑_≥_ (List t) i l = List (_↑_≥_ t i l)
@@ -234,7 +234,7 @@ elᵣ＋< σ , π >[ A , B ] c P b d [ i / a ] =
     elᵣVec[ (A [ i / a ]) ]< σ > (b [ i / a ]) (P [ i / a ]) 
         (nb [ i / a ]) 
          (cb [ i + 4 / _↑_≥_ a 4 0 ])
-(subst b by (eq 𝕢 σ)) [ i / a ] = subst (b [ i / a ]) by ((eq [ i / a ]) 𝕢 σ)
+(subst< π > b P eq) [ i / a ] = subst< π > (b [ i / a ]) (P [ i / a ]) (eq [ i / a ])
 -- Types
 (b 𝕢 σ ⟶ c) [ i / a ] = (b [ i / a ]) 𝕢 σ ⟶ (c [ suc i / _↑_≥_ a 1 0 ]) 
 (b ⟶r c) [ i / a ] = (b [ i / a ]) ⟶r (c [ suc i / _↑_≥_ a 1 0 ]) 

@@ -130,7 +130,7 @@ data Term where
     elVec[_]<_> : (innerty : Type) → Quantity → Term → (P : Term) → (nilB : Term) → (∷B : Term) → Term
     elᵣVec[_]<_> : (innerty : Type) → Quantity → Term → (P : Term) → (nilB : Term) → (∷B : Term) → Term
     -- Prop equal 
-    subst_by_ : Term → Annotation a σ → Term
+    subst<_> : Quantity → Term → Term → Term → Term
     
     -- Types
     Nat : Type
@@ -159,6 +159,3 @@ pattern nilv𝟘 = nilv𝕢_ 𝟘
 pattern nilvω = nilv𝕢_ ω
 pattern _∷v_𝕟𝟘_ a as n = _∷v_𝕟_𝕢_ a as n 𝟘
 pattern _∷v_𝕟ω_ a as n = _∷v_𝕟_𝕢_ a as n ω
- 
-pattern subst_by𝟘_ a b = subst_by_ a (b 𝕢 𝟘)
-pattern subst_byω_ a b = subst_by_ a (b 𝕢 ω)

@@ -269,7 +269,7 @@ data _⊢_∶_ where
         Γ ⊢ b 𝕢 π ∶ (c ≃ d) → 
         -- Should I check that i and j are in scope? 
         -- Is there a different way to define this?
-        Γ ⊢ (subst< π > a P b) 𝕢 σ ∶ ((P · a 𝕢 {!   !}) · b 𝕢 {!   !}) 
+        Γ ⊢ (subst< π > a P b) 𝕢 σ ∶ ((P · a 𝕢 σ) · b 𝕢 π) 
 
     ⊢Sett : 
         Γ ⊢ Sett 𝓁 𝕢 𝟘 ∶ Sett (suc 𝓁) 

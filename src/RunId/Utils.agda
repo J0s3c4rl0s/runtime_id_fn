@@ -116,35 +116,35 @@ elᵣ×< σ , π >[ A , B ] a P b ↑ i ≥ l =
     el×< σ , π >[ A ↑ i ≥ l , B ↑ i ≥ (suc l) ] (a ↑ i ≥ l) (P ↑ i ≥ l) 
         (b ↑ i ≥ (2 + l))
 el＋< σ , π >[ A , B ] a P b c ↑ i ≥ l = 
-    el＋< σ , π >[ A ↑ i ≥ l , B ↑ i ≥ l ] (a ↑ i ≥ l) (P ↑ i ≥ l) 
+    el＋< σ , π >[ A ↑ i ≥ l , B ↑ i ≥ l ] (a ↑ i ≥ l) (P ↑ i ≥ (suc l)) 
         (b ↑ i ≥ (suc l))
         (c ↑ i ≥ (suc l))
 elᵣ＋< σ , π >[ A , B ] a P b c ↑ i ≥ l = 
-    elᵣ＋< σ , π >[ A ↑ i ≥ l , B ↑ i ≥ l ] (a ↑ i ≥ l) (P ↑ i ≥ l) 
+    elᵣ＋< σ , π >[ A ↑ i ≥ l , B ↑ i ≥ l ] (a ↑ i ≥ l) (P ↑ i ≥ (suc l)) 
         (b ↑ i ≥ (suc l))
         (c ↑ i ≥ (suc l))
-_↑_≥_ (elNat t P zb sb) i l = 
-    elNat (_↑_≥_ t i l) (P ↑ i ≥ l) 
+_↑_≥_ (elNat t t₁ zb sb) i l = 
+    elNat (_↑_≥_ t i l) (_↑_≥_ t₁ i (suc l)) 
             (_↑_≥_ zb i l) 
             (_↑_≥_ sb i (2 + l))
-_↑_≥_ (elᵣNat t P zb sb) i l = 
-    elᵣNat (_↑_≥_ t i l) (P ↑ i ≥ l) 
+_↑_≥_ (elᵣNat t t₁ zb sb) i l = 
+    elᵣNat (_↑_≥_ t i l) (_↑_≥_ t₁ i (suc l)) 
             (_↑_≥_ zb i l) 
             (_↑_≥_ sb i (2 + l))
-_↑_≥_ (elList[ A ] t P t₃ t₄) i l = 
-    elList[  (_↑_≥_ A i l) ] (_↑_≥_ t i l) (P ↑ i ≥ l) 
+_↑_≥_ (elList[ A ] t t₁ t₃ t₄) i l = 
+    elList[  (_↑_≥_ A i l) ] (_↑_≥_ t i l) (_↑_≥_ t₁ i (suc l)) 
             (_↑_≥_ t₃ i l) 
             (_↑_≥_ t₄ i (3 + l))
-_↑_≥_ (elᵣList[ A ]  t P t₃ t₄) i l = 
-    elᵣList[  (_↑_≥_ A i l) ] (_↑_≥_ t i l) (P ↑ i ≥ l) 
+_↑_≥_ (elᵣList[ A ]  t t₁ t₃  t₄) i l = 
+    elᵣList[  (_↑_≥_ A i l) ] (_↑_≥_ t i l) (_↑_≥_ t₁ i (suc l)) 
             (_↑_≥_ t₃ i l) 
              (_↑_≥_ t₄ i (3 + l))
-_↑_≥_ (elVec[ A ]< σ > t P t₄ t₅) i l = 
-    elVec[ (_↑_≥_ A i l) ]< σ > (_↑_≥_ t i l) (P ↑ i ≥ l) 
+_↑_≥_ (elVec[ A ]< σ >  t t₁ t₄ t₅) i l = 
+    elVec[ (_↑_≥_ A i l) ]< σ > (_↑_≥_ t i l) (_↑_≥_ t₁ i (2+ l)) 
             (_↑_≥_ t₄ i l) 
              (_↑_≥_ t₅ i (4 + l))
-_↑_≥_ (elᵣVec[ A ]< σ > t P t₄ t₅) i l = 
-    elᵣVec[ (_↑_≥_ A i l) ]< σ > (_↑_≥_ t i l) (P ↑ i ≥ l) 
+_↑_≥_ (elᵣVec[ A ]< σ >  t t₁ t₄  t₅) i l = 
+    elᵣVec[ (_↑_≥_ A i l) ]< σ > (_↑_≥_ t i l) (_↑_≥_ t₁ i (2+ l)) 
             (_↑_≥_ t₄ i l) 
              (_↑_≥_ t₅ i (4 + l))
 (subst< π > a P b) ↑ i ≥ l =

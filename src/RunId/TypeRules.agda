@@ -152,9 +152,8 @@ data _⊢_∶_ where
         Γ ⊢ zb 𝕢 σ ∶ (P · z 𝕢 σ) →
         (zb [ i / z ]) ~ᵣ z →
         (Γ , Nat 𝕢 ρ , (P · var 0 𝕢 σ) 𝕢 ρ' ) ⊢ sb 𝕢 σ ∶ (P · (s (var 1)) 𝕢 σ ) →
-        -- Cons branch is runid, first is acc second is subrec
-        (sb [ i / s (var 0) ]) ~ᵣ (s (var 0)) ⊎ 
-            (sb [ i / (s (var 1)) ]) ~ᵣ (s (var 1)) →
+        -- Cons branch is runid, sub tail to acc
+        (sb [ 1 / var 0 ] [ i / s (var 0) ]) ~ᵣ (s (var 0)) →
         Γ ⊢ elᵣNat (var i) P 
                 zb 
                 sb 
@@ -195,10 +194,8 @@ data _⊢_∶_ where
         (Γ , 
             A 𝕢 σ , 
             List A 𝕢 σ , 
-            (P ·𝟘 var 0) 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P ·𝟘  (var 2 ∷l var 1)) → 
-        -- IH through choice, left acc right subtail
-        (cb [ 3 + i / var 2 ∷l var 0 ]) ~ᵣ (var 2 ∷l var 0) ⊎ 
-            (cb [ 3 + i / var 2 ∷l var 1 ]) ~ᵣ (var 2 ∷l var 1) →
+            (P ·𝟘 var 0) 𝕢 σ) ⊢ cb 𝕢 σ ∶ (P ·𝟘  (var 2 ∷l var 1)) →
+        (cb [ 1 / var 0 ] [ 3 + i / var 2 ∷l var 0 ]) ~ᵣ (var 2 ∷l var 0) →
         Γ ⊢ elᵣList[ A ] (var i) P 
                 nb 
                 cb 

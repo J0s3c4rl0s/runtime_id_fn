@@ -175,7 +175,8 @@ _↑_≥_ (Sett level) i l = Sett level
 
 -- There are some hijinks around when substitution is admissible, dont think quants change
 _[_/_]  : Term → ℕ → Term → Term
-var j [  i / a ] = if i ≡ᵇ j then a else var j 
+-- Shift down all free variables, ie all variables "above" the one being substituted for
+var j [ i / a ] = if i ≡ᵇ j then a else var (if i ≤ᵇ j then j ∸ 1 else j) 
 -- Constructors
 (ƛ∶ bₜ 𝕢 σ ♭ b) [ i / a ] = ƛ∶ bₜ [ i / a ]  𝕢 σ ♭ (b [ suc i / _↑_≥_ a 1 0 ])
 (ƛr∶ b ♭ b₁) [ i / a ] = (ƛr∶ (b [ i / a ]) ♭ (b₁ [ suc i / _↑_≥_ a 1 0 ]))

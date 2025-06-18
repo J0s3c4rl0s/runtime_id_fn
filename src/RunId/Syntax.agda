@@ -123,12 +123,12 @@ data Term where
     elNat : Term → Term → Term → Term → Term
     elᵣNat : Term → Term → Term → Term → Term
     -- List
-    elList[_] : (innerty : Type) → (list : Term) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
-    elᵣList[_] : (innerty : Type) → (list : Term) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    elList[_] : (A : Type) → (list : Term) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    elᵣList[_] : (A : Type) → (list : Term) → (P : Term) → (nilB : Term) → (∷B : Term) → Term
     -- vec
     -- Annotation is for if vec has erased index or not
-    elVec[_]<_> : (innerty : Type) → Quantity → Term → (P : Term) → (nilB : Term) → (∷B : Term) → Term
-    elᵣVec[_]<_> : (innerty : Type) → Quantity → Term → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    elVec[_]<_> : (A : Type) → Quantity → Term → (P : Term) → (nilB : Term) → (∷B : Term) → Term
+    elᵣVec[_]<_> : (A : Type) → Quantity → Term → (P : Term) → (nilB : Term) → (∷B : Term) → Term
     -- Prop equal 
     subst<_> : Quantity → Term → Term → Term → Term
     

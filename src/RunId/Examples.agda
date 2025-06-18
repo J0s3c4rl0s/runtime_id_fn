@@ -23,6 +23,20 @@ typed : Γ ⊢ s z 𝕢 ω ∶ Nat
 typed = 
     ⊢s ⊢z
 
+testSubstDown0 : (((var 0) ·ω (var 1)) [ 0 / ƛω∶ A ♭ var 0 ]) ≡ (ƛω∶ A ♭ var 0) ·ω (var 0)
+testSubstDown0 = refl
+
+testSubstDown1 : 
+    ((ƛω∶ Nat ♭ ((var 1) ·ω (var 0))) [ 0 / ƛω∶ Nat ♭ var 0 ]) ≡ 
+        (ƛω∶ Nat ♭ (ƛω∶ Nat ♭ var 0 ·ω (var 0)))
+testSubstDown1 = refl
+
+headVecTy : Type
+headVecTy = {!   !} 𝕢 {!   !} ⟶ Vec (var {!   !}) ((s (var {!   !})) 𝕢 ω) 𝕢 ω ⟶ var {!   !}
+testSubstDownMotive : Term
+
+testSubstDownMotive = {!   !}
+
 -- impossible, requires 0 <= ω
 untyped : (Γ , Nat 𝕢 𝟘) ⊢ var 0 𝕢 ω ∶ Nat
 untyped = ⊢var Z {!   !} refl
@@ -31,7 +45,7 @@ typedvar1 : (Γ , Nat 𝕢 ω) ⊢ var 0 𝕢 ω ∶ Nat
 typedvar1 = ⊢var Z ω≤qω refl
 
 listLengthTy : Term 
-listLengthTy = ∶ Sett 0 𝕢 𝟘 ⟶ ∶ List (var 0) 𝕢 ω ⟶ Nat
+listLengthTy = Sett 0 𝕢 𝟘 ⟶ List (var 0) 𝕢 ω ⟶ Nat
 
 listLengthDef : Term
 listLengthDef = 
@@ -42,7 +56,7 @@ listLengthDef =
                 (s (var 0))
 
 listLengthTyped : Γ ⊢ listLengthDef 𝕢 σ ∶ listLengthTy
-listLengthTyped = 
+listLengthTyped =
     ⊢lam 
         (⊢lam 
             (⊢listel 
@@ -51,11 +65,11 @@ listLengthTyped =
                 ⊢z 
                 (⊢s (⊢var Z ≤q-refl refl)))
             (⊢List (⊢var Z 𝟘≤q refl))) 
-        ⊢Sett
+        ⊢Sett 
 
 
 listToVecTy : Term 
-listToVecTy = r∶ List Nat ⟶ Vec𝟘 Nat (listLengthDef ·𝟘 Nat ·ω var 0) 
+listToVecTy = List Nat ⟶r Vec𝟘 Nat (listLengthDef ·𝟘 Nat ·ω var 0) 
 
 listToVecDef : Term
 listToVecDef = 
@@ -64,23 +78,23 @@ listToVecDef =
             nilv𝟘 
             (var 2 ∷v var 0 𝕟𝟘 (listLengthDef ·𝟘 Nat ·ω var 1))
 
-symtyped : 
-    Γ ⊢ 
-        (ƛ𝟘∶ a ≃ b ♭ (subst rfl by𝟘 (var 0))) 𝕢 ω ∶ 
-        (∶ (a ≃ b 𝕢 𝟘) ⟶ 
-        (b ≃ a))
-symtyped = 
-    ⊢lam 
-        -- missing A, i, j from this derivation...
-        (⊢subst 
-            ⊢rfl 
-            (⊢var Z 𝟘≤q refl)) 
-        (⊢≃ {!   !} {!   !})
+-- symtyped : 
+--     Γ ⊢ 
+--         (ƛ𝟘∶ a ≃ b ♭ (subst rfl  (var 0))) 𝕢 ω ∶ 
+--         (∶ (a ≃ b 𝕢 𝟘) ⟶ 
+--         (b ≃ a))
+-- symtyped = 
+--     ⊢lam 
+--         -- missing A, i, j from this derivation...
+--         (⊢subst 
+--             ⊢rfl 
+--             (⊢var Z 𝟘≤q refl)) 
+--         (⊢≃ {!   !} {!   !})
 
 -- do an example with erased eq 
 erasedEqType : Type
 erasedEqType = 
-    ∶ ({!  Na !} 𝕢 ω) ⟶ 
+    ({!  Na !} 𝕢 ω) ⟶ 
     {!   !}
 
 -- module utilsTests where
@@ -392,13 +406,13 @@ erasedEqType =
 --             -- B 
 --             ∶ Sett 0 𝕢 𝟘 ⟶ 
 --             -- (f : A ->r B)
---             ∶ r∶ var 1 ⟶ var 1 𝕢 ω ⟶ 
---             r∶ List (var 2) ⟶ List (var 2)
+--             ∶ var 1 ⟶ var 1 𝕢 ω ⟶ 
+--             List (var 2) ⟶ List (var 2)
 
 --         mapDef : Term 
 --         mapDef = 
 --             ƛ𝟘∶ Sett 0 ♭ ƛ𝟘∶ Sett 0 ♭
---                 ƛω∶ r∶ var 1 ⟶ var 1 ♭ 
+--                 ƛω∶ var 1 ⟶ var 1 ♭ 
 --                     ƛr∶  List (var 2) ♭ 
 --                         elimlᵣ var 0 ty∶ var 3 P∶ ƛ𝟘∶ (List (var 3)) ♭ (List (var 4)) 
 --                             nb∶ nill 
@@ -474,9 +488,9 @@ erasedEqType =
 --         mapRBody = ƛr∶ List Nat ♭ (eliml var 0 ty∶ Nat P∶ List Nat nb∶ nill cb∶ ((var 4 ·ω var 2) ∷l var 0))
 
 --         exDef : Term
---         exDef = ƛr∶ List Nat ♭ (((ƛω∶ r∶ Nat ⟶ Nat ♭ liftHOF 0 mapBody) ·ω idNatDef) ·ω (var 0))
+--         exDef = ƛr∶ List Nat ♭ (((ƛω∶ Nat ⟶ Nat ♭ liftHOF 0 mapBody) ·ω idNatDef) ·ω (var 0))
 
---         ~betaex : (ƛ∶ r∶ Nat ⟶ Nat 𝕢 ω ♭ liftHOF 0 mapBody ·ω idNatDef ·ω var 0) ~ᵣ var 0
+--         ~betaex : (ƛ∶ Nat ⟶ Nat 𝕢 ω ♭ liftHOF 0 mapBody ·ω idNatDef ·ω var 0) ~ᵣ var 0
 --         ~betaex = (~ᵣtrans (~ᵣappω ~ᵣbetaω ~ᵣrefl) (~ᵣtrans ~ᵣbetaω (~ᵣηlist ~ᵣrefl (~ᵣ∷l ~ᵣappr ~ᵣrefl)))) 
 
 --         convRule : 
@@ -484,7 +498,7 @@ erasedEqType =
 --             b ~ᵣ c → 
 --             a ~ᵣ c
 
---         ~betaexConv : (ƛ∶ r∶ Nat ⟶ Nat 𝕢 ω ♭ liftHOF 0 mapBody ·ω idNatDef ·ω var 0) ~ᵣ var 0
+--         ~betaexConv : (ƛ∶ Nat ⟶ Nat 𝕢 ω ♭ liftHOF 0 mapBody ·ω idNatDef ·ω var 0) ~ᵣ var 0
 --         ~betaexConv = convRule 
 --             (betapp ＝beta ＝beta) 
 --             (~ᵣηlist ~ᵣrefl (~ᵣ∷l ~ᵣappr ~ᵣrefl))
@@ -545,7 +559,7 @@ erasedEqType =
                 
 --         -- cant do this
 --         -- Which itself is not a type rule that can organically happen, I dont have point free programming
---         exTyped2 : [] ⊢ ((ƛω∶ r∶ Nat ⟶ Nat ♭ liftHOF 0 mapBody) ·ω idNatDef) 𝕢 ω ∶ (r∶ List Nat ⟶ List Nat)
+--         exTyped2 : [] ⊢ ((ƛω∶ Nat ⟶ Nat ♭ liftHOF 0 mapBody) ·ω idNatDef) 𝕢 ω ∶ (r∶ List Nat ⟶ List Nat)
 --         exTyped2 = 
 --             ⊢app {Γ = contFun} {Γ' = contArg} 
 --                 (⊢lam
@@ -557,7 +571,7 @@ erasedEqType =
 --                     contFun = {!   !}
 --                     contArg = {!   !}  
             
---         exTyped3Fail : [] ⊢ (((ƛω∶ r∶ Nat ⟶ Nat ♭ liftHOF 0 mapBody) ·ω idNatDef) ·ᵣ var 0) 𝕢 ω ∶ List Nat
+--         exTyped3Fail : [] ⊢ (((ƛω∶ Nat ⟶ Nat ♭ liftHOF 0 mapBody) ·ω idNatDef) ·ᵣ var 0) 𝕢 ω ∶ List Nat
 --         exTyped3Fail = 
 --             ⊢appᵣ {Γ = []} {Γ' = []} 
 --                 (⊢conv 
@@ -577,13 +591,13 @@ erasedEqType =
 --                 {!   !}
     
 --         exDefR : Term
---         exDefR = ƛr∶ List Nat ♭ (((ƛω∶ r∶ Nat ⟶ Nat ♭ liftHOF 0 mapBody) ·ω idNatDef) ·ᵣ (var 0))
+--         exDefR = ƛr∶ List Nat ♭ (((ƛω∶ Nat ⟶ Nat ♭ liftHOF 0 mapBody) ·ω idNatDef) ·ᵣ (var 0))
 
 --         inferRule : 
 --             Γ ⊢ (ƛr∶ A ♭ b) 𝕢 ω ∶ (r∶ A ⟶ B) → 
 --             Γ ⊢ (ƛω∶ A ♭ b) 𝕢 ω ∶ (r∶ A ⟶ B)  
             
---         exTypedInfer : ([] , List Nat 𝕢 ω) ⊢ (((ƛω∶ r∶ Nat ⟶ Nat ♭ liftHOF 0 mapBody) ·ω idNatDef) ·ᵣ var 0) 𝕢 ω ∶ List Nat
+--         exTypedInfer : ([] , List Nat 𝕢 ω) ⊢ (((ƛω∶ Nat ⟶ Nat ♭ liftHOF 0 mapBody) ·ω idNatDef) ·ᵣ var 0) 𝕢 ω ∶ List Nat
 --         exTypedInfer = -- {!   !}
 --             ⊢appᵣ {Γ = [] , List Nat 𝕢 ω} {Γ' = [] , List Nat 𝕢 ω} 
 --                 (let
@@ -683,7 +697,7 @@ erasedEqType =
 
 --         module Anned where 
 --             listToVecTy : Term 
---             listToVecTy = r∶ List Nat ⟶ Vec𝟘 Nat (listLengthDef ·𝟘 Nat ·ω var 0)
+--             listToVecTy = List Nat ⟶ Vec𝟘 Nat (listLengthDef ·𝟘 Nat ·ω var 0)
 
 --             listToVecDef : Term
 --             listToVecDef = 
@@ -715,7 +729,7 @@ erasedEqType =
 
 
 --         listToVecTy : Term 
---         listToVecTy = r∶ List Nat ⟶ Vec𝟘 Nat (listLengthDef ·𝟘 Nat ·ω var 0) 
+--         listToVecTy = List Nat ⟶ Vec𝟘 Nat (listLengthDef ·𝟘 Nat ·ω var 0) 
 
 --         listToVecDef : Term
 --         listToVecDef = 
@@ -890,7 +904,7 @@ erasedEqType =
 --             -- n : N 
 --             ∶ Nat 𝕢 𝟘 ⟶ 
 --             -- Vec A n
---             r∶ Vec𝟘 (var 1) (var 0) ⟶
+--             Vec𝟘 (var 1) (var 0) ⟶
 --             List (var 2)
 --         vecToListDef : Term    
 --         vecToListDef = 
@@ -904,7 +918,7 @@ erasedEqType =
 --                 -- B : Set 
 --                 ∶ Sett 0 𝕢 𝟘 ⟶ 
 --                 -- f : A -->r B
---                 ∶ r∶ {!   !} ⟶ {!   !} 𝕢 ω ⟶ 
+--                 ∶ {!   !} ⟶ {!   !} 𝕢 ω ⟶ 
 --                 {!   !}
 
 --             mapRListTy : Type
@@ -916,7 +930,7 @@ erasedEqType =
 --                 -- f : A -->r B
 --                 ∶ (r∶ (var 1) ⟶ (var 1)) 𝕢 ω ⟶ 
 --                 -- List A
---                 r∶ List (var 2) ⟶
+--                 List (var 2) ⟶
 --                 List (var 3)
             
 --             mapRListDef : Term

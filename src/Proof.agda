@@ -8,9 +8,14 @@ private variable
     Γ : Context
     a b c d A B C D : Term
 
+CanType : Set
+
+_↓ : Term → CanType
+
 -- Programm g context, indexed by types when plugged produces term thats only typed as a Nat
-LangCon : Type → Set
+LangCon : CanType → Set
 LangCon A = (a : Term) → Term
+
 
 data _⊢_~_∶_~_ : Context → Term → Term → Type → Type → Set where
 
@@ -38,7 +43,7 @@ proof : ∀ {vₐ vb} →
     let 
         rΓ = toRemap Γ 
         in
-    ∀ {C : LangCon (⟦ A ⟧t rΓ)} {δ : FullSubst Γ} → 
+    ∀ {C : LangCon ((⟦ A ⟧t rΓ) ↓)} {δ : FullSubst Γ} → 
     -- Their erasure + optimization
     C (δ (⟦ a ⟧t rΓ)) ⇓ vₐ → 
     C (δ (⟦ b ⟧t rΓ)) ⇓ vb → 

@@ -4,4 +4,3 @@ module RunId where
 open import RunId.Syntax public
 open import RunId.TypeRules public
 open import RunId.Utils public
-
